@@ -1,0 +1,59 @@
+a {
+  color: #12b2e7;
+}
+
+.message {
+  max-width: 75%;
+}
+
+.message .message-text {
+  border-radius: 8px;
+  padding: 8px 16px;
+}
+
+.message-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  margin-top: -38px;
+}
+
+.message-received.message-last .message-text,
+.message-received.message-with-tail .message-text,
+.message-received .message-text,
+.message-sent.message-last .message-text,
+.message-sent.message-with-tail .message-text,
+.message-sent .message-text {
+  -webkit-mask-box-image: none;
+}
+
+.message-received.message-with-avatar .message-text {
+  margin-left: 42px;
+}
+
+.message-sent.message-with-avatar .message-text {
+  margin-right: 42px;
+}
+
+.message-received.message-last .message-text,
+.message-received.message-with-tail .message-text {
+  border-radius: 8px 8px 8px 0;
+}
+
+.message-sent.message-last .message-text,
+.message-sent.message-with-tail .message-text {
+  border-radius: 8px 8px 0 8px;
+}
+
+.message-received.error .message-text {
+  color: #b51a00;
+}
+
+.message-sent .message-text {
+  background-color: #12b2e7;
+}
+
+.messagebar textarea {
+  padding: 6px 8px;
+  height: 34px;
+}
