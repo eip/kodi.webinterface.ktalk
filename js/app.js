@@ -31,25 +31,25 @@
       params: '{}'
     }, {
       name: 'exec <method> <params>',
-      description: 'Execute JSON-RPC "method" with "params". For example, "@exec GUI.ActivateWindow {"window":"home"}"',
+      description: 'Execute the JSON-RPC <method> with <params>. For example, "@exec GUI.ActivateWindow {"window":"home"}"',
       regex: /^exec\s+([\w\.]+)\s+(\S+)/i,
       method: '$1',
       params: '$2'
     }, {
       name: 'home',
-      description: 'Show home screen',
+      description: 'Show the home screen',
       regex: /^(home)/i,
       method: 'GUI.ActivateWindow',
       params: '{"window":"home"}'
     }, {
       name: 'weather',
-      description: 'Show weather screen',
+      description: 'Show the weather screen',
       regex: /^(weather)/i,
       method: 'GUI.ActivateWindow',
       params: '{"window":"weather"}'
     }, {
       name: 'play <url>',
-      description: 'Start playing given URL. For example, "play http://www.sample-videos.com/video/mp4/720/big_buck_bunny_720p_50mb.mp4", "play https://youtu.be/YE7VzlLtp-4", or simply "https://youtu.be/YE7VzlLtp-4"',
+      description: 'Start playing the given URL. For example, "play http://www.sample-videos.com/video/mp4/720/big_buck_bunny_720p_50mb.mp4", "play https://youtu.be/YE7VzlLtp-4", or simply "https://youtu.be/YE7VzlLtp-4"',
       regex: /^(?:play)?\s*((?:https?|plugin):\/\/.+)/i,
       method: 'Player.Open',
       params: function (m, c) {
@@ -114,7 +114,7 @@
       .replace(/>/g, '&gt;');
   }
 
-  function makeMsgProps(text, type) {
+  function makeMessageProps(text, type) {
     var props = {
         type: type,
         text: encodeHtmlEntities(text)
@@ -150,7 +150,7 @@
     }
 
     function addQuestionMessage(m) {
-      ktalkMessages.addMessage(makeMsgProps(m, 'sent'));
+      ktalkMessages.addMessage(makeMessageProps(m, 'sent'));
       return m;
     }
 
@@ -182,9 +182,9 @@
       }
 
       function makeHelpText() {
-        var result = 'I understand following commmands:';
+        var result = 'I understand the following commmands:';
         ktalkCommands.forEach(function (c) {
-          result += '\n\n' + c.name + ' — ' + c.description;
+          result += '\n---\n' + c.name + ' — ' + c.description;
         });
         return result;
       }
@@ -192,7 +192,7 @@
       // TODO Parse commands
       if (message.indexOf('help') === 0) {
         // print help message
-        ktalkMessages.addMessage(makeMsgProps(makeHelpText(), 'received'));
+        ktalkMessages.addMessage(makeMessageProps(makeHelpText(), 'received'));
         return r(''); // silent error
       }
       var request;
@@ -237,14 +237,14 @@
 
     function addAnswerMessage(m) {
       m = formatAnswerMessage(m);
-      ktalkMessages.addMessage(makeMsgProps(m, 'received'));
+      ktalkMessages.addMessage(makeMessageProps(m, 'received'));
       return m;
     }
 
     function addErrorMessage(m) {
       m = formatErrorMessage(m);
       if (m.length > 0) {
-        ktalkMessages.addMessage(makeMsgProps(m, 'received')).classList.add('error');
+        ktalkMessages.addMessage(makeMessageProps(m, 'received')).classList.add('error');
       }
       return m;
     }
@@ -259,7 +259,7 @@
   function addGreetingMessage() {
     var msgs = ['Hello, I am Kodi Talk Bot.', 'You cand send me URI to play or any command (try to type "help" for the list of commands I understand)'];
     msgs.map(function (msg) {
-      ktalkMessages.addMessage(makeMsgProps(msg, 'received'));
+      ktalkMessages.addMessage(makeMessageProps(msg, 'received'));
     });
   }
 
@@ -288,5 +288,5 @@
 
   fixMessageTemplate();
   addGreetingMessage();
-  addSampleKodiTalk();
+  // addSampleKodiTalk();
 }());
