@@ -11,36 +11,38 @@
     return uri;
   }
 
-  function parseResult(obj) {
-    return new Promise(function (resolve, reject) {
-      if (obj.error) {
-        // console.warn('Error!');
-        reject(obj.error);
-      } else {
-        // console.log('Success!');
-        resolve(obj.result);
-      }
-    });
-  }
-
   function callMethod(request) {
-    // console.log('Calling ' + method);
-    return window.fetch(window.kodi.url, {
-      method: "POST",
-      body: JSON.stringify({
-        "id": 1,
-        "jsonrpc": "2.0",
-        "method": request.method,
-        "params": request.params
-      }),
-      headers: {
-        "Content-Type": "application/json"
-      },
-      credentials: "same-origin"
-    }).then(function (response) {
-      // console.log(response.statusText);
-      return response.json();
-    }).then(parseResult);
+
+    function formatRequest(r) {
+      return {
+        method: "POST",
+        body: JSON.stringify({
+          id: r.id || 1,
+          jsonrpc: r.jsonrpc || '2.0',
+          method: r.method || 'JSONRPC.Ping',
+          params: r.params || {}
+        }),
+        headers: {
+          "Content-Type": "application/json"
+        },
+        credentials: "same-origin"
+      };
+    }
+
+    function toJson(r) {
+      return r.json();
+    }
+
+    function parseResult(obj) {
+      if (!obj.error) {
+        return Promise.resolve(obj.result);
+      }
+      return Promise.reject(obj.error);
+    }
+
+    return window.fetch(window.kodi.url, formatRequest(request))
+      .then(toJson)
+      .then(parseResult);
   }
 
   window.kodi = window.kodi || {};
