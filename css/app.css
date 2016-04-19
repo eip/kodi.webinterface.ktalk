@@ -9,6 +9,7 @@ a {
 .message .message-text {
   border-radius: 8px;
   padding: 8px 16px;
+  white-space: pre-wrap;
 }
 
 .message-avatar {

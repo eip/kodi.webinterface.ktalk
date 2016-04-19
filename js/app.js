@@ -42,12 +42,19 @@
       method: 'GUI.ActivateWindow',
       params: '{"window":"home"}'
     }, {
-      name: '<url>',
-      description: 'Start playing giben URL. For example, "http://www.sample-videos.com/video/mp4/720/big_buck_bunny_720p_50mb.mp4" or "https://youtu.be/YE7VzlLtp-4"',
-      regex: /^((?:https?|plugin):\/\/.+)/i,
+      name: 'weather',
+      description: 'Show weather screen',
+      regex: /^(weather)/i,
+      method: 'GUI.ActivateWindow',
+      params: '{"window":"weather"}'
+    }, {
+      name: 'play <url>',
+      description: 'Start playing given URL. For example, "play http://www.sample-videos.com/video/mp4/720/big_buck_bunny_720p_50mb.mp4", "play https://youtu.be/YE7VzlLtp-4", or simply "https://youtu.be/YE7VzlLtp-4"',
+      regex: /^(?:play)?\s*((?:https?|plugin):\/\/.+)/i,
       method: 'Player.Open',
-      params: '{"item":{"file":"$1"}}',
-      transform: transformPlayerUri
+      params: function (m, c) {
+        return '{"item":{"file":"' + transformPlayerUri(m.replace(c.regex, '$1')) + '"}}';
+      }
     }],
     lastMessageTime = 0;
 
@@ -80,10 +87,37 @@
     return formatDay(d) + ', <span>' + formatTime(d) + '</span>';
   }
 
+  function formatJson(o) {
+    return (JSON.stringify(o, null, 4) + '\n')
+      .replace(/^ *[\{\}] *(?:\r\n|\r|\n)+/gm, '')
+      .replace(/ *[\{\}] *|"/g, '')
+      .replace(/ *, *$/gm, '')
+      .replace(/\[/g, '(')
+      .replace(/\]/g, ')')
+      .trimRight();
+  }
+
+  function encodeHtmlEntities(s) {
+    var SURROGATE_PAIR_REGEXP = /[\uD800-\uDBFF][\uDC00-\uDFFF]/g,
+      NON_ALPHANUMERIC_REGEXP = /([^\#-~ |!])/g;
+
+    return s.replace(/&/g, '&amp;')
+      .replace(SURROGATE_PAIR_REGEXP, function (s) {
+        var hi = s.charCodeAt(0),
+          low = s.charCodeAt(1);
+        return '&#' + (((hi - 0xD800) * 0x400) + (low - 0xDC00) + 0x10000) + ';';
+      })
+      .replace(NON_ALPHANUMERIC_REGEXP, function (s) {
+        return '&#' + s.charCodeAt(0) + ';';
+      })
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+  }
+
   function makeMsgProps(text, type) {
     var props = {
         type: type,
-        text: text
+        text: encodeHtmlEntities(text)
       },
       date = new Date();
     if (date.getTime() - lastMessageTime > 10 * 60 * 1000) {
@@ -121,10 +155,44 @@
     }
 
     function parseKodiCommand(message) {
+
+      function makeProperty(command, propName, toJson) {
+        var result;
+        if (typeof command[propName] === 'function') {
+          result = command[propName](message, command);
+          if (typeof result === 'object' && !toJson) {
+            return JSON.stringify(result);
+          }
+          if (typeof result !== 'object' && toJson) {
+            return JSON.parse(result);
+          }
+          return result;
+        }
+        if (typeof command[propName] === 'object') {
+          command[propName] = JSON.stringify(command[propName]);
+        } else if (typeof command[propName] !== 'string') {
+          command[propName] = command[propName].toString();
+        }
+        if (command[propName].indexOf('$') >= 0) { // regex replace
+          result = message.replace(command.regex, command[propName]);
+        } else {
+          result = command[propName];
+        }
+        return toJson ? JSON.parse(result) : result;
+      }
+
+      function makeHelpText() {
+        var result = 'I understand following commmands:';
+        ktalkCommands.forEach(function (c) {
+          result += '\n\n' + c.name + ' — ' + c.description;
+        });
+        return result;
+      }
+
       // TODO Parse commands
       if (message.indexOf('help') === 0) {
         // print help message
-        ktalkMessages.addMessage(makeMsgProps('Help message', 'received'));
+        ktalkMessages.addMessage(makeMsgProps(makeHelpText(), 'received'));
         return r(''); // silent error
       }
       var request;
@@ -135,22 +203,23 @@
         var tokens = c.regex.exec(message);
         if (tokens) {
           request = {
-            method: message.replace(c.regex, c.method),
-            params: JSON.parse((typeof c.transform === 'function' ? c.transform(message) : message).replace(c.regex, c.params))
+            method: makeProperty(c, 'method'),
+            params: makeProperty(c, 'params', true)
+              // params: JSON.parse((typeof c.transform === 'function' ? c.transform(message) : message).replace(c.regex, c.params))
           };
         }
       });
       if (typeof request !== 'undefined') {
         return request;
       }
-      return q('Sorry, I can\'t understand You. I will learn more commands soon.');
+      return r('Sorry, I can\'t understand You. I will learn more commands soon.');
     }
 
     function formatAnswerMessage(m) {
       if (typeof m === 'string') {
         return m + '!';
       }
-      return 'OK, the answer is: ' + JSON.stringify(m);
+      return 'OK, the answer is:\n\n' + formatJson(m);
     }
 
     function formatErrorMessage(m) {
