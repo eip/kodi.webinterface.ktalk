@@ -12,12 +12,27 @@
     ktalkAvaSent = 'img/i-form-name-ios-114x114.png',
     lastMessageTime = 0;
 
+  function q(v) {
+    // console.log('Promise: ' + v);
+    return Promise.resolve(v);
+  }
+
+  function r(v) {
+    // console.log('Reject: ' + v);
+    return Promise.reject(v);
+  }
+
   function formatError(e) {
-    var result = 'ERROR';
-    result += e.code ? ' ' + e.code + ':' : ':';
-    result += e.name ? ' [' + e.name + ']' : '';
-    result += ' ' + e.message;
-    return result;
+    if (typeof e === 'undefined') {
+      return '';
+    } else if (typeof e === 'object') {
+      var result = 'ERROR';
+      result += e.code ? ' ' + e.code + ':' : ':';
+      result += e.name ? ' [' + e.name + ']' : '';
+      result += ' ' + e.message;
+      return result;
+    }
+    return e.toString().trim();
   }
 
   function formatDay(d) {
@@ -70,33 +85,55 @@
     });
   }
 
-  function talkToKodi(message) {
-    message = message.trim();
-    if (message.length === 0) {
-      return;
-    }
-    ktalkMessages.addMessage(makeMsgProps(message, 'sent'));
+  function parseKodiCommand(message) {
     // TODO Parse commands
     if (message.indexOf('@exec') === 0) {
       var tokens = /^@\w+\s+([\w\.]+)\s+(\S+)$/.exec(message);
       if (tokens) {
-        return window.kodi.call(tokens[1], JSON.parse(tokens[2])).then(function (r) {
-          window.console.log(r);
-          var answer;
-          if (typeof r === 'string') {
-            answer = r + '!';
-          } else {
-            answer = 'OK, the answer is: ' + JSON.stringify(r);
-          }
-          ktalkMessages.addMessage(makeMsgProps(answer, 'received'));
-        }, function (e) {
-          window.console.warn(e);
-          ktalkMessages.addMessage(makeMsgProps(formatError(e), 'received')).classList.add('error');
-        });
+        return {
+          method: tokens[1],
+          params: JSON.parse(tokens[2])
+        };
       }
     }
-    ktalkMessages.addMessage(makeMsgProps('Sorry, I can\'t understand You. I will learn more commands soon.', 'received')).classList.add('error');
-    return Promise.resolve();
+    return r('Sorry, I can\'t understand You. I will learn more commands soon.');
+  }
+
+  function talkToKodi(message) {
+    return q(message)
+      .then(function (m) {
+        m = m.trim();
+        if (m.length > 0) {
+          return m;
+        } else {
+          // console.log('Message is empty.')
+          return r();
+        }
+      })
+      .then(function (m) {
+        ktalkMessages.addMessage(makeMsgProps(m, 'sent'));
+        return m;
+      })
+      .then(parseKodiCommand)
+      .then(function (m) {
+        return window.kodi.call(m.method, m.params);
+      })
+      .then(function (r) {
+        // console.log(r);
+        var answer;
+        if (typeof r === 'string') {
+          answer = r + '!';
+        } else {
+          answer = 'OK, the answer is: ' + JSON.stringify(r);
+        }
+        ktalkMessages.addMessage(makeMsgProps(answer, 'received'));
+        return answer;
+      }, function (e) {
+        var answer = formatError(e);
+        // console.log(answer);
+        ktalkMessages.addMessage(makeMsgProps(answer, 'received')).classList.add('error');
+        return answer;
+      });
   }
 
   function addSampleKodiTalk() {
@@ -121,7 +158,7 @@
       return p.then(function () {
         return talkToKodi(['@exec ', t.m, JSON.stringify(t.p)].join(' '));
       });
-    }, Promise.resolve());
+    }, q());
   }
 
   // Handle message

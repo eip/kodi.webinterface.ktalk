@@ -2,33 +2,14 @@
 (function () {
   'use strict';
 
-  //  function submitForm() {
-  //    var xhr = new XMLHttpRequest();
-  //    var frm = document.getElementById('kodi-rpc');
-  //    var uri = document.getElementById('media-uri').value;
-  //    var req = {
-  //      id: 1,
-  //      jsonrpc: '2.0',
-  //      method: 'Player.Open',
-  //      params: {
-  //        item: {
-  //          file: transformUri(uri)
-  //        }
-  //      }
-  //    };
-  //    xhr.open(frm.method, frm.action, true);
-  //    xhr.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
-  //    xhr.send(JSON.stringify(req));
-  //  }
-  //
-  //  function transformUri(uri) {
-  //    uri = uri.trim();
-  //    var match = /^https?:\/\/(?:www\.)?youtu(?:\.be|be\.com)\/(?:\S+\/)?(?:[^\s\/]*(?:\?|&)vi?=)?([^#?&]+)/i.exec(uri);
-  //    if (match) {
-  //      return 'plugin://plugin.video.youtube/?path=/root&search&action=play_video&videoid=' + match[1];
-  //    }
-  //    return uri;
-  //  }
+  function transformUri(uri) {
+    uri = uri.trim();
+    var match = /^https?:\/\/(?:www\.)?youtu(?:\.be|be\.com)\/(?:\S+\/)?(?:[^\s\/]*(?:\?|&)vi?=)?([^#?&]+)/i.exec(uri);
+    if (match) {
+      return 'plugin://plugin.video.youtube/?path=/root&search&action=play_video&videoid=' + match[1];
+    }
+    return uri;
+  }
 
   function parseResult(obj) {
     return new Promise(function (resolve, reject) {
@@ -77,5 +58,5 @@
   //    console.warn(e);
   //  });  
 
-  window.console.log('Kodi initialized');
+  window.console.info('Kodi initialized');
 }());
