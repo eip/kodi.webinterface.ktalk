@@ -2,25 +2,16 @@
 (function () {
   'use strict';
 
-  function transformUri(uri) {
-    uri = uri.trim();
-    var match = /^https?:\/\/(?:www\.)?youtu(?:\.be|be\.com)\/(?:\S+\/)?(?:[^\s\/]*(?:\?|&)vi?=)?([^#?&]+)/i.exec(uri);
-    if (match) {
-      return 'plugin://plugin.video.youtube/?path=/root&search&action=play_video&videoid=' + match[1];
-    }
-    return uri;
-  }
+  function callMethod(params) {
 
-  function callMethod(request) {
-
-    function formatRequest(r) {
+    function makeRequest(b) {
       return {
         method: "POST",
         body: JSON.stringify({
-          id: r.id || 1,
-          jsonrpc: r.jsonrpc || '2.0',
-          method: r.method || 'JSONRPC.Ping',
-          params: r.params || {}
+          id: b.id || 1,
+          jsonrpc: b.jsonrpc || '2.0',
+          method: b.method || 'JSONRPC.Ping',
+          params: b.params || {}
         }),
         headers: {
           "Content-Type": "application/json"
@@ -33,14 +24,14 @@
       return r.json();
     }
 
-    function parseResult(obj) {
-      if (!obj.error) {
-        return Promise.resolve(obj.result);
+    function parseResult(r) {
+      if (!r.error) {
+        return Promise.resolve(r.result);
       }
-      return Promise.reject(obj.error);
+      return Promise.reject(r.error);
     }
 
-    return window.fetch(window.kodi.url, formatRequest(request))
+    return window.fetch(window.kodi.url, makeRequest(params))
       .then(toJson)
       .then(parseResult);
   }

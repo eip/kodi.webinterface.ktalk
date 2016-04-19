@@ -2,6 +2,19 @@
 (function () {
   'use strict';
 
+  function transformPlayerUri(uri) {
+    uri = uri.trim();
+    // youtube links
+    var match = /^https?:\/\/(?:www\.)?youtu(?:\.be|be\.com)\/(?:\S+\/)?(?:[^\s\/]*(?:\?|&)vi?=)?([^#?&]+)/i.exec(uri),
+      newUri;
+    if (match) {
+      newUri = 'plugin://plugin.video.youtube/?path=/root&search&action=play_video&videoid=' + match[1];
+      window.console.info('URI ' + uri + ' transformed to ' + newUri);
+      return newUri;
+    }
+    return uri;
+  }
+
   var ktalkApp = new Framework7(),
     $$ = Dom7,
     ktalkMessages = ktalkApp.messages('.messages', {
@@ -10,6 +23,32 @@
     ktalkMessagebar = ktalkApp.messagebar('.messagebar'),
     ktalkAvaRecv = 'img/apple-touch-icon-114x114.png',
     ktalkAvaSent = 'img/i-form-name-ios-114x114.png',
+    ktalkCommands = [{
+      name: 'ping',
+      description: 'Check the availability of the Kodi web server',
+      regex: /^(ping)/i,
+      method: 'JSONRPC.Ping',
+      params: '{}'
+    }, {
+      name: 'exec <method> <params>',
+      description: 'Execute JSON-RPC "method" with "params". For example, "@exec GUI.ActivateWindow {"window":"home"}"',
+      regex: /^exec\s+([\w\.]+)\s+(\S+)/i,
+      method: '$1',
+      params: '$2'
+    }, {
+      name: 'home',
+      description: 'Show home screen',
+      regex: /^(home)/i,
+      method: 'GUI.ActivateWindow',
+      params: '{"window":"home"}'
+    }, {
+      name: '<url>',
+      description: 'Start playing giben URL. For example, "http://www.sample-videos.com/video/mp4/720/big_buck_bunny_720p_50mb.mp4" or "https://youtu.be/YE7VzlLtp-4"',
+      regex: /^((?:https?|plugin):\/\/.+)/i,
+      method: 'Player.Open',
+      params: '{"item":{"file":"$1"}}',
+      transform: transformPlayerUri
+    }],
     lastMessageTime = 0;
 
   function q(v) {
@@ -83,16 +122,28 @@
 
     function parseKodiCommand(message) {
       // TODO Parse commands
-      if (message.indexOf('@exec') === 0) {
-        var tokens = /^@\w+\s+([\w\.]+)\s+(\S+)$/.exec(message);
+      if (message.indexOf('help') === 0) {
+        // print help message
+        ktalkMessages.addMessage(makeMsgProps('Help message', 'received'));
+        return r(''); // silent error
+      }
+      var request;
+      ktalkCommands.forEach(function (c) {
+        if (typeof request !== 'undefined') {
+          return;
+        }
+        var tokens = c.regex.exec(message);
         if (tokens) {
-          return {
-            method: tokens[1],
-            params: JSON.parse(tokens[2])
+          request = {
+            method: message.replace(c.regex, c.method),
+            params: JSON.parse((typeof c.transform === 'function' ? c.transform(message) : message).replace(c.regex, c.params))
           };
         }
+      });
+      if (typeof request !== 'undefined') {
+        return request;
       }
-      return r('Sorry, I can\'t understand You. I will learn more commands soon.');
+      return q('Sorry, I can\'t understand You. I will learn more commands soon.');
     }
 
     function formatAnswerMessage(m) {
@@ -144,26 +195,18 @@
   }
 
   function addSampleKodiTalk() {
-    var st = [{
-      m: "JSONRPC.Ping",
-      p: {}
-    }, {
-      m: "JSONRPC.Pong",
-      p: {}
-    }, {
-      m: "JSONRPC.Version",
-      p: {}
-    }, {
-      m: "Application.GetProperties",
-      p: {
-        "properties": ["name", "version"]
-      }
-    }];
+    var st = [
+      'help',
+      'exec JSONRPC.Ping {}',
+      'exec JSONRPC.Pong {}',
+      'exec JSONRPC.Version {}',
+      'exec Application.GetProperties {"properties":["name","version"]}'
+    ];
 
     // Send messages in a sequential manner
-    st.reduce(function (p, t) {
+    st.reduce(function (p, c) {
       return p.then(function () {
-        return talkToKodi(['@exec ', t.m, JSON.stringify(t.p)].join(' '));
+        return talkToKodi(c);
       });
     }, q());
   }

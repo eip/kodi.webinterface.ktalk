@@ -1,0 +1,8 @@
+{
+  "js": {
+    "jslint_happy": true
+  },
+  "css": {
+    "selector_separator_newline": false
+  }
+}

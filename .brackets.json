@@ -1,0 +1,7 @@
+{
+  "jslint.options": {
+    "plusplus": true,
+    "regexp": true,
+    "bitwise": true
+  }
+}
