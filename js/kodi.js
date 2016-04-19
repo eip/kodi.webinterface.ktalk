@@ -23,15 +23,15 @@
     });
   }
 
-  function callMethod(method, params) {
+  function callMethod(request) {
     // console.log('Calling ' + method);
     return window.fetch(window.kodi.url, {
       method: "POST",
       body: JSON.stringify({
         "id": 1,
         "jsonrpc": "2.0",
-        "method": method,
-        "params": params
+        "method": request.method,
+        "params": request.params
       }),
       headers: {
         "Content-Type": "application/json"
@@ -50,13 +50,5 @@
     window.console.warn('Using test server: ' + window.kodi.url);
   }
   window.kodi.call = callMethod;
-
-  //  window.kodi.call("JSONRPC.Ping", {});
-  //  window.kodi.call("JSONRPC.Invalid", {}).then(function (r) {
-  //    console.log(r);
-  //  }, function (e) {
-  //    console.warn(e);
-  //  });  
-
   window.console.info('Kodi initialized');
 }());

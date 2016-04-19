@@ -22,19 +22,6 @@
     return Promise.reject(v);
   }
 
-  function formatError(e) {
-    if (typeof e === 'undefined') {
-      return '';
-    } else if (typeof e === 'object') {
-      var result = 'ERROR';
-      result += e.code ? ' ' + e.code + ':' : ':';
-      result += e.name ? ' [' + e.name + ']' : '';
-      result += ' ' + e.message;
-      return result;
-    }
-    return e.toString().trim();
-  }
-
   function formatDay(d) {
     var date = d ? new Date(d) : new Date(),
       weekDay = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][date.getDay()],
@@ -78,62 +65,80 @@
     }
   }
 
+  function talkToKodi(message) {
+
+    function checkMessage(m) {
+      m = m.trim();
+      if (m.length > 0) {
+        return q(m);
+      } else {
+        return r();
+      }
+    }
+
+    function addQuestionMessage(m) {
+      ktalkMessages.addMessage(makeMsgProps(m, 'sent'));
+      return m;
+    }
+
+    function parseKodiCommand(message) {
+      // TODO Parse commands
+      if (message.indexOf('@exec') === 0) {
+        var tokens = /^@\w+\s+([\w\.]+)\s+(\S+)$/.exec(message);
+        if (tokens) {
+          return {
+            method: tokens[1],
+            params: JSON.parse(tokens[2])
+          };
+        }
+      }
+      return r('Sorry, I can\'t understand You. I will learn more commands soon.');
+    }
+
+    function formatAnswerMessage(m) {
+      if (typeof m === 'string') {
+        return m + '!';
+      }
+      return 'OK, the answer is: ' + JSON.stringify(m);
+    }
+
+    function formatErrorMessage(m) {
+      if (typeof m === 'undefined') {
+        return '';
+      } else if (typeof m === 'object') {
+        var result = 'ERROR';
+        result += m.code ? ' ' + m.code + ':' : ':';
+        result += m.name ? ' [' + m.name + ']' : '';
+        result += ' ' + m.message;
+        return result;
+      }
+      return m.toString().trim();
+    }
+
+    function addAnswerMessage(m) {
+      m = formatAnswerMessage(m);
+      ktalkMessages.addMessage(makeMsgProps(m, 'received'));
+      return m;
+    }
+
+    function addErrorMessage(m) {
+      m = formatErrorMessage(m);
+      ktalkMessages.addMessage(makeMsgProps(m, 'received')).classList.add('error');
+      return m;
+    }
+
+    return checkMessage(message)
+      .then(addQuestionMessage)
+      .then(parseKodiCommand)
+      .then(window.kodi.call)
+      .then(addAnswerMessage, addErrorMessage);
+  }
+
   function addGreetingMessage() {
     var msgs = ['Hello, I am Kodi Talk Bot.', 'You cand send me URI to play or any command (try to type "help" for the list of commands I understand)'];
     msgs.map(function (msg) {
       ktalkMessages.addMessage(makeMsgProps(msg, 'received'));
     });
-  }
-
-  function parseKodiCommand(message) {
-    // TODO Parse commands
-    if (message.indexOf('@exec') === 0) {
-      var tokens = /^@\w+\s+([\w\.]+)\s+(\S+)$/.exec(message);
-      if (tokens) {
-        return {
-          method: tokens[1],
-          params: JSON.parse(tokens[2])
-        };
-      }
-    }
-    return r('Sorry, I can\'t understand You. I will learn more commands soon.');
-  }
-
-  function talkToKodi(message) {
-    return q(message)
-      .then(function (m) {
-        m = m.trim();
-        if (m.length > 0) {
-          return m;
-        } else {
-          // console.log('Message is empty.')
-          return r();
-        }
-      })
-      .then(function (m) {
-        ktalkMessages.addMessage(makeMsgProps(m, 'sent'));
-        return m;
-      })
-      .then(parseKodiCommand)
-      .then(function (m) {
-        return window.kodi.call(m.method, m.params);
-      })
-      .then(function (r) {
-        // console.log(r);
-        var answer;
-        if (typeof r === 'string') {
-          answer = r + '!';
-        } else {
-          answer = 'OK, the answer is: ' + JSON.stringify(r);
-        }
-        ktalkMessages.addMessage(makeMsgProps(answer, 'received'));
-        return answer;
-      }, function (e) {
-        var answer = formatError(e);
-        // console.log(answer);
-        ktalkMessages.addMessage(makeMsgProps(answer, 'received')).classList.add('error');
-        return answer;
-      });
   }
 
   function addSampleKodiTalk() {
