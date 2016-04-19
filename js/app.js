@@ -123,7 +123,9 @@
 
     function addErrorMessage(m) {
       m = formatErrorMessage(m);
-      ktalkMessages.addMessage(makeMsgProps(m, 'received')).classList.add('error');
+      if (m.length > 0) {
+        ktalkMessages.addMessage(makeMsgProps(m, 'received')).classList.add('error');
+      }
       return m;
     }
 
