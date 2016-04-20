@@ -30,11 +30,13 @@
       method: 'JSONRPC.Ping',
       params: '{}'
     }, {
-      name: 'exec <method> <params>',
-      description: 'Execute the JSON-RPC <method> with <params>. For example, "@exec GUI.ActivateWindow {"window":"home"}"',
-      regex: /^exec\s+([\w\.]+)\s+(\S+)/i,
-      method: '$1',
-      params: '$2'
+      name: 'play <url>',
+      description: 'Start playing the given URL. For example,\n"play http://www.sample-videos.com/video/mp4/720/big_buck_bunny_720p_50mb.mp4",\n"play https://youtu.be/YE7VzlLtp-4",\nor simply "https://youtu.be/YE7VzlLtp-4"',
+      regex: /^(?:play)?\s*((?:https?|plugin):\/\/.+)/i,
+      method: 'Player.Open',
+      params: function (m, c) {
+        return '{"item":{"file":"' + transformPlayerUri(m.replace(c.regex, '$1')) + '"}}';
+      }
     }, {
       name: 'home',
       description: 'Show the home screen',
@@ -48,13 +50,11 @@
       method: 'GUI.ActivateWindow',
       params: '{"window":"weather"}'
     }, {
-      name: 'play <url>',
-      description: 'Start playing the given URL. For example, "play http://www.sample-videos.com/video/mp4/720/big_buck_bunny_720p_50mb.mp4", "play https://youtu.be/YE7VzlLtp-4", or simply "https://youtu.be/YE7VzlLtp-4"',
-      regex: /^(?:play)?\s*((?:https?|plugin):\/\/.+)/i,
-      method: 'Player.Open',
-      params: function (m, c) {
-        return '{"item":{"file":"' + transformPlayerUri(m.replace(c.regex, '$1')) + '"}}';
-      }
+      name: 'exec <method> <params>',
+      description: 'For geeks only: execute the JSON-RPC <method> with <params>. For example,\n"@exec GUI.ActivateWindow {"window":"home"}"',
+      regex: /^exec\s+([\w\.]+)\s+(\S+)/i,
+      method: '$1',
+      params: '$2'
     }],
     lastMessageTime = 0;
 
@@ -184,7 +184,7 @@
       function makeHelpText() {
         var result = 'I understand the following commmands:';
         ktalkCommands.forEach(function (c) {
-          result += '\n---\n' + c.name + ' — ' + c.description;
+          result += '\n\n• ' + c.name + ' — ' + c.description;
         });
         return result;
       }
