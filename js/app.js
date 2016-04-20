@@ -190,7 +190,7 @@
       }
 
       // TODO Parse commands
-      if (message.indexOf('help') === 0) {
+      if (/^(help)/i.test(message)) {
         // print help message
         ktalkMessages.addMessage(makeMessageProps(makeHelpText(), 'received'));
         return r(''); // silent error
