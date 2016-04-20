@@ -280,10 +280,22 @@
     }, q());
   }
 
-  // Handle message
-  $$('.messagebar .link').on('click', function () {
+  function sendMessage() {
     talkToKodi(ktalkMessagebar.value());
     ktalkMessagebar.clear();
+  }
+
+  // Handle message
+  $$('.messagebar .link').on('click', function () {
+    sendMessage();
+  });
+
+  $$('.messagebar textarea').on('keypress', function (e) {
+    e = e || window.event;
+    if ((e.which || e.keyCode) === 13) {
+      e.preventDefault();
+      sendMessage();
+    }
   });
 
   fixMessageTemplate();
