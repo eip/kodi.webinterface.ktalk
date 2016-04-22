@@ -25,13 +25,13 @@
     ktalkAvaSent = 'img/i-form-name-ios-114x114.png',
     ktalkCommands = [{
       name: 'ping',
-      description: 'Check the availability of the Kodi web server',
+      description: 'check the availability of the Kodi web server',
       regex: /^(ping)/i,
       method: 'JSONRPC.Ping',
       params: '{}'
     }, {
       name: 'play <url>',
-      description: 'Start playing the given URL. For example,\n"play http://www.sample-videos.com/video/mp4/720/big_buck_bunny_720p_50mb.mp4",\n"play https://youtu.be/YE7VzlLtp-4",\nor simply "https://youtu.be/YE7VzlLtp-4"',
+      description: 'start playing the given URL. For example,\n"play http://www.sample-videos.com/video/mp4/720/big_buck_bunny_720p_50mb.mp4",\n"play https://youtu.be/YE7VzlLtp-4",\nor simply "https://youtu.be/YE7VzlLtp-4"',
       regex: /^(?:play)?\s*((?:https?|plugin):\/\/.+)/i,
       method: 'Player.Open',
       params: function (m, c) {
@@ -39,19 +39,19 @@
       }
     }, {
       name: 'home',
-      description: 'Show the home screen',
+      description: 'show the home screen',
       regex: /^(home)/i,
       method: 'GUI.ActivateWindow',
       params: '{"window":"home"}'
     }, {
       name: 'weather',
-      description: 'Show the weather screen',
+      description: 'show the weather screen',
       regex: /^(weather)/i,
       method: 'GUI.ActivateWindow',
       params: '{"window":"weather"}'
     }, {
       name: 'exec <method> <params>',
-      description: 'For geeks only: execute the JSON-RPC <method> with <params>. For example,\n"@exec GUI.ActivateWindow {"window":"home"}"',
+      description: 'for geeks only: execute the JSON-RPC <method> with <params>. For example,\n"exec GUI.ActivateWindow {"window":"home"}"',
       regex: /^exec\s+([\w\.]+)\s+(\S+)/i,
       method: '$1',
       params: '$2'
@@ -184,7 +184,7 @@
       function makeHelpText() {
         var result = 'I understand the following commmands:';
         ktalkCommands.forEach(function (c) {
-          result += '\n\n• ' + c.name + ' — ' + c.description;
+          result += '\n\n‣ ' + c.name + ' — ' + c.description;
         });
         return result;
       }
@@ -212,7 +212,7 @@
       if (typeof request !== 'undefined') {
         return request;
       }
-      return r('Sorry, I can\'t understand You. I will learn more commands soon.');
+      return r('Sorry, I can\'t understand you. I will learn more commands soon.');
     }
 
     function formatAnswerMessage(m) {
@@ -257,7 +257,7 @@
   }
 
   function addGreetingMessage() {
-    var msgs = ['Hello, I am Kodi Talk Bot.', 'You cand send me URI to play or any command (try to type "help" for the list of commands I understand)'];
+    var msgs = ['Hello, I\'m a Kodi Talk bot.', 'You can send me an URI to play or another command (try to type "help" for the list of commands I understand)'];
     msgs.map(function (msg) {
       ktalkMessages.addMessage(makeMessageProps(msg, 'received'));
     });
@@ -265,11 +265,11 @@
 
   function addSampleKodiTalk() {
     var st = [
+      'ping',
       'help',
-      'exec JSONRPC.Ping {}',
-      'exec JSONRPC.Pong {}',
       'exec JSONRPC.Version {}',
-      'exec Application.GetProperties {"properties":["name","version"]}'
+      'exec Application.GetProperties {"properties":["name","version"]}',
+      'hello'
     ];
 
     // Send messages in a sequential manner
@@ -311,6 +311,8 @@
   addGreetingMessage();
   // addSampleKodiTalk();
   if (!isMobile()) {
-    $$('.messagebar textarea').focus();
+    setTimeout(function () {
+      $$('.messagebar textarea').focus();
+    }, 100);
   }
 }());
