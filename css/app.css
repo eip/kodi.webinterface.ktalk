@@ -2,6 +2,16 @@ a {
   color: #12b2e7;
 }
 
+body {
+  background: #e5e5ea;
+}
+
+.views {
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
 .message {
   max-width: 75%;
 }
@@ -19,12 +29,7 @@ a {
   margin-top: -38px;
 }
 
-.message-received.message-last .message-text,
-.message-received.message-with-tail .message-text,
-.message-received .message-text,
-.message-sent.message-last .message-text,
-.message-sent.message-with-tail .message-text,
-.message-sent .message-text {
+.message-received.message-last .message-text, .message-received.message-with-tail .message-text, .message-received .message-text, .message-sent.message-last .message-text, .message-sent.message-with-tail .message-text, .message-sent .message-text {
   -webkit-mask-box-image: none;
 }
 
@@ -36,13 +41,11 @@ a {
   margin-right: 42px;
 }
 
-.message-received.message-last .message-text,
-.message-received.message-with-tail .message-text {
+.message-received.message-last .message-text, .message-received.message-with-tail .message-text {
   border-radius: 8px 8px 8px 0;
 }
 
-.message-sent.message-last .message-text,
-.message-sent.message-with-tail .message-text {
+.message-sent.message-last .message-text, .message-sent.message-with-tail .message-text {
   border-radius: 8px 8px 0 8px;
 }
 
