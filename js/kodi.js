@@ -40,7 +40,7 @@
   window.kodi.url = '/jsonrpc';
   if (window.location.protocol.indexOf('http') === -1) {
     window.kodi.url = 'http://192.168.237.9:8080' + window.kodi.url;
-    window.console.warn('Using test server: ' + window.kodi.url);
+    window.console.warn(window.location.protocol + '// connection. Using test server: ' + window.kodi.url);
   }
   window.kodi.call = callMethod;
   window.console.info('Kodi initialized');

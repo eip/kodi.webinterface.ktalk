@@ -49,6 +49,10 @@ body {
   border-radius: 8px 8px 0 8px;
 }
 
+.message-received.debug .message-text {
+  color: #12b2e7;
+}
+
 .message-received.error .message-text {
   color: #b51a00;
 }
