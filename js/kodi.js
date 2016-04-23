@@ -10,7 +10,7 @@
         body: JSON.stringify({
           id: b.id || 1,
           jsonrpc: b.jsonrpc || '2.0',
-          method: b.method || 'JSONRPC.Ping',
+          method: b.method,
           params: b.params || {}
         }),
         headers: {
@@ -31,6 +31,9 @@
       return Promise.reject(r.error);
     }
 
+    if (typeof params === 'undefined' || typeof params.method === 'undefined') {
+      return;
+    }
     return window.fetch(window.kodi.url, makeRequest(params))
       .then(toJson)
       .then(parseResult);

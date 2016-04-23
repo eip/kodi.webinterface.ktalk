@@ -24,18 +24,27 @@
     ktalkAvaRecv = 'img/apple-touch-icon-114x114.png',
     ktalkAvaSent = 'img/i-form-name-ios-114x114.png',
     ktalkCommands = [{
-      name: 'ping',
-      description: 'check the availability of the Kodi web server',
-      regex: /^(ping)/i,
-      method: 'JSONRPC.Ping',
-      params: '{}'
-    }, {
       name: 'play <url>',
       description: 'start playing the given URL. For example,\n"play http://www.sample-videos.com/video/mp4/720/big_buck_bunny_720p_50mb.mp4",\n"play https://youtu.be/YE7VzlLtp-4",\nor simply "https://youtu.be/YE7VzlLtp-4"',
       regex: /^(?:play)?\s*((?:https?|plugin):\/\/.+)/i,
       method: 'Player.Open',
       params: function (m, c) {
         return '{"item":{"file":"' + transformPlayerUri(m.replace(c.regex, '$1')) + '"}}';
+      }
+    }, {
+      name: 'ping',
+      description: 'check the availability of the Kodi web server',
+      regex: /^(ping)/i,
+      method: 'JSONRPC.Ping',
+      params: '{}'
+    }, {
+      name: 'version',
+      description: 'get the Kodi version',
+      regex: /^(version)/i,
+      method: 'Application.GetProperties',
+      params: '{"properties":["name","version"]}',
+      format: function (m, c) {
+        return m.name + ' ' + m.version.major + '.' + m.version.minor + (m.version.tag === 'releasecandidate' ? ' RC ' + m.version.tagversion : '') + ' (rev. ' + m.version.revision + ')';
       }
     }, {
       name: 'home',
@@ -58,8 +67,8 @@
     }, {
       name: 'debug <js object>',
       regex: /^debug\s+(.+)/i,
-      response: function (m, c) {
-        return JSON.stringify(eval(m.replace(c.regex, '$1')), null, 2);
+      format: function (m, c) {
+        return '#DEBUG\n' + JSON.stringify(eval(m.replace(c.regex, '$1')), null, 2);
       }
     }],
     lastMessageTime = 0;
@@ -146,6 +155,8 @@
 
   function talkToKodi(message) {
 
+    var command; // current command
+
     function checkMessage(m) {
       m = m.trim();
       if (m.length > 0) {
@@ -160,35 +171,35 @@
       return m;
     }
 
-    function parseKodiCommand(message) {
-
-      function makeProperty(command, propName, toJson) {
-        var result;
-        if (typeof command[propName] === 'undefined') {
-          return;
-        }
-        if (typeof command[propName] === 'function') {
-          result = command[propName](message, command);
-          if (typeof result === 'object' && !toJson) {
-            return JSON.stringify(result);
-          }
-          if (typeof result !== 'object' && toJson) {
-            return JSON.parse(result);
-          }
-          return result;
-        }
-        if (typeof command[propName] === 'object') {
-          command[propName] = JSON.stringify(command[propName]);
-        } else if (typeof command[propName] !== 'string') {
-          command[propName] = command[propName].toString();
-        }
-        if (command[propName].indexOf('$') >= 0) { // regex replace
-          result = message.replace(command.regex, command[propName]);
-        } else {
-          result = command[propName];
-        }
-        return toJson ? JSON.parse(result) : result;
+    function parseProperty(message, command, propName, toJson) {
+      var result;
+      if (typeof command[propName] === 'undefined') {
+        return;
       }
+      if (typeof command[propName] === 'function') {
+        result = command[propName](message, command);
+        if (typeof result === 'object' && !toJson) {
+          return JSON.stringify(result);
+        }
+        if (typeof result !== 'object' && toJson) {
+          return JSON.parse(result);
+        }
+        return result;
+      }
+      if (typeof command[propName] === 'object') {
+        command[propName] = JSON.stringify(command[propName]);
+      } else if (typeof command[propName] !== 'string') {
+        command[propName] = command[propName].toString();
+      }
+      if (command[propName].indexOf('$') >= 0) { // regex replace
+        result = message.replace(command.regex, command[propName]);
+      } else {
+        result = command[propName];
+      }
+      return toJson ? JSON.parse(result) : result;
+    }
+
+    function parseKodiCommand(message) {
 
       function makeHelpText() {
         var result = 'I understand the following commmands:';
@@ -212,21 +223,28 @@
         }
         if (c.regex.test(message)) {
           request = {
-            method: makeProperty(c, 'method'),
-            params: makeProperty(c, 'params', true),
-            response: makeProperty(c, 'response')
+            method: parseProperty(message, c, 'method'),
+            params: parseProperty(message, c, 'params', true)
           };
+          command = {};
+          command.name = c.name;
+          command.description = c.description;
+          command.regex = c.regex;
+          command.method = request.method;
+          command.params = request.params;
+          command.format = (typeof request.method === 'undefined') ? parseProperty(message, c, 'format') : c.format;
         }
       });
-      if (typeof request !== 'undefined' && typeof request.method !== 'undefined') {
+      if (typeof request !== 'undefined') {
         return request;
-      } else if (typeof request !== 'undefined' && typeof request.response !== 'undefined') {
-        return r('#DEBUG\n' + request.response);
       }
       return r('Sorry, I can\'t understand you. I will learn more commands soon.');
     }
 
     function formatAnswerMessage(m) {
+      if (typeof command.format !== 'undefined') {
+        return parseProperty(m, command, 'format');
+      }
       if (typeof m === 'string') {
         return m + '!';
       }
