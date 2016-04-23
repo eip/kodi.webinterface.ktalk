@@ -320,6 +320,10 @@
     ktalkMessagebar.clear();
   }
 
+  // Fix for missing iPhone status bar in landscape mode
+  ktalkApp.device.statusBar = false;
+  $$('html').removeClass('with-statusbar-overlay');
+
   // Handle message
   $$('.messagebar .link').on('click', function () {
     sendMessage();
