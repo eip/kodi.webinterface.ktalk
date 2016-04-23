@@ -24,6 +24,19 @@
     ktalkAvaRecv = 'img/apple-touch-icon-114x114.png',
     ktalkAvaSent = 'img/i-form-name-ios-114x114.png',
     ktalkCommands = [{
+      name: 'help',
+      description: 'get the list of commands I understand',
+      regex: /^(help)/i,
+      format: function () {
+        var result = 'I understand the following commmands:';
+        ktalkCommands.forEach(function (c) {
+          if (typeof c.description !== 'undefined') {
+            result += '\n\n‣ ' + c.name + ' — ' + c.description;
+          }
+        });
+        return result;
+      }
+    }, {
       name: 'play <url>',
       description: 'start playing the given URL. For example,\n"play http://www.sample-videos.com/video/mp4/720/big_buck_bunny_720p_50mb.mp4",\n"play https://youtu.be/YE7VzlLtp-4",\nor simply "https://youtu.be/YE7VzlLtp-4"',
       regex: /^(?:play)?\s*((?:https?|plugin):\/\/.+)/i,
@@ -43,7 +56,7 @@
       regex: /^(version)/i,
       method: 'Application.GetProperties',
       params: '{"properties":["name","version"]}',
-      format: function (m, c) {
+      format: function (m) {
         return m.name + ' ' + m.version.major + '.' + m.version.minor + (m.version.tag === 'releasecandidate' ? ' RC ' + m.version.tagversion : '') + ' (rev. ' + m.version.revision + ')';
       }
     }, {
@@ -68,18 +81,17 @@
       name: 'debug <js object>',
       regex: /^debug\s+(.+)/i,
       format: function (m, c) {
-        return '#DEBUG\n' + JSON.stringify(eval(m.replace(c.regex, '$1')), null, 2);
+        var v = m.replace(c.regex, '$1');
+        return '#DEBUG ' + v + ' =\n' + JSON.stringify(eval(m.replace(c.regex, '$1')), null, 2);
       }
     }],
     lastMessageTime = 0;
 
   function q(v) {
-    // console.log('Promise: ' + v);
     return Promise.resolve(v);
   }
 
   function r(v) {
-    // console.log('Reject: ' + v);
     return Promise.reject(v);
   }
 
@@ -154,7 +166,6 @@
   }
 
   function talkToKodi(message) {
-
     var command; // current command
 
     function checkMessage(m) {
@@ -200,40 +211,24 @@
     }
 
     function parseKodiCommand(message) {
-
-      function makeHelpText() {
-        var result = 'I understand the following commmands:';
-        ktalkCommands.forEach(function (c) {
-          if (typeof c.description !== 'undefined') {
-            result += '\n\n‣ ' + c.name + ' — ' + c.description;
-          }
-        });
-        return result;
-      }
-
-      if (/^(help)/i.test(message)) {
-        // print help message
-        ktalkMessages.addMessage(makeMessageProps(makeHelpText(), 'received'));
-        return r(''); // silent error
-      }
       var request;
-      ktalkCommands.forEach(function (c) {
-        if (typeof request !== 'undefined') {
-          return;
-        }
+      ktalkCommands.some(function (c) {
         if (c.regex.test(message)) {
           request = {
             method: parseProperty(message, c, 'method'),
             params: parseProperty(message, c, 'params', true)
           };
-          command = {};
-          command.name = c.name;
-          command.description = c.description;
-          command.regex = c.regex;
-          command.method = request.method;
-          command.params = request.params;
-          command.format = (typeof request.method === 'undefined') ? parseProperty(message, c, 'format') : c.format;
+          command = {
+            name: c.name,
+            description: c.description,
+            regex: c.regex,
+            method: request.method,
+            params: request.params,
+            format: (typeof request.method === 'undefined') ? parseProperty(message, c, 'format') : c.format
+          };
+          return true;
         }
+        return false;
       });
       if (typeof request !== 'undefined') {
         return request;
@@ -300,13 +295,11 @@
 
   function addSampleKodiTalk() {
     var st = [
-      'ping',
       'help',
-      'exec JSONRPC.Version {}',
-      'exec Application.GetProperties {"properties":["name","version"]}',
+      'ping',
+      'version',
       'hello'
     ];
-
     // Send messages in a sequential manner
     st.reduce(function (p, c) {
       return p.then(function () {
