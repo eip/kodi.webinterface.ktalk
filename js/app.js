@@ -25,7 +25,7 @@
     ktalkAvaSent = 'img/i-form-name-ios-114x114.png',
     ktalkCommands = [{
       name: 'help',
-      description: 'get the list of commands I understand',
+      description: 'get the list of commands I understand.',
       regex: /^(help)/i,
       format: function () {
         var result = 'I understand the following commmands:';
@@ -38,7 +38,7 @@
       }
     }, {
       name: 'play <url>',
-      description: 'start playing the given URL. For example,\n"play http://www.sample-videos.com/video/mp4/720/big_buck_bunny_720p_50mb.mp4",\n"play https://youtu.be/YE7VzlLtp-4",\nor simply "https://youtu.be/YE7VzlLtp-4"',
+      description: 'start playing the given URL. For example,\n"play http://www.sample-videos.com/video/mp4/720/big_buck_bunny_720p_50mb.mp4",\n"play https://youtu.be/YE7VzlLtp-4",\nor simply "https://youtu.be/YE7VzlLtp-4".',
       regex: /^(?:play)?\s*((?:https?|plugin):\/\/.+)/i,
       method: 'Player.Open',
       params: function (m, c) {
@@ -46,13 +46,13 @@
       }
     }, {
       name: 'ping',
-      description: 'check the availability of the Kodi web server',
+      description: 'check the availability of the Kodi web server.',
       regex: /^(ping)/i,
       method: 'JSONRPC.Ping',
       params: '{}'
     }, {
       name: 'version',
-      description: 'get the Kodi version',
+      description: 'get the Kodi version.',
       regex: /^(version)/i,
       method: 'Application.GetProperties',
       params: '{"properties":["name","version"]}',
@@ -61,19 +61,42 @@
       }
     }, {
       name: 'home',
-      description: 'show the home screen',
+      description: 'show the home screen.',
       regex: /^(home)/i,
       method: 'GUI.ActivateWindow',
       params: '{"window":"home"}'
     }, {
       name: 'weather',
-      description: 'show the weather screen',
+      description: 'show the weather screen.',
       regex: /^(weather)/i,
       method: 'GUI.ActivateWindow',
       params: '{"window":"weather"}'
     }, {
+      name: 'tv',
+      description: 'get the list of TV channels. You can add a string to filter the channels by name, for example, "tv discovery". For sorting the list by number, use "tv#" command.',
+      regex: /^(tv#?)(?:$|\s+(.*)$)/i,
+      method: 'PVR.GetChannels',
+      params: '{"channelgroupid":"alltv"}',
+      format: function (m, c) {
+        var filter = c.message.replace(c.regex, '$2').toLowerCase(),
+          sortById = (c.message.replace(c.regex, '$1').indexOf('#') >= 0),
+          result = '';
+        m.channels.sort(function (a, b) {
+          if (sortById) {
+            return a.channelid - b.channelid;
+          }
+          return a.label.localeCompare(b.label);
+        });
+        m.channels.forEach(function (ch) {
+          if (ch.label.toLowerCase().indexOf(filter) >= 0) {
+            result += ch.channelid + ': ' + ch.label + '\n';
+          }
+        });
+        return result;
+      }
+    }, {
       name: 'exec <method> <params>',
-      description: 'for geeks only: execute the JSON-RPC <method> with <params>. For example,\n"exec GUI.ActivateWindow {"window":"home"}"',
+      description: 'for geeks only: execute the JSON-RPC <method> with <params>. For example,\n"exec GUI.ActivateWindow {"window":"home"}".',
       regex: /^exec\s+([\w\.]+)\s+(\S+)/i,
       method: '$1',
       params: '$2'
@@ -219,6 +242,7 @@
             params: parseProperty(message, c, 'params', true)
           };
           command = {
+            message: message,
             name: c.name,
             description: c.description,
             regex: c.regex,
