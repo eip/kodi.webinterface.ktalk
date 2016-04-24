@@ -110,6 +110,7 @@
     var command; // current command
 
     function checkMessage(m) {
+      ktalkBusy = true;
       m = m.trim();
       if (m.length > 0) {
         return q(m);
@@ -121,6 +122,8 @@
     function addQuestionMessage(m) {
       if (!silent) {
         ktalkMessages.addMessage(makeMessageProps(m, 'sent'));
+      } else {
+        window.console.debug('Silent command: ' + m);
       }
       return m;
     }
@@ -186,7 +189,11 @@
       } else {
         result = 'OK, the answer is:\n\n' + formatJson(m);
       }
-      return ktalkQueue.length ? '' : result;
+      if (ktalkQueue.length) {
+        window.console.debug('Silent answer: ' + (result || '<empty>') + ' (command: ' + command.message + ')');
+        return '';
+      }
+      return result;
     }
 
     function formatErrorMessage(m) {
@@ -225,24 +232,25 @@
       return addReceivedMessage(message, formatErrorMessage, 'error');
     }
 
-    ktalkBusy = true;
+    function queuedCommand() {
+      var command = ktalkQueue.shift();
+      if (command) {
+        return new Promise(function (resolve, reject) {
+          setTimeout(resolve, 100);
+        }).then(function () {
+          talkToKodi(command, true);
+        });
+      }
+      ktalkBusy = false;
+      return 'Finished.';
+    }
+
     return checkMessage(message)
       .then(addQuestionMessage)
       .then(parseKodiCommand)
       .then(window.kodi.call)
       .then(addAnswerMessage, addErrorMessage)
-      .then(function () {
-        var command = ktalkQueue.shift();
-        if (command) {
-          return new Promise(function (resolve, reject) {
-            setTimeout(function () {
-              resolve(talkToKodi(command, true));
-            }, 100);
-          });
-        }
-        ktalkBusy = false;
-        return 'End.';
-      });
+      .then(queuedCommand);
   }
 
   function addInfoMessages(msg) {
@@ -320,20 +328,20 @@
     description: 'start playing the given URL. For example,\n"play http://www.sample-videos.com/video/mp4/720/big_buck_bunny_720p_50mb.mp4",\n"play https://youtu.be/YE7VzlLtp-4",\nor simply "https://youtu.be/YE7VzlLtp-4".',
     regex: /^(?:play)?\s*((?:https?|plugin):\/\/.+)/i,
     format: function (m, c) {
-      var params = '{"item":{"file":"' + transformPlayerUri(c.message.replace(c.regex, '$1')) + '"}}';
+      var file = transformPlayerUri(c.message.replace(c.regex, '$1'));
       ktalkQueue.push('stop');
-      ktalkQueue.push('exec Player.Open ' + params);
-      return '';
+      ktalkQueue.push('exec Player.Open {"item":{"file":"' + file + '"}}');
+      return 'Start playing URL: ' + file;
     }
   }, {
     name: 'play tv <channel>',
     description: 'start playing the given TV channel. For example, "play tv 1".\nUse "tv" command to get the list of TV channels.',
     regex: /^play\s+tv\s+(\d+)$/i,
     format: function (m, c) {
-      var params = '{"item":{"channelid":' + transformPlayerUri(c.message.replace(c.regex, '$1')) + '}}';
+      var id = c.message.replace(c.regex, '$1');
       ktalkQueue.push('stop');
-      ktalkQueue.push('exec Player.Open ' + params);
-      return '';
+      ktalkQueue.push('exec Player.Open {"item":{"channelid":' + id + '}}');
+      return 'Start playing TV channel #' + id;
     }
   }, {
     name: 'stop',
@@ -345,7 +353,7 @@
       m.forEach(function (o) {
         ktalkQueue.unshift('exec Player.Stop {"playerid":' + o.playerid + '}');
       });
-      return m.length === 0 ? 'There is no active players.' : '';
+      return m.length === 0 ? 'There is no active players.' : 'Stopping ' + m.length + ' player(s)';
     }
   }, {
     name: 'ping',
