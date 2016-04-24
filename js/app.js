@@ -190,6 +190,12 @@
         result = 'OK, the answer is:\n\n' + formatJson(m);
       }
       if (ktalkQueue.length) {
+        if (typeof result === 'object' && typeof result.then === 'function') {
+          return result.then(function (m) {
+            window.console.debug('Silent answer: ' + (m || '<empty>') + ' (command: ' + command.message + ')');
+            return '';
+          });
+        }
         window.console.debug('Silent answer: ' + (result || '<empty>') + ' (command: ' + command.message + ')');
         return '';
       }
@@ -268,11 +274,7 @@
 
   function addSampleKodiTalk() {
     var st = [
-      'help',
-      'ping',
-      'version',
-      'hello'
-//    'https://youtu.be/YE7VzlLtp-4'
+      'version'
     ];
     // Send messages in a sequential manner
     return st.reduce(function (p, c) {
@@ -331,6 +333,8 @@
       var file = transformPlayerUri(c.message.replace(c.regex, '$1'));
       ktalkQueue.push('stop');
       ktalkQueue.push('exec Player.Open {"item":{"file":"' + file + '"}}');
+      ktalkQueue.push('delay 1000');
+      ktalkQueue.push('what\'s up');
       return 'Start playing URL: ' + file;
     }
   }, {
@@ -341,11 +345,13 @@
       var id = c.message.replace(c.regex, '$1');
       ktalkQueue.push('stop');
       ktalkQueue.push('exec Player.Open {"item":{"channelid":' + id + '}}');
+      ktalkQueue.push('delay 1000');
+      ktalkQueue.push('what\'s up');
       return 'Start playing TV channel #' + id;
     }
   }, {
     name: 'stop',
-    description: 'Stop playback.',
+    description: 'stop playback.',
     regex: /^(stop)/i,
     method: 'Player.GetActivePlayers',
     params: '{}',
@@ -354,6 +360,28 @@
         ktalkQueue.unshift('exec Player.Stop {"playerid":' + o.playerid + '}');
       });
       return m.length === 0 ? 'There is no active players.' : 'Stopping ' + m.length + ' player(s)';
+    }
+  }, {
+    name: 'what\'s up',
+    description: 'check what Kodi is doing now.',
+    regex: /^(w(?:hat's\s+|ass|azz)up)/i,
+    method: 'Player.GetActivePlayers',
+    params: '{}',
+    format: function (m) {
+      m.forEach(function (o) {
+        ktalkQueue.push('player.getitem ' + o.playerid);
+      });
+      return m.length === 0 ? 'Nothing is playing now.' : 'Checking state of ' + m.length + ' player(s)';
+    }
+  }, {
+    name: 'player.getitem',
+    regex: /^(player\.getitem)\s+(\d+)$/i,
+    method: 'Player.GetItem',
+    params: '{"playerid":$2,"properties":["artist","channeltype"]}',
+    format: function (m) {
+      return 'Playing' + (m.item.type && m.item.type !== 'unknown' ? (m.item.type === 'channel' ? ' ' + m.item.channeltype.toUpperCase() : '') + ' ' + m.item.type : '') + ': ' +
+        (m.item.artist && m.item.artist.length ? m.item.artist.join(', ') + ' — ' : '') + m.item.label +
+        (m.item.type === 'channel' ? ' (#' + m.item.id + ')' : '') + '...';
     }
   }, {
     name: 'ping',
@@ -412,16 +440,27 @@
     method: '$1',
     params: '$2'
   }, {
-    name: 'debug <js object>',
-    regex: /^debug\s+(.+)/i,
+    name: 'delay',
+    regex: /^(delay)\s+(\d+)$/i,
     format: function (m, c) {
-      var val = c.message.replace(c.regex, '$1');
+      var ms = c.message.replace(c.regex, '$2');
+      return new Promise(function (resolve, reject) {
+        setTimeout(function () {
+          resolve('Waiting ' + ms + ' ms.');
+        }, ms);
+      });
+    }
+  }, {
+    name: 'debug <js object>',
+    regex: /^(debug)\s+(.+)$/i,
+    format: function (m, c) {
+      var val = c.message.replace(c.regex, '$2');
       return '# ' + val + ' =\n' + JSON.stringify(eval(val), null, 2);
     }
   }];
 
   addGreeting();
-  // addSampleKodiTalk();
+  addSampleKodiTalk();
   if (!ktalkApp.device.os) {
     setTimeout(function () {
       $$('.messagebar textarea').focus();
