@@ -283,18 +283,27 @@
       return m.toString().trim();
     }
 
-    function addAnswerMessage(m) {
-      m = formatAnswerMessage(m);
-      ktalkMessages.addMessage(makeMessageProps(m, 'received'));
-      return m;
+    function addReceivedMessage(message, format, className) {
+      return q(message).then(format).then(function (message) {
+        if (message.length === 0) {
+          return null;
+        }
+        var elm = ktalkMessages.addMessage(makeMessageProps(message, 'received'));
+        if (message.indexOf('#') === 0) {
+          elm.classList.add('debug');
+        } else if (className) {
+          elm.classList.add(className);
+        }
+        return elm;
+      });
     }
 
-    function addErrorMessage(m) {
-      m = formatErrorMessage(m);
-      if (m.length > 0) {
-        ktalkMessages.addMessage(makeMessageProps(m, 'received')).classList.add(m.indexOf('#') === 0 ? 'debug' : 'error');
-      }
-      return m;
+    function addAnswerMessage(message) {
+      return addReceivedMessage(message, formatAnswerMessage);
+    }
+
+    function addErrorMessage(message) {
+      return addReceivedMessage(message, formatErrorMessage, 'error');
     }
 
     return checkMessage(message)
