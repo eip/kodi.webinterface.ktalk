@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <addon
   id="plugin.webinterface.ktalk"
-  version="0.1.3"
+  version="0.1.4"
   name="Kodi Talk"
   provider-name="eip">
   <requires>

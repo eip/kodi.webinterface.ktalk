@@ -236,7 +236,6 @@
         if (command) {
           return new Promise(function (resolve, reject) {
             setTimeout(function () {
-              // console.log('Next command in queue: ' + command);
               resolve(talkToKodi(command, true));
             }, 100);
           });
@@ -265,7 +264,7 @@
       'ping',
       'version',
       'hello'
-//      'https://youtu.be/YE7VzlLtp-4'
+//    'https://youtu.be/YE7VzlLtp-4'
     ];
     // Send messages in a sequential manner
     return st.reduce(function (p, c) {
