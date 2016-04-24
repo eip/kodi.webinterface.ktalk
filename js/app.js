@@ -132,9 +132,6 @@
       }
       if (typeof command[propName] === 'function') {
         result = command[propName](message, command);
-        if (typeof result === 'object' && !toJson) {
-          return JSON.stringify(result);
-        }
         if (typeof result !== 'object' && toJson) {
           return JSON.parse(result);
         }
@@ -183,7 +180,7 @@
     function formatAnswerMessage(m) {
       var result;
       if (typeof command.format !== 'undefined') {
-        result = parseProperty(m, command, 'format', true);
+        result = parseProperty(m, command, 'format');
       } else if (typeof m === 'string') {
         result = m + '!';
       } else {
@@ -317,7 +314,7 @@
           result += '\n\n‣ ' + c.name + ' — ' + c.description;
         }
       });
-      return q(result);
+      return result;
     }
   }, {
     name: 'play <url>',
@@ -332,7 +329,22 @@
         ktalkQueue.push('exec Player.Stop {"playerid":' + o.playerid + '}');
       });
       ktalkQueue.push('exec Player.Open ' + params);
-      return q('');
+      return '';
+    }
+  }, {
+    name: 'play tv <channel>',
+    description: 'start playing the given TV channel. For example, "play tv 1".\nUse "tv" command to get the list of TV channels.',
+    regex: /^play\s+tv\s+(\d+)$/i,
+    method: 'Player.GetActivePlayers',
+    params: '{}',
+    format: function (m, c) {
+      var params = '{"item":{"channelid":' + transformPlayerUri(c.message.replace(c.regex, '$1')) + '}}';
+
+      m.forEach(function (o) {
+        ktalkQueue.push('exec Player.Stop {"playerid":' + o.playerid + '}');
+      });
+      ktalkQueue.push('exec Player.Open ' + params);
+      return '';
     }
   }, {
     name: 'stop',
@@ -344,7 +356,7 @@
       m.forEach(function (o) {
         ktalkQueue.push('exec Player.Stop {"playerid":' + o.playerid + '}');
       });
-      return q(m.length === 0 ? 'There is no active players.' : '');
+      return m.length === 0 ? 'There is no active players.' : '';
     }
   }, {
     name: 'ping',
@@ -359,7 +371,7 @@
     method: 'Application.GetProperties',
     params: '{"properties":["name","version"]}',
     format: function (m) {
-      return q(m.name + ' ' + m.version.major + '.' + m.version.minor + (m.version.tag === 'releasecandidate' ? ' RC ' + m.version.tagversion : '') + ' (rev. ' + m.version.revision + ')');
+      return m.name + ' ' + m.version.major + '.' + m.version.minor + (m.version.tag === 'releasecandidate' ? ' RC ' + m.version.tagversion : '') + ' (rev. ' + m.version.revision + ')';
     }
   }, {
     name: 'home',
@@ -394,7 +406,7 @@
           result += ch.channelid + ': ' + ch.label + '\n';
         }
       });
-      return q(result);
+      return result;
     }
   }, {
     name: 'exec <method> <params>',
@@ -407,12 +419,12 @@
     regex: /^debug\s+(.+)/i,
     format: function (m, c) {
       var val = c.message.replace(c.regex, '$1');
-      return q('# ' + val + ' =\n' + JSON.stringify(eval(val), null, 2));
+      return '# ' + val + ' =\n' + JSON.stringify(eval(val), null, 2);
     }
   }];
 
   addGreeting();
-  addSampleKodiTalk();
+  // addSampleKodiTalk();
   if (!ktalkApp.device.os) {
     setTimeout(function () {
       $$('.messagebar textarea').focus();
