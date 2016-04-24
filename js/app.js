@@ -104,8 +104,8 @@
       name: 'debug <js object>',
       regex: /^debug\s+(.+)/i,
       format: function (m, c) {
-        var v = m.replace(c.regex, '$1');
-        return '#DEBUG ' + v + ' =\n' + JSON.stringify(eval(m.replace(c.regex, '$1')), null, 2);
+        var val = c.message.replace(c.regex, '$1');
+        return '# ' + val + ' =\n' + JSON.stringify(eval(val), null, 2);
       }
     }],
     lastMessageTime = 0;
@@ -248,7 +248,7 @@
             regex: c.regex,
             method: request.method,
             params: request.params,
-            format: (typeof request.method === 'undefined') ? parseProperty(message, c, 'format') : c.format
+            format: c.format
           };
           return true;
         }
