@@ -26,13 +26,13 @@
 
     function parseResult(r) {
       if (!r.error) {
-        return Promise.resolve(r.result);
+        return r.result;
       }
       return Promise.reject(r.error);
     }
 
     if (typeof params === 'undefined' || typeof params.method === 'undefined') {
-      return;
+      return '';
     }
     return window.fetch(window.kodi.url, makeRequest(params))
       .then(toJson)

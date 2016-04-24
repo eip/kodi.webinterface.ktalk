@@ -24,6 +24,8 @@
     ktalkAvaRecv = 'img/apple-touch-icon-114x114.png',
     ktalkAvaSent = 'img/i-form-name-ios-114x114.png',
     ktalkCommands = [],
+    ktalkQueue = [],
+    ktalkBusy = false,
     lastMessageTime = 0;
 
   function q(v) {
@@ -179,13 +181,15 @@
     }
 
     function formatAnswerMessage(m) {
+      var result;
       if (typeof command.format !== 'undefined') {
-        return parseProperty(m, command, 'format', true);
+        result = parseProperty(m, command, 'format', true);
+      } else if (typeof m === 'string') {
+        result = m + '!';
+      } else {
+        result = 'OK, the answer is:\n\n' + formatJson(m);
       }
-      if (typeof m === 'string') {
-        return m + '!';
-      }
-      return 'OK, the answer is:\n\n' + formatJson(m);
+      return ktalkQueue.length ? '' : result;
     }
 
     function formatErrorMessage(m) {
@@ -224,11 +228,25 @@
       return addReceivedMessage(message, formatErrorMessage, 'error');
     }
 
+    ktalkBusy = true;
     return checkMessage(message)
       .then(addQuestionMessage)
       .then(parseKodiCommand)
       .then(window.kodi.call)
-      .then(addAnswerMessage, addErrorMessage);
+      .then(addAnswerMessage, addErrorMessage)
+      .then(function () {
+        var command = ktalkQueue.shift();
+        if (command) {
+          return new Promise(function (resolve, reject) {
+            setTimeout(function () {
+              // console.log('Next command in queue: ' + command);
+              resolve(talkToKodi(command, true));
+            }, 100);
+          });
+        }
+        ktalkBusy = false;
+        return 'End.';
+      });
   }
 
   function addInfoMessages(msg) {
@@ -250,6 +268,7 @@
       'ping',
       'version',
       'hello'
+//      'https://youtu.be/YE7VzlLtp-4'
     ];
     // Send messages in a sequential manner
     return st.reduce(function (p, c) {
@@ -260,6 +279,10 @@
   }
 
   function sendMessage() {
+    if (ktalkBusy) {
+      setTimeout(sendMessage, 300);
+      return;
+    }
     talkToKodi(ktalkMessagebar.value());
     ktalkMessagebar.clear();
   }
@@ -300,9 +323,16 @@
     name: 'play <url>',
     description: 'start playing the given URL. For example,\n"play http://www.sample-videos.com/video/mp4/720/big_buck_bunny_720p_50mb.mp4",\n"play https://youtu.be/YE7VzlLtp-4",\nor simply "https://youtu.be/YE7VzlLtp-4".',
     regex: /^(?:play)?\s*((?:https?|plugin):\/\/.+)/i,
-    method: 'Player.Open',
-    params: function (m, c) {
-      return '{"item":{"file":"' + transformPlayerUri(m.replace(c.regex, '$1')) + '"}}';
+    method: 'Player.GetActivePlayers',
+    params: '{}',
+    format: function (m, c) {
+      var params = '{"item":{"file":"' + transformPlayerUri(c.message.replace(c.regex, '$1')) + '"}}';
+
+      m.forEach(function (o) {
+        ktalkQueue.push('exec Player.Stop {"playerid":' + o.playerid + '}');
+      });
+      ktalkQueue.push('exec Player.Open ' + params);
+      return q('');
     }
   }, {
     name: 'stop',
@@ -311,16 +341,10 @@
     method: 'Player.GetActivePlayers',
     params: '{}',
     format: function (m) {
-      m = m.map(function (o) {
-        return o.playerid;
+      m.forEach(function (o) {
+        ktalkQueue.push('exec Player.Stop {"playerid":' + o.playerid + '}');
       });
-
-      // Send messages in a sequential manner
-      return m.reduce(function (p, id) {
-        return p.then(function () {
-          return talkToKodi('exec Player.Stop {"playerid":' + id + '}', true);
-        });
-      }, q('There are no active player.'));
+      return q(m.length === 0 ? 'There is no active players.' : '');
     }
   }, {
     name: 'ping',
@@ -388,8 +412,7 @@
   }];
 
   addGreeting();
-  // addInfoMessages([formatJson(ktalkApp.device)]);
-  // addSampleKodiTalk();
+  addSampleKodiTalk();
   if (!ktalkApp.device.os) {
     setTimeout(function () {
       $$('.messagebar textarea').focus();
