@@ -320,14 +320,9 @@
     name: 'play <url>',
     description: 'start playing the given URL. For example,\n"play http://www.sample-videos.com/video/mp4/720/big_buck_bunny_720p_50mb.mp4",\n"play https://youtu.be/YE7VzlLtp-4",\nor simply "https://youtu.be/YE7VzlLtp-4".',
     regex: /^(?:play)?\s*((?:https?|plugin):\/\/.+)/i,
-    method: 'Player.GetActivePlayers',
-    params: '{}',
     format: function (m, c) {
       var params = '{"item":{"file":"' + transformPlayerUri(c.message.replace(c.regex, '$1')) + '"}}';
-
-      m.forEach(function (o) {
-        ktalkQueue.push('exec Player.Stop {"playerid":' + o.playerid + '}');
-      });
+      ktalkQueue.push('stop');
       ktalkQueue.push('exec Player.Open ' + params);
       return '';
     }
@@ -335,14 +330,9 @@
     name: 'play tv <channel>',
     description: 'start playing the given TV channel. For example, "play tv 1".\nUse "tv" command to get the list of TV channels.',
     regex: /^play\s+tv\s+(\d+)$/i,
-    method: 'Player.GetActivePlayers',
-    params: '{}',
     format: function (m, c) {
       var params = '{"item":{"channelid":' + transformPlayerUri(c.message.replace(c.regex, '$1')) + '}}';
-
-      m.forEach(function (o) {
-        ktalkQueue.push('exec Player.Stop {"playerid":' + o.playerid + '}');
-      });
+      ktalkQueue.push('stop');
       ktalkQueue.push('exec Player.Open ' + params);
       return '';
     }
@@ -354,7 +344,7 @@
     params: '{}',
     format: function (m) {
       m.forEach(function (o) {
-        ktalkQueue.push('exec Player.Stop {"playerid":' + o.playerid + '}');
+        ktalkQueue.unshift('exec Player.Stop {"playerid":' + o.playerid + '}');
       });
       return m.length === 0 ? 'There is no active players.' : '';
     }
