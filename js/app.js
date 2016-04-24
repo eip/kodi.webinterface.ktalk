@@ -384,33 +384,6 @@
         (m.item.type === 'channel' ? ' (#' + m.item.id + ')' : '') + '...';
     }
   }, {
-    name: 'ping',
-    description: 'check the availability of the Kodi web server.',
-    regex: /^(ping)/i,
-    method: 'JSONRPC.Ping',
-    params: '{}'
-  }, {
-    name: 'version',
-    description: 'get the Kodi version.',
-    regex: /^(version)/i,
-    method: 'Application.GetProperties',
-    params: '{"properties":["name","version"]}',
-    format: function (m) {
-      return m.name + ' ' + m.version.major + '.' + m.version.minor + (m.version.tag === 'releasecandidate' ? ' RC ' + m.version.tagversion : '') + ' (rev. ' + m.version.revision + ')';
-    }
-  }, {
-    name: 'home',
-    description: 'show the home screen.',
-    regex: /^(home)/i,
-    method: 'GUI.ActivateWindow',
-    params: '{"window":"home"}'
-  }, {
-    name: 'weather',
-    description: 'show the weather screen.',
-    regex: /^(weather)/i,
-    method: 'GUI.ActivateWindow',
-    params: '{"window":"weather"}'
-  }, {
     name: 'tv',
     description: 'get the list of TV channels. You can add a string to filter the channels by name, for example, "tv discovery". For sorting the list by number, use "tv#" command.',
     regex: /^(tv#?)(?:$|\s+(.*)$)/i,
@@ -433,6 +406,33 @@
       });
       return result;
     }
+  }, {
+    name: 'home',
+    description: 'show the home screen.',
+    regex: /^(home)/i,
+    method: 'GUI.ActivateWindow',
+    params: '{"window":"home"}'
+  }, {
+    name: 'weather',
+    description: 'show the weather screen.',
+    regex: /^(weather)/i,
+    method: 'GUI.ActivateWindow',
+    params: '{"window":"weather"}'
+  }, {
+    name: 'version',
+    description: 'get the Kodi version.',
+    regex: /^(version)/i,
+    method: 'Application.GetProperties',
+    params: '{"properties":["name","version"]}',
+    format: function (m) {
+      return m.name + ' ' + m.version.major + '.' + m.version.minor + (m.version.tag === 'releasecandidate' ? ' RC ' + m.version.tagversion : '') + ' (rev. ' + m.version.revision + ')';
+    }
+  }, {
+    name: 'ping',
+    description: 'check the availability of the Kodi web server.',
+    regex: /^(ping)/i,
+    method: 'JSONRPC.Ping',
+    params: '{}'
   }, {
     name: 'exec <method> <params>',
     description: 'for geeks only: execute the JSON-RPC <method> with <params>. For example,\n"exec GUI.ActivateWindow {"window":"home"}".',
