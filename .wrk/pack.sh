@@ -11,7 +11,7 @@ cd ../../
 ls -la
 rm webinterface.ktalk*.zip 2> /dev/null
 rm webinterface.ktalk/webinterface.ktalk*.zip 2> /dev/null
-zip -r webinterface.ktalk.zip webinterface.ktalk/* -x "*/.*" "*/*.app/*" "*/*.zip" "*/screenshot.*"
+zip -r webinterface.ktalk.zip webinterface.ktalk/* -x "*/.*" "*/*.app/*" "*/*.zip" "*/screenshot.*" "*/*.map" "*/js/framework7.js*"
 ADDON_VER=`cat webinterface.ktalk/addon.xml | grep "^\s*version=" | grep -o "[0-9\.]\+"`
 mv webinterface.ktalk.zip webinterface.ktalk/webinterface.ktalk-${ADDON_VER}.zip
 popd  > /dev/null
