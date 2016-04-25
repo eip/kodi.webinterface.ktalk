@@ -349,7 +349,11 @@
 
   // Global ajax options
   $$.ajaxSetup({
-    contentType: 'application/json'
+    contentType: 'application/json',
+    processData: false,
+    headers: {
+      'Content-Type': 'application/json'
+    }
   });
 
   // Fix for missing iPhone status bar in landscape mode
