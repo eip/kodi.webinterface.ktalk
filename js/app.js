@@ -21,6 +21,7 @@
       autoLayout: true
     }),
     ktalkMessagebar = ktalkApp.messagebar('.messagebar'),
+    ktalkJsonRpcUrl = '/jsonrpc',
     ktalkAvaRecv = 'img/apple-touch-icon-114x114.png',
     ktalkAvaSent = 'img/i-form-name-ios-114x114.png',
     ktalkCommands = [],
@@ -180,6 +181,43 @@
       return r('Sorry, I can\'t understand you. I will learn more commands soon.');
     }
 
+    function callJsonRpcMethod(params) {
+
+      function makeRequestBody(b) {
+        return JSON.stringify({
+          id: b.id || 1,
+          jsonrpc: b.jsonrpc || '2.0',
+          method: b.method,
+          params: b.params || {}
+        });
+      }
+
+      function parseResult(r) {
+        if (!r.error) {
+          return r.result;
+        }
+        return Promise.reject(r.error);
+      }
+
+      if (typeof params === 'undefined' || typeof params.method === 'undefined') {
+        return '';
+      }
+      return new Promise(function (resolve, reject) {
+        $$.ajax({
+          url: ktalkJsonRpcUrl,
+          method: 'POST',
+          data: makeRequestBody(params),
+          success: resolve,
+          error: function (xhr, status) {
+            reject({
+              code: status.toString(),
+              message: 'Failed to complete JSON-RPC request to the Kodi server.'
+            });
+          }
+        });
+      }).then(JSON.parse).then(parseResult);
+    }
+
     function formatAnswerMessage(m) {
       var result;
       if (typeof command.format !== 'undefined') {
@@ -254,7 +292,7 @@
     return checkMessage(message)
       .then(addQuestionMessage)
       .then(parseKodiCommand)
-      .then(window.kodi.call)
+      .then(callJsonRpcMethod)
       .then(addAnswerMessage)
       .then(q, addErrorMessage) // JSLint friendly instead of .catch()
       .then(queuedCommand);
@@ -293,6 +331,16 @@
     talkToKodi(ktalkMessagebar.value());
     ktalkMessagebar.clear();
   }
+
+  if (window.location.protocol.indexOf('http') === -1) {
+    ktalkJsonRpcUrl = 'http://192.168.237.9:8080' + ktalkJsonRpcUrl;
+    window.console.warn(window.location.protocol + '// connection. Using test server: ' + ktalkJsonRpcUrl);
+  }
+
+  // Global ajax options
+  $$.ajaxSetup({
+    contentType: 'application/json'
+  });
 
   // Fix for missing iPhone status bar in landscape mode
   ktalkApp.device.statusBar = false;
