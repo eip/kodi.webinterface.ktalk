@@ -538,12 +538,12 @@
     method: 'JSONRPC.Ping',
     params: '{}'
   }, {
-    name: 'say',
+    name: 'say <message>',
     description: 'display the message on the Kodi screen.',
     regex: /^(say)\s+([\S\s]+?)\s*$/i,
     method: 'GUI.ShowNotification',
     params: function (m, c) {
-      return '{"title":"Kodi Talk bot","message":' + JSON.stringify(m.replace(c.regex, '$2')) + '}';
+      return '{"title":"Kodi Talk","message":' + JSON.stringify(m.replace(c.regex, '$2')) + '}';
     }
   }, {
     name: 'exec <method> <params>',
@@ -578,7 +578,7 @@
       return ktalkQueue.answers.join(d);
     }
   }, {
-    name: 'debug <js object>',
+    name: 'debug <js expression>',
     regex: /^(debug)\s+(.+)$/i,
     handleResponse: function (m, c) {
       var val = c.message.replace(c.regex, '$2');
