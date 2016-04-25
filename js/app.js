@@ -172,7 +172,7 @@
             regex: c.regex,
             method: request.method,
             params: request.params,
-            format: c.format
+            handleResponse: c.handleResponse
           };
           return true;
         }
@@ -223,8 +223,8 @@
 
     function formatAnswerMessage(m) {
       var result;
-      if (typeof command.format !== 'undefined') {
-        result = parseProperty(m, command, 'format');
+      if (typeof command.handleResponse !== 'undefined') {
+        result = parseProperty(m, command, 'handleResponse');
       } else if (typeof m === 'string') {
         result = m + '!';
       } else {
@@ -375,7 +375,7 @@
     name: 'help',
     description: 'get the list of commands I understand.',
     regex: /^(help)\s*[\.!\?]*$/i,
-    format: function () {
+    handleResponse: function () {
       var result = 'I understand the following commmands:';
       ktalkCommands.forEach(function (c) {
         if (typeof c.description !== 'undefined') {
@@ -388,7 +388,7 @@
     name: 'play <url>',
     description: 'start playing the given URL. For example,\n"play http://www.sample-videos.com/video/mp4/720/big_buck_bunny_720p_50mb.mp4",\n"play https://youtu.be/YE7VzlLtp-4",\nor simply "https://youtu.be/YE7VzlLtp-4".',
     regex: /^(?:play)?\s*((?:https?|plugin):\/\/.+)$/i,
-    format: function (m, c) {
+    handleResponse: function (m, c) {
       var file = transformPlayerUri(c.message.replace(c.regex, '$1'));
       ktalkQueue.commands.push('stop');
       ktalkQueue.commands.push('exec Player.Open {"item":{"file":"' + file + '"}}');
@@ -401,7 +401,7 @@
     name: 'play tv <channel>',
     description: 'start playing the given TV channel. For example, "play tv 1".\nUse "tv" command to get the list of TV channels.',
     regex: /^play\s+tv\s+(\d+)\s*[\.!\?]*$/i,
-    format: function (m, c) {
+    handleResponse: function (m, c) {
       var id = c.message.replace(c.regex, '$1');
       ktalkQueue.commands.push('stop');
       ktalkQueue.commands.push('exec Player.Open {"item":{"channelid":' + id + '}}');
@@ -416,7 +416,7 @@
     regex: /^(stop)\s*[\.!\?]*$/i,
     method: 'Player.GetActivePlayers',
     params: '{}',
-    format: function (m) {
+    handleResponse: function (m) {
       m.forEach(function (o) {
         ktalkQueue.commands.unshift('exec Player.Stop {"playerid":' + o.playerid + '}');
       });
@@ -428,7 +428,7 @@
     regex: /^(w(?:hat's\s+|ass|azz)up)\s*[\.!\?]*$/i,
     method: 'Player.GetActivePlayers',
     params: '{}',
-    format: function (m) {
+    handleResponse: function (m) {
       m.forEach(function (o) {
         ktalkQueue.commands.push('player.getitem ' + o.playerid);
       });
@@ -440,7 +440,7 @@
     regex: /^(player\.getitem)\s+(\d+)$/i,
     method: 'Player.GetItem',
     params: '{"playerid":$2,"properties":["artist","channeltype"]}',
-    format: function (m) {
+    handleResponse: function (m) {
       return '‣' + (m.item.type && m.item.type !== 'unknown' ? (m.item.type === 'channel' ? ' ' + m.item.channeltype.toUpperCase() : '') + ' ' + m.item.type : '') + ': ' +
         (m.item.artist && m.item.artist.length ? m.item.artist.join(', ') + ' — ' : '') + m.item.label +
         (m.item.type === 'channel' ? ' (#' + m.item.id + ')' : '') + '...';
@@ -451,7 +451,7 @@
     regex: /^(tv#?)(?:$|\s+(.*)$)/i,
     method: 'PVR.GetChannels',
     params: '{"channelgroupid":"alltv"}',
-    format: function (m, c) {
+    handleResponse: function (m, c) {
       var filter = c.message.replace(c.regex, '$2').toLowerCase(),
         sortById = (c.message.replace(c.regex, '$1').indexOf('#') >= 0),
         result = '';
@@ -487,7 +487,7 @@
     regex: /^(sleep)\s+(\d+)\s*[\.!\?]*$/i,
     method: 'Addons.GetAddons',
     params: '{"type":"xbmc.addon.executable","enabled":true}',
-    format: function (m, c) {
+    handleResponse: function (m, c) {
       var i, time = Math.round(parseInt(c.message.replace(c.regex, '$2'), 10) / 10);
       time = time < 0 ? 0 : (time > 6 ? 6 : time);
       if (m.addons.some(function (a) {
@@ -518,7 +518,7 @@
     regex: /^(version)\s*[\.!\?]*$/i,
     method: 'Application.GetProperties',
     params: '{"properties":["name","version"]}',
-    format: function (m) {
+    handleResponse: function (m) {
       ktalkQueue.commands.push('version.addon plugin.webinterface.ktalk');
       ktalkQueue.commands.push('answers.join ' + JSON.stringify('\n'));
       return m.name + ' ' + m.version.major + '.' + m.version.minor + (m.version.tag === 'releasecandidate' ? ' RC ' + m.version.tagversion : '') + ' (rev. ' + m.version.revision + ')';
@@ -528,7 +528,7 @@
     regex: /^(version\.addon)\s+(.+)$/i,
     method: 'Addons.GetAddonDetails',
     params: '{"addonid":"$2","properties":["name","version"]}',
-    format: function (m) {
+    handleResponse: function (m) {
       return m.addon.name + ' addon ' + m.addon.version;
     }
   }, {
@@ -546,7 +546,7 @@
   }, {
     name: 'delay',
     regex: /^(delay)\s+(\d+)$/i,
-    format: function (m, c) {
+    handleResponse: function (m, c) {
       var ms = parseInt(c.message.replace(c.regex, '$2'), 10);
       return new Promise(function (resolve, reject) {
         setTimeout(function () {
@@ -557,14 +557,14 @@
   }, {
     name: 'answers.clear',
     regex: /^(answers\.clear)$/i,
-    format: function (m, c) {
+    handleResponse: function (m, c) {
       ktalkQueue.answers.length = 0;
       return '';
     }
   }, {
     name: 'answers.join',
     regex: /^(answers\.join)\s+(.+)$/i,
-    format: function (m, c) {
+    handleResponse: function (m, c) {
       var d = c.message.replace(c.regex, '$2');
       d = d.indexOf('\"') === 0 ? JSON.parse(d) : d;
       return ktalkQueue.answers.join(d);
@@ -572,7 +572,7 @@
   }, {
     name: 'debug <js object>',
     regex: /^(debug)\s+(.+)$/i,
-    format: function (m, c) {
+    handleResponse: function (m, c) {
       var val = c.message.replace(c.regex, '$2');
       return '# ' + val + ' =\n' + JSON.stringify(eval(val), null, 2);
     }
