@@ -426,7 +426,7 @@
     params: '{"addonid":"script.sleep"}',
     format: function (m, c) {
       var i, time = Math.round(parseInt(c.message.replace(c.regex, '$2'), 10) / 10);
-      time = time < 1 ? 1 : (time > 6 ? 6 : time);
+      time = time < 0 ? 0 : (time > 6 ? 6 : time);
       ktalkQueue.push('exec Addons.ExecuteAddon ' + JSON.stringify(c.params));
       ktalkQueue.push('delay 1500');
 
@@ -434,9 +434,11 @@
       for (i = 0; i < 7; ++i) {
         ktalkQueue.push('exec Input.Select {}');
       }
-      ktalkQueue.push('exec Input.Right {}');
-      for (i = 0; i < time; ++i) {
-        ktalkQueue.push('exec Input.Select {}');
+      if (time) {
+        ktalkQueue.push('exec Input.Right {}');
+        for (i = 0; i < time; ++i) {
+          ktalkQueue.push('exec Input.Select {}');
+        }
       }
       ktalkQueue.push('delay 1500');
       ktalkQueue.push('exec Input.Back {}');
