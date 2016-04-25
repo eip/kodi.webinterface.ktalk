@@ -233,13 +233,17 @@
       if (ktalkQueue.commands.length) {
         if (typeof result === 'object' && typeof result.then === 'function') {
           return result.then(function (m) {
-            window.console.debug('Silent answer: ' + (m || '<empty>') + ' (command: ' + command.message + ')');
-            ktalkQueue.answers.push(m);
+            // window.console.debug('Silent answer: ' + (m || '<empty>') + ' (command: ' + command.message + ')');
+            if (m) {
+              ktalkQueue.answers.push(m);
+            }
             return '';
           });
         }
-        window.console.debug('Silent answer: ' + (result || '<empty>') + ' (command: ' + command.message + ')');
-        ktalkQueue.answers.push(result);
+        // window.console.debug('Silent answer: ' + (result || '<empty>') + ' (command: ' + command.message + ')');
+        if (result) {
+          ktalkQueue.answers.push(result);
+        }
         return '';
       }
       return result;
@@ -290,7 +294,7 @@
           talkToKodi(command, true);
         });
       }
-      ktalkQueue.answers = [];
+      ktalkQueue.answers.length = 0;
       ktalkBusy = false;
       return 'Finished.';
     }
@@ -389,6 +393,7 @@
       ktalkQueue.commands.push('stop');
       ktalkQueue.commands.push('exec Player.Open {"item":{"file":"' + file + '"}}');
       ktalkQueue.commands.push('delay 1000');
+      ktalkQueue.commands.push('answers.clear');
       ktalkQueue.commands.push('what\'s up');
       return 'Start playing URL: ' + file;
     }
@@ -401,6 +406,7 @@
       ktalkQueue.commands.push('stop');
       ktalkQueue.commands.push('exec Player.Open {"item":{"channelid":' + id + '}}');
       ktalkQueue.commands.push('delay 1000');
+      ktalkQueue.commands.push('answers.clear');
       ktalkQueue.commands.push('what\'s up');
       return 'Start playing TV channel #' + id;
     }
@@ -426,7 +432,8 @@
       m.forEach(function (o) {
         ktalkQueue.commands.push('player.getitem ' + o.playerid);
       });
-      return m.length === 0 ? 'Nothing is playing now.' : 'Checking state of ' + m.length + ' player(s)';
+      ktalkQueue.commands.push('answers.join ' + JSON.stringify('\n'));
+      return m.length === 0 ? 'Nothing is playing now.' : 'Now playing:';
     }
   }, {
     name: 'player.getitem',
@@ -434,7 +441,7 @@
     method: 'Player.GetItem',
     params: '{"playerid":$2,"properties":["artist","channeltype"]}',
     format: function (m) {
-      return 'Playing' + (m.item.type && m.item.type !== 'unknown' ? (m.item.type === 'channel' ? ' ' + m.item.channeltype.toUpperCase() : '') + ' ' + m.item.type : '') + ': ' +
+      return '‣' + (m.item.type && m.item.type !== 'unknown' ? (m.item.type === 'channel' ? ' ' + m.item.channeltype.toUpperCase() : '') + ' ' + m.item.type : '') + ': ' +
         (m.item.artist && m.item.artist.length ? m.item.artist.join(', ') + ' — ' : '') + m.item.label +
         (m.item.type === 'channel' ? ' (#' + m.item.id + ')' : '') + '...';
     }
@@ -546,6 +553,13 @@
           resolve('Waiting ' + ms + ' ms.');
         }, ms);
       });
+    }
+  }, {
+    name: 'answers.clear',
+    regex: /^(answers\.clear)$/i,
+    format: function (m, c) {
+      ktalkQueue.answers.length = 0;
+      return '';
     }
   }, {
     name: 'answers.join',
