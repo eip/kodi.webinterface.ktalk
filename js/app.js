@@ -255,7 +255,8 @@
       .then(addQuestionMessage)
       .then(parseKodiCommand)
       .then(window.kodi.call)
-      .then(addAnswerMessage, addErrorMessage)
+      .then(addAnswerMessage)
+      .then(q, addErrorMessage) // JSLint friendly instead of .catch()
       .then(queuedCommand);
   }
 
@@ -419,30 +420,36 @@
     method: 'GUI.ActivateWindow',
     params: '{"window":"weather"}'
   }, {
+    // !!! requires script.sleep addon by robwebset http://kodi.wiki/view/Add-on:Sleep
     name: 'sleep <N>',
-    description: 'set Kodi to sleep after <N> minutes. Requires "A TV like sleep timer" addon.\nFor example, "sleep 30".',
+    description: 'put Kodi to sleep after <N> minutes. Requires "Sleep" addon by robwebset.\nFor example, "sleep 30". Send "sleep 0" to disable sleep timer',
     regex: /^(sleep)\s+(\d+)$/i,
-    method: 'Addons.GetAddonDetails',
-    params: '{"addonid":"script.sleep"}',
+    method: 'Addons.GetAddons',
+    params: '{"type":"xbmc.addon.executable","enabled":true}',
     format: function (m, c) {
       var i, time = Math.round(parseInt(c.message.replace(c.regex, '$2'), 10) / 10);
       time = time < 0 ? 0 : (time > 6 ? 6 : time);
-      ktalkQueue.push('exec Addons.ExecuteAddon ' + JSON.stringify(c.params));
-      ktalkQueue.push('delay 1500');
+      if (m.addons.some(function (a) {
+          return a.addonid === 'script.sleep';
+        })) {
+        ktalkQueue.push('exec Addons.ExecuteAddon {"addonid":"script.sleep"}');
+        ktalkQueue.push('delay 1500');
 
-      ktalkQueue.push('exec Input.Left {}');
-      for (i = 0; i < 7; ++i) {
-        ktalkQueue.push('exec Input.Select {}');
-      }
-      if (time) {
-        ktalkQueue.push('exec Input.Right {}');
-        for (i = 0; i < time; ++i) {
+        ktalkQueue.push('exec Input.Left {}');
+        for (i = 0; i < 7; ++i) {
           ktalkQueue.push('exec Input.Select {}');
         }
+        if (time) {
+          ktalkQueue.push('exec Input.Right {}');
+          for (i = 0; i < time; ++i) {
+            ktalkQueue.push('exec Input.Select {}');
+          }
+        }
+        ktalkQueue.push('delay 1500');
+        ktalkQueue.push('exec Input.Back {}');
+        return 'Set sleep timer to ' + time * 10 + ' min.';
       }
-      ktalkQueue.push('delay 1500');
-      ktalkQueue.push('exec Input.Back {}');
-      return 'Set sleep timer to ' + time * 10 + ' min.';
+      return r('The required "Sleep" addon by robwebset is not installed.');
     }
   }, {
     name: 'version',
