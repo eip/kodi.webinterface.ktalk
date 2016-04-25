@@ -419,6 +419,30 @@
     method: 'GUI.ActivateWindow',
     params: '{"window":"weather"}'
   }, {
+    name: 'sleep <N>',
+    description: 'set Kodi to sleep after <N> minutes. Requires "A TV like sleep timer" addon.\nFor example, "sleep 30".',
+    regex: /^(sleep)\s+(\d+)$/i,
+    method: 'Addons.GetAddonDetails',
+    params: '{"addonid":"script.sleep"}',
+    format: function (m, c) {
+      var i, time = Math.round(parseInt(c.message.replace(c.regex, '$2'), 10) / 10);
+      time = time < 1 ? 1 : (time > 6 ? 6 : time);
+      ktalkQueue.push('exec Addons.ExecuteAddon ' + JSON.stringify(c.params));
+      ktalkQueue.push('delay 1500');
+
+      ktalkQueue.push('exec Input.Left {}');
+      for (i = 0; i < 7; ++i) {
+        ktalkQueue.push('exec Input.Select {}');
+      }
+      ktalkQueue.push('exec Input.Right {}');
+      for (i = 0; i < time; ++i) {
+        ktalkQueue.push('exec Input.Select {}');
+      }
+      ktalkQueue.push('delay 1500');
+      ktalkQueue.push('exec Input.Back {}');
+      return 'Set sleep timer to ' + time * 10 + ' min.';
+    }
+  }, {
     name: 'version',
     description: 'get the Kodi version.',
     regex: /^(version)/i,
@@ -443,7 +467,7 @@
     name: 'delay',
     regex: /^(delay)\s+(\d+)$/i,
     format: function (m, c) {
-      var ms = c.message.replace(c.regex, '$2');
+      var ms = parseInt(c.message.replace(c.regex, '$2'), 10);
       return new Promise(function (resolve, reject) {
         setTimeout(function () {
           resolve('Waiting ' + ms + ' ms.');
