@@ -538,6 +538,14 @@
     method: 'JSONRPC.Ping',
     params: '{}'
   }, {
+    name: 'say',
+    description: 'display the message on the Kodi screen.',
+    regex: /^(say)\s+([\S\s]+?)\s*$/i,
+    method: 'GUI.ShowNotification',
+    params: function (m, c) {
+      return '{"title":"Kodi Talk bot","message":' + JSON.stringify(m.replace(c.regex, '$2')) + '}';
+    }
+  }, {
     name: 'exec <method> <params>',
     description: 'for geeks only: execute the JSON-RPC <method> with <params>. For example,\n"exec GUI.ActivateWindow {"window":"home"}".',
     regex: /^exec\s+([\w\.]+)\s+(\S+)$/i,
