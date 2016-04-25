@@ -25,7 +25,10 @@
     ktalkAvaRecv = 'img/apple-touch-icon-114x114.png',
     ktalkAvaSent = 'img/i-form-name-ios-114x114.png',
     ktalkCommands = [],
-    ktalkQueue = [],
+    ktalkQueue = {
+      commands: [],
+      answers: []
+    },
     ktalkBusy = false,
     lastMessageTime = 0;
 
@@ -227,14 +230,16 @@
       } else {
         result = 'OK, the answer is:\n\n' + formatJson(m);
       }
-      if (ktalkQueue.length) {
+      if (ktalkQueue.commands.length) {
         if (typeof result === 'object' && typeof result.then === 'function') {
           return result.then(function (m) {
             window.console.debug('Silent answer: ' + (m || '<empty>') + ' (command: ' + command.message + ')');
+            ktalkQueue.answers.push(m);
             return '';
           });
         }
         window.console.debug('Silent answer: ' + (result || '<empty>') + ' (command: ' + command.message + ')');
+        ktalkQueue.answers.push(result);
         return '';
       }
       return result;
@@ -277,7 +282,7 @@
     }
 
     function queuedCommand() {
-      var command = ktalkQueue.shift();
+      var command = ktalkQueue.commands.shift();
       if (command) {
         return new Promise(function (resolve, reject) {
           setTimeout(resolve, 100);
@@ -285,6 +290,7 @@
           talkToKodi(command, true);
         });
       }
+      ktalkQueue.answers = [];
       ktalkBusy = false;
       return 'Finished.';
     }
@@ -364,7 +370,7 @@
   ktalkCommands = [{
     name: 'help',
     description: 'get the list of commands I understand.',
-    regex: /^(help)/i,
+    regex: /^(help)\s*[\.!\?]*$/i,
     format: function () {
       var result = 'I understand the following commmands:';
       ktalkCommands.forEach(function (c) {
@@ -377,48 +383,48 @@
   }, {
     name: 'play <url>',
     description: 'start playing the given URL. For example,\n"play http://www.sample-videos.com/video/mp4/720/big_buck_bunny_720p_50mb.mp4",\n"play https://youtu.be/YE7VzlLtp-4",\nor simply "https://youtu.be/YE7VzlLtp-4".',
-    regex: /^(?:play)?\s*((?:https?|plugin):\/\/.+)/i,
+    regex: /^(?:play)?\s*((?:https?|plugin):\/\/.+)$/i,
     format: function (m, c) {
       var file = transformPlayerUri(c.message.replace(c.regex, '$1'));
-      ktalkQueue.push('stop');
-      ktalkQueue.push('exec Player.Open {"item":{"file":"' + file + '"}}');
-      ktalkQueue.push('delay 1000');
-      ktalkQueue.push('what\'s up');
+      ktalkQueue.commands.push('stop');
+      ktalkQueue.commands.push('exec Player.Open {"item":{"file":"' + file + '"}}');
+      ktalkQueue.commands.push('delay 1000');
+      ktalkQueue.commands.push('what\'s up');
       return 'Start playing URL: ' + file;
     }
   }, {
     name: 'play tv <channel>',
     description: 'start playing the given TV channel. For example, "play tv 1".\nUse "tv" command to get the list of TV channels.',
-    regex: /^play\s+tv\s+(\d+)$/i,
+    regex: /^play\s+tv\s+(\d+)\s*[\.!\?]*$/i,
     format: function (m, c) {
       var id = c.message.replace(c.regex, '$1');
-      ktalkQueue.push('stop');
-      ktalkQueue.push('exec Player.Open {"item":{"channelid":' + id + '}}');
-      ktalkQueue.push('delay 1000');
-      ktalkQueue.push('what\'s up');
+      ktalkQueue.commands.push('stop');
+      ktalkQueue.commands.push('exec Player.Open {"item":{"channelid":' + id + '}}');
+      ktalkQueue.commands.push('delay 1000');
+      ktalkQueue.commands.push('what\'s up');
       return 'Start playing TV channel #' + id;
     }
   }, {
     name: 'stop',
     description: 'stop playback.',
-    regex: /^(stop)/i,
+    regex: /^(stop)\s*[\.!\?]*$/i,
     method: 'Player.GetActivePlayers',
     params: '{}',
     format: function (m) {
       m.forEach(function (o) {
-        ktalkQueue.unshift('exec Player.Stop {"playerid":' + o.playerid + '}');
+        ktalkQueue.commands.unshift('exec Player.Stop {"playerid":' + o.playerid + '}');
       });
       return m.length === 0 ? 'There is no active players.' : 'Stopping ' + m.length + ' player(s)';
     }
   }, {
     name: 'what\'s up',
     description: 'check what Kodi is doing now.',
-    regex: /^(w(?:hat's\s+|ass|azz)up)/i,
+    regex: /^(w(?:hat's\s+|ass|azz)up)\s*[\.!\?]*$/i,
     method: 'Player.GetActivePlayers',
     params: '{}',
     format: function (m) {
       m.forEach(function (o) {
-        ktalkQueue.push('player.getitem ' + o.playerid);
+        ktalkQueue.commands.push('player.getitem ' + o.playerid);
       });
       return m.length === 0 ? 'Nothing is playing now.' : 'Checking state of ' + m.length + ' player(s)';
     }
@@ -458,20 +464,20 @@
   }, {
     name: 'home',
     description: 'show the home screen.',
-    regex: /^(home)/i,
+    regex: /^(home)\s*[\.!\?]*$/i,
     method: 'GUI.ActivateWindow',
     params: '{"window":"home"}'
   }, {
     name: 'weather',
     description: 'show the weather screen.',
-    regex: /^(weather)/i,
+    regex: /^(weather)\s*[\.!\?]*$/i,
     method: 'GUI.ActivateWindow',
     params: '{"window":"weather"}'
   }, {
     // !!! requires script.sleep addon by robwebset http://kodi.wiki/view/Add-on:Sleep
     name: 'sleep <N>',
     description: 'put Kodi to sleep after <N> minutes. Requires "Sleep" addon by robwebset.\nFor example, "sleep 30". Send "sleep 0" to disable sleep timer',
-    regex: /^(sleep)\s+(\d+)$/i,
+    regex: /^(sleep)\s+(\d+)\s*[\.!\?]*$/i,
     method: 'Addons.GetAddons',
     params: '{"type":"xbmc.addon.executable","enabled":true}',
     format: function (m, c) {
@@ -480,21 +486,21 @@
       if (m.addons.some(function (a) {
           return a.addonid === 'script.sleep';
         })) {
-        ktalkQueue.push('exec Addons.ExecuteAddon {"addonid":"script.sleep"}');
-        ktalkQueue.push('delay 1500');
+        ktalkQueue.commands.push('exec Addons.ExecuteAddon {"addonid":"script.sleep"}');
+        ktalkQueue.commands.push('delay 1500');
 
-        ktalkQueue.push('exec Input.Left {}');
+        ktalkQueue.commands.push('exec Input.Left {}');
         for (i = 0; i < 7; ++i) {
-          ktalkQueue.push('exec Input.Select {}');
+          ktalkQueue.commands.push('exec Input.Select {}');
         }
         if (time) {
-          ktalkQueue.push('exec Input.Right {}');
+          ktalkQueue.commands.push('exec Input.Right {}');
           for (i = 0; i < time; ++i) {
-            ktalkQueue.push('exec Input.Select {}');
+            ktalkQueue.commands.push('exec Input.Select {}');
           }
         }
-        ktalkQueue.push('delay 1500');
-        ktalkQueue.push('exec Input.Back {}');
+        ktalkQueue.commands.push('delay 1500');
+        ktalkQueue.commands.push('exec Input.Back {}');
         return 'Set sleep timer to ' + time * 10 + ' min.';
       }
       return r('The required "Sleep" addon by robwebset is not installed.');
@@ -502,22 +508,32 @@
   }, {
     name: 'version',
     description: 'get the Kodi version.',
-    regex: /^(version)/i,
+    regex: /^(version)\s*[\.!\?]*$/i,
     method: 'Application.GetProperties',
     params: '{"properties":["name","version"]}',
     format: function (m) {
+      ktalkQueue.commands.push('version.addon plugin.webinterface.ktalk');
+      ktalkQueue.commands.push('answers.join ' + JSON.stringify('\n'));
       return m.name + ' ' + m.version.major + '.' + m.version.minor + (m.version.tag === 'releasecandidate' ? ' RC ' + m.version.tagversion : '') + ' (rev. ' + m.version.revision + ')';
+    }
+  }, {
+    name: 'version.addon',
+    regex: /^(version\.addon)\s+(.+)$/i,
+    method: 'Addons.GetAddonDetails',
+    params: '{"addonid":"$2","properties":["name","version"]}',
+    format: function (m) {
+      return m.addon.name + ' addon ' + m.addon.version;
     }
   }, {
     name: 'ping',
     description: 'check the availability of the Kodi web server.',
-    regex: /^(ping)/i,
+    regex: /^(ping)\s*[\.!\?]*$/i,
     method: 'JSONRPC.Ping',
     params: '{}'
   }, {
     name: 'exec <method> <params>',
     description: 'for geeks only: execute the JSON-RPC <method> with <params>. For example,\n"exec GUI.ActivateWindow {"window":"home"}".',
-    regex: /^exec\s+([\w\.]+)\s+(\S+)/i,
+    regex: /^exec\s+([\w\.]+)\s+(\S+)$/i,
     method: '$1',
     params: '$2'
   }, {
@@ -530,6 +546,14 @@
           resolve('Waiting ' + ms + ' ms.');
         }, ms);
       });
+    }
+  }, {
+    name: 'answers.join',
+    regex: /^(answers\.join)\s+(.+)$/i,
+    format: function (m, c) {
+      var d = c.message.replace(c.regex, '$2');
+      d = d.indexOf('\"') === 0 ? JSON.parse(d) : d;
+      return ktalkQueue.answers.join(d);
     }
   }, {
     name: 'debug <js object>',
