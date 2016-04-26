@@ -119,8 +119,8 @@
     }
   }
 
-  function talkToKodi(message, silent) {
-    var command; // current command
+  function sendCommand(message, silent) {
+    var currentCommand; // current command
 
     function checkMessage(m) {
       ktalkBusy = true;
@@ -135,9 +135,8 @@
     function addQuestionMessage(m) {
       if (!silent) {
         ktalkMessages.addMessage(makeMessageProps(m, 'sent'));
-      } else {
-        window.console.debug('Silent command: ' + m);
       }
+      window.console.debug('Send command: ' + (silent ? '…' : '') + m);
       return m;
     }
 
@@ -174,7 +173,7 @@
             method: parseProperty(message, c, 'method'),
             params: parseProperty(message, c, 'params', true)
           };
-          command = {
+          currentCommand = {
             message: message,
             name: c.name,
             description: c.description,
@@ -232,8 +231,8 @@
 
     function formatAnswerMessage(m) {
       var result;
-      if (typeof command.handleResponse !== 'undefined') {
-        result = parseProperty(m, command, 'handleResponse');
+      if (typeof currentCommand.handleResponse !== 'undefined') {
+        result = parseProperty(m, currentCommand, 'handleResponse');
       } else if (typeof m === 'string') {
         result = m + '!';
       } else {
@@ -294,27 +293,26 @@
       return addReceivedMessage(message, formatErrorMessage, 'error');
     }
 
-    function queuedCommand() {
-      var command = ktalkQueue.commands.shift();
-      if (command) {
-        return new Promise(function (resolve, reject) {
-          setTimeout(resolve, 100);
-        }).then(function () {
-          talkToKodi(command, true);
-        });
-      }
-      ktalkQueue.answers.length = 0;
-      ktalkBusy = false;
-      return 'Finished.';
-    }
-
     return checkMessage(message)
-        .then(addQuestionMessage)
-        .then(parseKodiCommand)
-        .then(callJsonRpcMethod)
-        .then(addAnswerMessage)
-      .then(q, addErrorMessage) // JSLint friendly instead of .catch()
-      .then(queuedCommand);
+      .then(addQuestionMessage)
+      .then(parseKodiCommand)
+      .then(callJsonRpcMethod)
+      .then(addAnswerMessage)
+      .then(q, addErrorMessage); // JSLint friendly instead of .catch()
+  }
+
+  function sendQueuedCommand() {
+    var command = ktalkQueue.commands.shift();
+    if (command) {
+      return sendCommand(command, true).then(sendQueuedCommand);
+    }
+    ktalkQueue.answers.length = 0;
+    ktalkBusy = false;
+    return 'Finished.';
+  }
+
+  function talkToKodi(message) {
+    return sendCommand(message).then(sendQueuedCommand);
   }
 
   function addInfoMessages(msg) {
@@ -331,14 +329,19 @@
   }
 
   function sendMessage(message) {
+    message = message || ktalkMessagebar.value();
     if (ktalkBusy) {
       return qt(message, 300).then(sendMessage);
     }
-    return (talkToKodi(message || ktalkMessagebar.value())).then(ktalkMessagebar.clear);
+    return (talkToKodi(message)).then(ktalkMessagebar.clear);
   }
 
   function addSampleKodiTalk() {
-    ['version', 'what\'s up?'].forEach(sendMessage);
+    return ['version', 'what\'s up?'].reduce(function (p, c) {
+      return p.then(function () {
+        return talkToKodi(c);
+      });
+    }, q());
   }
 
   if (window.location.protocol.indexOf('http') === -1) {
@@ -348,7 +351,6 @@
 
   // Global ajax options
   $$.ajaxSetup({
-    contentType: 'application/json',
     processData: false,
     headers: {
       'Content-Type': 'application/json'
@@ -428,7 +430,7 @@
   }, {
     name: 'what\'s up',
     description: 'check what Kodi is doing now.',
-    regex: /^(w(?:hat's\s+|ass|azz)up)\s*[\.!\?]*$/i,
+    regex: /^(w(?:hat'?s\s*|ass|azz)up)\s*[\.!\?]*$/i,
     method: 'Player.GetActivePlayers',
     params: '{}',
     handleResponse: function (m) {
