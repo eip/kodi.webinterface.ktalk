@@ -445,9 +445,9 @@
     method: 'Player.GetItem',
     params: '{"playerid":$2,"properties":["artist","channeltype"]}',
     handleResponse: function (m) {
-      return '‣' + (m.item.type && m.item.type !== 'unknown' ? (m.item.type === 'channel' ? ' ' + m.item.channeltype.toUpperCase() : '') + ' ' + m.item.type : '') + ': ' +
+      return '‣' + (m.item.type && m.item.type !== 'unknown' ? (m.item.type === 'channel' ? ' ' + m.item.channeltype.toUpperCase() : '') + ' ' + m.item.type +': ' : ' ') +
         (m.item.artist && m.item.artist.length ? m.item.artist.join(', ') + ' — ' : '') + m.item.label +
-        (m.item.type === 'channel' ? ' (#' + m.item.id + ')' : '') + '...';
+        (m.item.type === 'channel' ? ' (#' + m.item.id + ')' : '');
     }
   }, {
     name: 'tv',
