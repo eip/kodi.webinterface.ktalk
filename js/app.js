@@ -36,6 +36,15 @@
     return Promise.resolve(v);
   }
 
+  function qt(v, d) {
+    return new Promise(function (resolve) {
+      setTimeout(function () {
+        resolve(v);
+      }, d || 500);
+    });
+  }
+
+
   function r(v) {
     return Promise.reject(v);
   }
@@ -300,10 +309,10 @@
     }
 
     return checkMessage(message)
-      .then(addQuestionMessage)
-      .then(parseKodiCommand)
-      .then(callJsonRpcMethod)
-      .then(addAnswerMessage)
+        .then(addQuestionMessage)
+        .then(parseKodiCommand)
+        .then(callJsonRpcMethod)
+        .then(addAnswerMessage)
       .then(q, addErrorMessage) // JSLint friendly instead of .catch()
       .then(queuedCommand);
   }
@@ -321,25 +330,15 @@
     addInfoMessages(['Hello, I\'m a Kodi Talk bot.', 'You can send me an URI to play or another command (try to type "help" for the list of commands I understand)']);
   }
 
-  function addSampleKodiTalk() {
-    var st = [
-      'version'
-    ];
-    // Send messages in a sequential manner
-    return st.reduce(function (p, c) {
-      return p.then(function () {
-        return talkToKodi(c);
-      });
-    }, q());
+  function sendMessage(message) {
+    if (ktalkBusy) {
+      return qt(message, 300).then(sendMessage);
+    }
+    return (talkToKodi(message || ktalkMessagebar.value())).then(ktalkMessagebar.clear);
   }
 
-  function sendMessage() {
-    if (ktalkBusy) {
-      setTimeout(sendMessage, 300);
-      return;
-    }
-    talkToKodi(ktalkMessagebar.value());
-    ktalkMessagebar.clear();
+  function addSampleKodiTalk() {
+    ['version', 'what\'s up?'].forEach(sendMessage);
   }
 
   if (window.location.protocol.indexOf('http') === -1) {
@@ -445,7 +444,7 @@
     method: 'Player.GetItem',
     params: '{"playerid":$2,"properties":["artist","channeltype"]}',
     handleResponse: function (m) {
-      return '‣' + (m.item.type && m.item.type !== 'unknown' ? (m.item.type === 'channel' ? ' ' + m.item.channeltype.toUpperCase() : '') + ' ' + m.item.type +': ' : ' ') +
+      return '‣' + (m.item.type && m.item.type !== 'unknown' ? (m.item.type === 'channel' ? ' ' + m.item.channeltype.toUpperCase() : '') + ' ' + m.item.type + ': ' : ' ') +
         (m.item.artist && m.item.artist.length ? m.item.artist.join(', ') + ' — ' : '') + m.item.label +
         (m.item.type === 'channel' ? ' (#' + m.item.id + ')' : '');
     }
@@ -471,6 +470,15 @@
         }
       });
       return result;
+    }
+  }, {
+    name: 'fullscreen',
+    description: 'set the fullscrin player mode.',
+    regex: /^(fullscreen)\s*[\.!\?]*$/i,
+    method: 'GUI.SetFullscreen',
+    params: '{"fullscreen":true}',
+    handleResponse: function (m) {
+      return m ? 'OK, fullscreen mode activated.' : 'Oops, still in GUI mode.';
     }
   }, {
     name: 'home',
@@ -550,6 +558,18 @@
       return '{"title":"Kodi Talk","message":' + JSON.stringify(m.replace(c.regex, '$2')) + '}';
     }
   }, {
+    name: 'reboot',
+    description: 'reboot the system running Kodi.',
+    regex: /^(reboot)\s*[\.!\?]*$/i,
+    method: 'System.Reboot',
+    params: '{}'
+  }, {
+    name: 'shutdown',
+    description: 'shutdown the system running Kodi.',
+    regex: /^(shutdown)\s*[\.!\?]*$/i,
+    method: 'System.Shutdown',
+    params: '{}'
+  }, {
     name: 'exec <method> <params>',
     description: 'for geeks only: execute the JSON-RPC <method> with <params>. For example,\n"exec GUI.ActivateWindow {"window":"home"}".',
     regex: /^exec\s+([\w\.]+)\s+(\S+)$/i,
@@ -560,11 +580,7 @@
     regex: /^(delay)\s+(\d+)$/i,
     handleResponse: function (m, c) {
       var ms = parseInt(c.message.replace(c.regex, '$2'), 10);
-      return new Promise(function (resolve, reject) {
-        setTimeout(function () {
-          resolve('Waiting ' + ms + ' ms.');
-        }, ms);
-      });
+      return qt('Waiting ' + ms + ' ms.', ms);
     }
   }, {
     name: 'answers.clear',
