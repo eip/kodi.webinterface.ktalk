@@ -324,10 +324,6 @@
     });
   }
 
-  function addGreeting() {
-    addInfoMessages(['Hello, I\'m a Kodi Talk bot.', 'You can send me an URI to play or another command (try to type "help" for the list of commands I understand)']);
-  }
-
   function sendMessage(message) {
     message = message || ktalkMessagebar.value();
     if (ktalkBusy) {
@@ -337,7 +333,7 @@
   }
 
   function addSampleKodiTalk() {
-    return ['version', 'what\'s up?'].reduce(function (p, c) {
+    return ['hello', 'version', 'what\'s up?'].reduce(function (p, c) {
       return p.then(function () {
         return talkToKodi(c);
       });
@@ -377,6 +373,10 @@
   fixMessageTemplate();
 
   ktalkCommands = [{
+    name: 'hello',
+    regex: /^(hello)\s*[\.!\?]*$/i,
+    handleResponse: 'Hello, I\'m a Kodi Talk bot.\n\nYou can send me an URI to play or another command (try to type "help" for the list of commands I understand)'
+  }, {
     name: 'help',
     description: 'get the list of commands I understand.',
     regex: /^(help)\s*[\.!\?]*$/i,
@@ -608,7 +608,6 @@
     }
   }];
 
-  addGreeting();
   addSampleKodiTalk();
   if (!ktalkApp.device.os) {
     setTimeout(function () {
