@@ -25,6 +25,7 @@
     ktalkAvaRecv = 'img/apple-touch-icon-114x114.png',
     ktalkAvaSent = 'img/i-form-name-ios-114x114.png',
     ktalkCommands = [],
+    ktalkCommandId = 0,
     ktalkQueue = {
       commands: [],
       answers: []
@@ -195,12 +196,14 @@
     function callJsonRpcMethod(command) {
 
       function makeRequestBody(c) {
-        return JSON.stringify({
-          id: c.id || 1,
+        var result = JSON.stringify({
+          id: c.id || ++ktalkCommandId,
           jsonrpc: c.jsonrpc || '2.0',
           method: c.method,
           params: c.params || {}
         });
+        // window.console.debug(result);
+        return result;
       }
 
       function parseResult(r) {
