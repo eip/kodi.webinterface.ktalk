@@ -334,8 +334,8 @@
     return (talkToKodi(message)).then(ktalkMessagebar.clear);
   }
 
-  function addSampleKodiTalk() {
-    return ['hello', 'version', 'what\'s up?'].reduce(function (p, c) {
+  function addGreetings() {
+    return ['.hello', '.version', '.what\'s up?'].reduce(function (p, c) {
       return p.then(function () {
         return talkToKodi(c);
       });
@@ -605,7 +605,7 @@
     }
   }];
 
-  addSampleKodiTalk();
+  addGreetings();
   if (!ktalkApp.device.os) {
     setTimeout(function () {
       $$('.messagebar textarea').focus();
