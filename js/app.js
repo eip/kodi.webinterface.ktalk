@@ -50,6 +50,10 @@
     return Promise.reject(v);
   }
 
+  function capitalize(s) {
+    return s.charAt(0).toLocaleUpperCase() + s.slice(1).toLocaleLowerCase();
+  }
+
   function formatDay(d) {
     var date = d ? new Date(d) : new Date(),
       weekDay = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][date.getDay()],
@@ -94,6 +98,10 @@
       })
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;');
+  }
+
+  function getMessageToken(command, token) {
+    return command.message.replace(command.regex, '$' + token);
   }
 
   function makeMessageProps(text, type) {
@@ -396,7 +404,7 @@
     description: 'start playing the given URL. For example,\n"play http://www.sample-videos.com/video/mp4/720/big_buck_bunny_720p_50mb.mp4",\n"play https://youtu.be/YE7VzlLtp-4",\nor simply "https://youtu.be/YE7VzlLtp-4".',
     regex: /^(?:play)?\s*((?:https?|plugin):\/\/.+)$/i,
     answer: function (c) {
-      var file = transformPlayerUri(c.message.replace(c.regex, '$1'));
+      var file = transformPlayerUri(getMessageToken(c, 1));
       ktalkQueue.commands.push('.stop');
       ktalkQueue.commands.push('.exec Player.Open {"item":{"file":"' + file + '"}}');
       ktalkQueue.commands.push('.delay 1000');
@@ -409,7 +417,7 @@
     description: 'start playing the given TV channel. For example, "play tv 1".\nUse "tv" command to get the list of TV channels.',
     regex: /^play\s+tv\s+(\d+)\s*[\.!\?]*$/i,
     answer: function (c) {
-      var id = c.message.replace(c.regex, '$1');
+      var id = getMessageToken(c, 1);
       ktalkQueue.commands.push('.stop');
       ktalkQueue.commands.push('.exec Player.Open {"item":{"channelid":' + id + '}}');
       ktalkQueue.commands.push('.delay 1000');
@@ -427,6 +435,47 @@
         ktalkQueue.commands.unshift('.exec Player.Stop {"playerid":' + o.playerid + '}');
       });
       return c.response.length === 0 ? 'There is no active players.' : 'Stopping ' + c.response.length + ' player(s)';
+    }
+  }, {
+    name: 'pause',
+    description: 'pause playback.',
+    regex: /^(pause)\s*[\.!\?]*$/i,
+    method: 'Player.GetActivePlayers',
+    answer: function (c) {
+      var result = [];
+      c.response.forEach(function (o) {
+        ktalkQueue.commands.push(['.player.playpause', o.playerid, 0].join(' '));
+        result.push(capitalize(o.type) + ' playback [#].');
+      });
+      ktalkQueue.commands.push('.answers.format ' + JSON.stringify('\n'));
+      return c.response.length === 0 ? 'There is no active players.' : result;
+    }
+  }, {
+    name: 'resume',
+    description: 'resume paused playback.',
+    regex: /^(resume)\s*[\.!\?]*$/i,
+    method: 'Player.GetActivePlayers',
+    answer: function (c) {
+      var result = [];
+      c.response.forEach(function (o) {
+        ktalkQueue.commands.push(['.player.playpause', o.playerid, 1].join(' '));
+        result.push(capitalize(o.type) + ' playback [#].');
+      });
+      ktalkQueue.commands.push('.answers.format ' + JSON.stringify('\n'));
+      return c.response.length === 0 ? 'There is no active players.' : result;
+    }
+  }, {
+    name: 'player.playpause',
+    regex: /^(player\.playpause)\s+(\d+)\s+(\d+)$/i,
+    method: 'Player.PlayPause',
+    params: function (c) {
+      return {
+        playerid: parseInt(getMessageToken(c, 2), 10),
+        play: (parseInt(getMessageToken(c, 3), 10) ? true : false)
+      };
+    },
+    answer: function (c) {
+      return c.response.speed === 0 ? 'paused' : 'resumed';
     }
   }, {
     name: 'what\'s up',
@@ -457,8 +506,8 @@
     method: 'PVR.GetChannels',
     params: '{"channelgroupid":"alltv"}',
     answer: function (c) {
-      var filter = c.message.replace(c.regex, '$2').toLowerCase(),
-        sortById = (c.message.replace(c.regex, '$1').indexOf('#') >= 0),
+      var filter = getMessageToken(c, 2).toLowerCase(),
+        sortById = (getMessageToken(c, 1).indexOf('#') >= 0),
         result = '';
       c.response.channels.sort(function (a, b) {
         if (sortById) {
@@ -502,7 +551,7 @@
     method: 'Addons.GetAddons',
     params: '{"type":"xbmc.addon.executable","enabled":true}',
     answer: function (c) {
-      var i, time = Math.round(parseInt(c.message.replace(c.regex, '$2'), 10) / 10);
+      var i, time = Math.round(parseInt(getMessageToken(c, 2), 10) / 10);
       time = time < 0 ? 0 : (time > 6 ? 6 : time);
       if (c.response.addons.some(function (a) {
           return a.addonid === 'script.sleep';
@@ -556,7 +605,7 @@
     regex: /^(say)\s+([\S\s]+?)\s*$/i,
     method: 'GUI.ShowNotification',
     params: function (c) {
-      return '{"title":"Kodi Talk","message":' + JSON.stringify(c.message.replace(c.regex, '$2')) + '}';
+      return '{"title":"Kodi Talk","message":' + JSON.stringify(getMessageToken(c, 2)) + '}';
     }
   }, {
     name: 'reboot',
@@ -578,7 +627,7 @@
     name: 'delay',
     regex: /^(delay)\s+(\d+)$/i,
     answer: function (c) {
-      var ms = parseInt(c.message.replace(c.regex, '$2'), 10);
+      var ms = parseInt(getMessageToken(c, 2), 10);
       return qt('Waiting ' + ms + ' ms.', ms);
     }
   }, {
@@ -592,15 +641,31 @@
     name: 'answers.join',
     regex: /^(answers\.join)\s+(.+)$/i,
     answer: function (c) {
-      var d = c.message.replace(c.regex, '$2');
+      var d = getMessageToken(c, 2);
       d = d.indexOf('\"') === 0 ? JSON.parse(d) : d;
       return ktalkQueue.answers.join(d);
+    }
+  }, {
+    name: 'answers.format',
+    regex: /^(answers\.format)\s+(.+)$/i,
+    answer: function (c) {
+      var a, i, f = ktalkQueue.answers[0],
+        d = getMessageToken(c, 2);
+      d = d.indexOf('\"') === 0 ? JSON.parse(d) : d;
+      if (typeof f === 'string') {
+        f = [f];
+      }
+      for (i = 0; i < f.length; ++i) {
+        a = ktalkQueue.answers[i + 1] || '';
+        f[i] = f[i].replace('[#]', a);
+      }
+      return f.join(d);
     }
   }, {
     name: 'debug <js expression>',
     regex: /^(debug)\s+(.+)$/i,
     answer: function (c) {
-      var val = c.message.replace(c.regex, '$2');
+      var val = getMessageToken(c, 2);
       return '# ' + val + ' =\n' + JSON.stringify(eval(val), null, 2);
     }
   }];
