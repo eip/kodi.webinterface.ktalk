@@ -426,15 +426,18 @@
       return 'Start playing TV channel #' + id;
     }
   }, {
-    name: 'stop',
-    description: 'stop playback.',
-    regex: /^(stop)\s*[\.!\?]*$/i,
+    name: 'play',
+    description: 'resume paused playback.',
+    regex: /^(play)\s*[\.!\?]*$/i,
     method: 'Player.GetActivePlayers',
     answer: function (c) {
+      var result = [];
       c.response.forEach(function (o) {
-        ktalkQueue.commands.unshift('.exec Player.Stop {"playerid":' + o.playerid + '}');
+        ktalkQueue.commands.push(['.player.playpause', o.playerid, 1].join(' '));
+        result.push(capitalize(o.type) + ' playback [#].');
       });
-      return c.response.length === 0 ? 'There is no active players.' : 'Stopping ' + c.response.length + ' player(s)';
+      ktalkQueue.commands.push('.answers.format ' + JSON.stringify('\n'));
+      return c.response.length === 0 ? 'There is no active players.' : result;
     }
   }, {
     name: 'pause',
@@ -451,18 +454,15 @@
       return c.response.length === 0 ? 'There is no active players.' : result;
     }
   }, {
-    name: 'resume',
-    description: 'resume paused playback.',
-    regex: /^(resume)\s*[\.!\?]*$/i,
+    name: 'stop',
+    description: 'stop playback.',
+    regex: /^(stop)\s*[\.!\?]*$/i,
     method: 'Player.GetActivePlayers',
     answer: function (c) {
-      var result = [];
       c.response.forEach(function (o) {
-        ktalkQueue.commands.push(['.player.playpause', o.playerid, 1].join(' '));
-        result.push(capitalize(o.type) + ' playback [#].');
+        ktalkQueue.commands.unshift('.exec Player.Stop {"playerid":' + o.playerid + '}');
       });
-      ktalkQueue.commands.push('.answers.format ' + JSON.stringify('\n'));
-      return c.response.length === 0 ? 'There is no active players.' : result;
+      return c.response.length === 0 ? 'There is no active players.' : 'Stopping ' + c.response.length + ' player(s)';
     }
   }, {
     name: 'player.playpause',
@@ -504,7 +504,9 @@
     description: 'get the list of TV channels. You can add a string to filter the channels by name, for example, "tv discovery". For sorting the list by number, use "tv#" command.',
     regex: /^(tv#?)(?:$|\s+(.*)$)/i,
     method: 'PVR.GetChannels',
-    params: '{"channelgroupid":"alltv"}',
+    params: {
+      channelgroupid: 'alltv'
+    },
     answer: function (c) {
       var filter = getMessageToken(c, 2).toLowerCase(),
         sortById = (getMessageToken(c, 1).indexOf('#') >= 0),
@@ -527,7 +529,9 @@
     description: 'set the fullscrin player mode.',
     regex: /^(fullscreen)\s*[\.!\?]*$/i,
     method: 'GUI.SetFullscreen',
-    params: '{"fullscreen":true}',
+    params: {
+      fullscreen: true
+    },
     answer: function (c) {
       return c.response ? 'OK, fullscreen mode activated.' : 'Oops, still in GUI mode.';
     }
@@ -536,20 +540,27 @@
     description: 'show the home screen.',
     regex: /^(home)\s*[\.!\?]*$/i,
     method: 'GUI.ActivateWindow',
-    params: '{"window":"home"}'
+    params: {
+      window: 'home'
+    }
   }, {
     name: 'weather',
     description: 'show the weather screen.',
     regex: /^(weather)\s*[\.!\?]*$/i,
     method: 'GUI.ActivateWindow',
-    params: '{"window":"weather"}'
+    params: {
+      window: 'weather'
+    }
   }, {
     // !!! requires script.sleep addon by robwebset http://kodi.wiki/view/Add-on:Sleep
     name: 'sleep <N>',
     description: 'put Kodi to sleep after <N> minutes. Requires "Sleep" addon by robwebset.\nFor example, "sleep 30". Send "sleep 0" to disable sleep timer',
     regex: /^(sleep)\s+(\d+)\s*[\.!\?]*$/i,
     method: 'Addons.GetAddons',
-    params: '{"type":"xbmc.addon.executable","enabled":true}',
+    params: {
+      type: 'xbmc.addon.executable',
+      enabled: true
+    },
     answer: function (c) {
       var i, time = Math.round(parseInt(getMessageToken(c, 2), 10) / 10);
       time = time < 0 ? 0 : (time > 6 ? 6 : time);
@@ -580,7 +591,9 @@
     description: 'get the Kodi version.',
     regex: /^(version)\s*[\.!\?]*$/i,
     method: 'Application.GetProperties',
-    params: '{"properties":["name","version"]}',
+    params: {
+      properties: ['name', 'version']
+    },
     answer: function (c) {
       ktalkQueue.commands.push('.version.addon plugin.webinterface.ktalk');
       ktalkQueue.commands.push('.answers.join ' + JSON.stringify('\n'));
@@ -604,9 +617,7 @@
     description: 'display the message on the Kodi screen.',
     regex: /^(say)\s+([\S\s]+?)\s*$/i,
     method: 'GUI.ShowNotification',
-    params: function (c) {
-      return '{"title":"Kodi Talk","message":' + JSON.stringify(getMessageToken(c, 2)) + '}';
-    }
+    params: '{"title":"Kodi Talk","message":"$2"}'
   }, {
     name: 'reboot',
     description: 'reboot the system running Kodi.',
