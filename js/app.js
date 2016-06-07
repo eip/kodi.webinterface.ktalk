@@ -153,7 +153,6 @@
     }
 
     function parseKodiCommand(command) {
-      var request;
       $$.commands.some(function (c) {
         if (c.regex.test(command.message)) {
           command.name = c.name;
@@ -326,6 +325,10 @@
 
     function init() {
       $$.jsonRpcUrl = '/jsonrpc';
+      if (window.location.protocol.indexOf('http') === -1) {
+        $$.jsonRpcUrl = 'http://192.168.237.9:8080' + $$.jsonRpcUrl;
+        window.console.warn(window.location.protocol + '// connection. Using test server: ' + $$.jsonRpcUrl);
+      }
       $$.avaRecv = 'img/apple-touch-icon-114x114.png';
       $$.avaSent = 'img/i-form-name-ios-114x114.png';
       $$.busy = false;
@@ -579,7 +582,7 @@
         regex: /^(shutdown)\s*[\.!\?]*$/i,
         method: 'System.Shutdown'
       }, {
-        name: 'exec <method> <params>',
+        name: 'exec',
         description: 'for geeks only: execute the JSON-RPC <method> with <params>. For example,\n"exec GUI.ActivateWindow {"window":"home"}".',
         regex: /^exec\s+([\w\.]+)\s+(\S+)$/i,
         method: '$1',
@@ -623,7 +626,7 @@
           return f.join(d);
         }
       }, {
-        name: 'debug <js expression>',
+        name: 'debug',
         regex: /^(debug)\s+(.+)$/i,
         answer: function (c) {
           var val = getMessageToken(c, 2);
@@ -636,48 +639,6 @@
         answers: []
       };
 
-      // Global ajax options
-      window.d7.ajaxSetup({
-        processData: false,
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (window.location.protocol.indexOf('http') === -1) {
-        $$.jsonRpcUrl = 'http://192.168.237.9:8080' + $$.jsonRpcUrl;
-        window.console.warn(window.location.protocol + '// connection. Using test server: ' + $$.jsonRpcUrl);
-      }
-
-      $$.messages = window.f7App.messages('.messages', {
-        autoLayout: true
-      });
-
-      // fix space between {{day}} and ","
-      if ($$.messages.params.messageTemplate.indexOf('{{day}} {{#if time}},') >= 0) {
-        $$.messages.params.messageTemplate = $$.messages.params.messageTemplate.replace('{{day}} {{#if time}},', '{{day}}{{#if time}},');
-        $$.messages.template = Template7.compile($$.messages.params.messageTemplate);
-        window.console.info('Message template fixed');
-      }
-
-      $$.messagebar = window.f7App.messagebar('.messagebar');
-
-      // Fix for missing iPhone status bar in landscape mode
-      window.f7App.device.statusBar = false;
-      window.d7('html').removeClass('with-statusbar-overlay');
-
-      // Handle message
-      window.d7('.messagebar .link').on('click', function () {
-        sendMessage();
-      });
-
-      window.d7('.messagebar textarea').on('keypress', function (e) {
-        e = e || window.event;
-        if ((e.which || e.keyCode) === 13) {
-          e.preventDefault();
-          sendMessage();
-        }
-      });
     }
 
     function run() {
@@ -718,13 +679,13 @@
         sendQueuedCommand: sendQueuedCommand,
         talkToKodi: talkToKodi,
         addInfoMessages: addInfoMessages,
-        sendMessage: sendMessage,
         addGreetings: addGreetings
       };
 
     }
     $$.init = init;
     $$.run = run;
+    $$.sendMessage = sendMessage;
 
     return $$;
   }
@@ -732,7 +693,44 @@
   window.f7App = new Framework7();
   window.d7 = Dom7;
   window.kTalk = new KTalk();
-
   window.kTalk.init();
+
+  // Global ajax options
+  window.d7.ajaxSetup({
+    processData: false,
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  });
+
+  window.kTalk.messages = window.f7App.messages('.messages', {
+    autoLayout: true
+  });
+
+  // fix space between {{day}} and ","
+  if (window.kTalk.messages.params.messageTemplate.indexOf('{{day}} {{#if time}},') >= 0) {
+    window.kTalk.messages.params.messageTemplate = window.kTalk.messages.params.messageTemplate.replace('{{day}} {{#if time}},', '{{day}}{{#if time}},');
+    window.kTalk.messages.template = Template7.compile(window.kTalk.messages.params.messageTemplate);
+    window.console.info('Message template fixed');
+  }
+
+  window.kTalk.messagebar = window.f7App.messagebar('.messagebar');
+
+  // Fix for missing iPhone status bar in landscape mode
+  window.f7App.device.statusBar = false;
+  window.d7('html').removeClass('with-statusbar-overlay');
+
+  // Handle message
+  window.d7('.messagebar .link').on('click', function () {
+    window.kTalk.sendMessage();
+  });
+
+  window.d7('.messagebar textarea').on('keypress', function (e) {
+    e = e || window.event;
+    if ((e.which || e.keyCode) === 13) {
+      e.preventDefault();
+      window.kTalk.sendMessage();
+    }
+  });
 
 }(window));
