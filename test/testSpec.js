@@ -13,29 +13,30 @@ describe('kTalk', function kTalk_0() {
     });
   }
 
+  function clone(source, members) {
+    var result = {};
+
+    members.forEach(function (m) {
+      result[m] = source[m];
+    });
+    return result;
+  }
+
   describe('Initialization', function initialization_0() {
 
     it('kTalk should be an object', function initialization_1() {
       expect($$).toEqual(jasmine.any(Object));
     });
 
-    it('kTalk.testing should be an object', function initialization_2() {
-      expect($$.testing).toEqual(jasmine.any(Object));
-    });
-
-    it('kTalk.f7 should be a Framework7 object', function initialization_3() {
+    it('f7App should be a Framework7 object', function initialization_2() {
       expect(window.f7App).toEqual(jasmine.any(Framework7));
     });
 
-    it('kTalk.d7 should be a function', function initialization_4() {
+    it('d7 should be a function', function initialization_3() {
       expect(window.d7).toEqual(jasmine.any(Function));
     });
 
-    it('kTalk.d7 should be a function', function initialization_5() {
-      expect(window.d7).toEqual(jasmine.any(Function));
-    });
-
-    it('kTalk.messages should be initialized', function initialization_6() {
+    it('kTalk.messages should be initialized', function initialization_4() {
       expect($$.messages).toEqual(jasmine.any(Object));
       expect($$.messages.container[0]).toEqual(jasmine.any(window.HTMLDivElement));
       expect($$.messages.container[0].nodeType).toBe(1);
@@ -51,7 +52,7 @@ describe('kTalk', function kTalk_0() {
       expect($$.messages.params.newMessagesFirst).toBe(false);
     });
 
-    it('kTalk.messagebar should be initialized', function initialization_7() {
+    it('kTalk.messagebar should be initialized', function initialization_5() {
       expect($$.messagebar).toEqual(jasmine.any(Object));
       expect($$.messagebar.container[0]).toEqual(jasmine.any(window.HTMLDivElement));
       expect($$.messagebar.container[0].nodeType).toBe(1);
@@ -59,7 +60,7 @@ describe('kTalk', function kTalk_0() {
       expect($$.messagebar.textarea[0].nodeType).toBe(1);
     });
 
-    it('kTalk\'s members of primitive data types shold be initialized', function initialization_8() {
+    it('kTalk\'s members of primitive data types shold be initialized', function initialization_6() {
       expect($$.jsonRpcUrl).toEqual(jasmine.any(String));
       expect($$.avaRecv).toEqual(jasmine.any(String));
       expect($$.avaSent).toEqual(jasmine.any(String));
@@ -68,7 +69,7 @@ describe('kTalk', function kTalk_0() {
       expect($$.lastMessageTime).toBe(0);
     });
 
-    it('kTalk.commands should be initialized', function initialization_9() {
+    it('kTalk.commands should be initialized', function initialization_7() {
       expect($$.commands).toEqual(jasmine.any(Array));
       expect($$.commands.length).toBeGreaterThan(2);
 
@@ -83,7 +84,7 @@ describe('kTalk', function kTalk_0() {
       });
     });
 
-    it('kTalk.queue should be initialized', function initialization_a() {
+    it('kTalk.queue should be initialized', function initialization_8() {
       expect($$.queue).toEqual(jasmine.any(Object));
       expect($$.queue.commands).toEqual(jasmine.any(Array));
       expect($$.queue.commands.length).toBe(0);
@@ -93,7 +94,7 @@ describe('kTalk', function kTalk_0() {
 
   });
 
-  describe('.testing', function lib_0() {
+  describe('.testing (private methods)', function lib_0() {
 
     describe('.q()', function q_0() {
 
@@ -416,6 +417,8 @@ describe('kTalk', function kTalk_0() {
           regex: /^(hello)[\.,!\?]*\s+([A-Z]+)\s+from\s+test\s+(\d+)[\.,!\?]*$/i,
           params_s: JSON.stringify(result),
           params_o: result,
+          params_b: true,
+          params_n: 123,
           params_fs: function (c) {
             return JSON.stringify(result);
           },
@@ -448,11 +451,17 @@ describe('kTalk', function kTalk_0() {
         expect($$.testing.parseProperty(command, 'params_o')).toEqual(result);
         expect($$.testing.parseProperty(command, 'params_s', false)).toEqual(result);
         expect($$.testing.parseProperty(command, 'params_o', 0)).toEqual(result);
+        expect($$.testing.parseProperty(command, 'params_b')).toEqual('true');
+        expect($$.testing.parseProperty(command, 'params_n')).toEqual('123');
+        expect($$.testing.parseProperty(command, 'params_b', false)).toEqual('true');
+        expect($$.testing.parseProperty(command, 'params_n', 0)).toEqual('123');
       });
 
       it('should return an object if toJson set to true', function parseProperty_4() {
         expect($$.testing.parseProperty(command, 'params_s', true)).toEqual(result);
         expect($$.testing.parseProperty(command, 'params_o', 1)).toEqual(result);
+        expect($$.testing.parseProperty(command, 'params_b', true)).toEqual(true);
+        expect($$.testing.parseProperty(command, 'params_n', 1)).toEqual(123);
       });
 
       it('should substitute $# with the tokens from command.message', function parseProperty_5() {
@@ -473,26 +482,204 @@ describe('kTalk', function kTalk_0() {
 
     });
 
-    xdescribe('.parseKodiCommand()', function parseKodiCommand_0() {
+    describe('.parseKodiCommand()', function parseKodiCommand_0() {
+      var command, result;
 
-      it('should ...', function parseKodiCommand_1() {
-        expect($$.testing.parseKodiCommand('')).toBe('');
+      beforeEach(function () {
+        command = {
+          message: ''
+        };
       });
 
-      it('should ...', function parseKodiCommand_2() {
-        expect($$.testing.parseKodiCommand('')).toBe('');
+      it('should successfully parse "hello" command', function parseKodiCommand_1() {
+        result = getCommand('hello');
+
+        command.message = 'hello';
+        result.message = command.message;
+        expect($$.testing.parseKodiCommand(command)).toEqual(jasmine.objectContaining(result));
+
+        command.message = 'hello!';
+        result.message = command.message;
+        expect($$.testing.parseKodiCommand(command)).toEqual(jasmine.objectContaining(result));
+
+        command.message = 'Hello ?';
+        result.message = command.message;
+        expect($$.testing.parseKodiCommand(command)).toEqual(jasmine.objectContaining(result));
+      });
+
+      it('should successfully parse "help" command', function parseKodiCommand_2() {
+        result = getCommand('help');
+
+        command.message = 'help';
+        result.message = command.message;
+        expect($$.testing.parseKodiCommand(command)).toEqual(jasmine.objectContaining(result));
+
+        command.message = 'Help.';
+        result.message = command.message;
+        expect($$.testing.parseKodiCommand(command)).toEqual(jasmine.objectContaining(result));
+
+        command.message = 'Help !';
+        result.message = command.message;
+        expect($$.testing.parseKodiCommand(command)).toEqual(jasmine.objectContaining(result));
+      });
+
+      it('should successfully parse "debug" command', function parseKodiCommand_2() {
+        result = getCommand('debug');
+
+        command.message = 'debug true';
+        result.message = command.message;
+        expect($$.testing.parseKodiCommand(command)).toEqual(jasmine.objectContaining(result));
+
+        command.message = 'Debug  window';
+        result.message = command.message;
+        expect($$.testing.parseKodiCommand(command)).toEqual(jasmine.objectContaining(result));
+
+        command.message = 'DEBUG window.kTalk';
+        result.message = command.message;
+        expect($$.testing.parseKodiCommand(command)).toEqual(jasmine.objectContaining(result));
+      });
+
+      it('should return rejected promise for unknown command', function parseKodiCommand_5(done) {
+        command.message = 'Fake message.';
+        $$.testing.parseKodiCommand(command).then(null, function (v) {
+          expect(v).toBe('Sorry, I can\'t understand you. I will learn more commands soon.');
+          done();
+        });
       });
 
     });
 
-    xdescribe('.callJsonRpcMethod()', function callJsonRpcMethod_0() {
+    describe('.callJsonRpcMethod()', function callJsonRpcMethod_0() {
+      var command, xhrMethod, headers, data, response, result, xhr;
 
-      it('should ...', function callJsonRpcMethod_1() {
-        expect($$.testing.callJsonRpcMethod('')).toBe('');
+      beforeEach(function () {
+        xhrMethod = 'POST';
+        headers = {
+          'Content-Type': 'application/json'
+        };
+        data = {
+          id: $$.commandId + 1,
+          jsonrpc: "2.0"
+        };
+        response = {
+          status: 200,
+          contentType: headers['Content-Type'],
+          responseText: {
+            id: $$.commandId + 1,
+            jsonrpc: '2.0'
+          }
+        };
+        jasmine.Ajax.install();
       });
 
-      it('should ...', function callJsonRpcMethod_2() {
-        expect($$.testing.callJsonRpcMethod('')).toBe('');
+      afterEach(function () {
+        jasmine.Ajax.uninstall();
+      });
+
+      it('should call JSONRPC.Ping method via XMLHttpRequest and return resolved promise with result in the command.response', function callJsonRpcMethod_1(done) {
+        command = getCommand('ping');
+        data.method = command.method;
+        data.params = {};
+        result = clone(command, ['name', 'description', 'regex', 'method']);
+        result.response = 'pong';
+        response.responseText.result = result.response;
+        response.responseText = JSON.stringify(response.responseText);
+
+        $$.testing.callJsonRpcMethod(command).then(function (v) {
+          expect(v).toEqual(jasmine.objectContaining(result));
+          done();
+        });
+        xhr = jasmine.Ajax.requests.mostRecent();
+        expect(xhr.method).toBe(xhrMethod);
+        expect(xhr.url).toBe($$.jsonRpcUrl);
+        expect(xhr.requestHeaders).toEqual(jasmine.objectContaining(headers));
+        expect(xhr.data()).toEqual(jasmine.objectContaining(data));
+        xhr.respondWith(response);
+      });
+
+      it('should call Player.Open method via XMLHttpRequest and return resolved promise with result in the command.response', function callJsonRpcMethod_2(done) {
+        command = getCommand('exec');
+        command.method = 'Player.Open';
+        command.params = {
+          item: {
+            file: 'plugin://plugin.video.youtube/?path=/root&search&action=play_video&videoid=YE7VzlLtp-4'
+          }
+        };
+        data.method = command.method;
+        data.params = command.params;
+        result = clone(command, ['name', 'description', 'regex', 'method', 'params']);
+        result.response = 'OK';
+        response.responseText.result = result.response;
+        response.responseText = JSON.stringify(response.responseText);
+
+        $$.testing.callJsonRpcMethod(command).then(function (v) {
+          expect(v).toEqual(jasmine.objectContaining(result));
+          done();
+        });
+        xhr = jasmine.Ajax.requests.mostRecent();
+        expect(xhr.method).toBe(xhrMethod);
+        expect(xhr.url).toBe($$.jsonRpcUrl);
+        expect(xhr.requestHeaders).toEqual(jasmine.objectContaining(headers));
+        expect(xhr.data()).toEqual(jasmine.objectContaining(data));
+        xhr.respondWith(response);
+      });
+
+      it('should call JSONRPC.Fake method via XMLHttpRequest and return rejected promise with error description', function callJsonRpcMethod_3(done) {
+        command = getCommand('exec');
+        command.method = 'JSONRPC.Fake';
+        command.params = {
+          foo: {
+            bar: '!@#$%^&*()_+-={}[]:";\'<>?,./`~ \n'
+          }
+        };
+        data.method = command.method;
+        data.params = command.params;
+        result = {
+          code: -32601,
+          message: 'Method not found.'
+        };
+        response.responseText.error = result;
+        response.responseText = JSON.stringify(response.responseText);
+
+        $$.testing.callJsonRpcMethod(command).then(null, function (v) {
+          expect(v).toEqual(jasmine.objectContaining(result));
+          done();
+        });
+        xhr = jasmine.Ajax.requests.mostRecent();
+        expect(xhr.method).toBe(xhrMethod);
+        expect(xhr.url).toBe($$.jsonRpcUrl);
+        expect(xhr.requestHeaders).toEqual(jasmine.objectContaining(headers));
+        expect(xhr.data()).toEqual(jasmine.objectContaining(data));
+        xhr.respondWith(response);
+      });
+
+      it('should call JSONRPC.Ping method via XMLHttpRequest and return rejected promise if server responds with 404 HTTP status', function callJsonRpcMethod_4(done) {
+        command = getCommand('ping');
+        data.method = command.method;
+        data.params = {};
+        response.status = 404;
+        response.contentType = 'text/html';
+        response.responseText = '<html><head><title>File not found</title></head><body>File not found</body></html>'
+        result = {
+          code: response.status.toString(),
+          message: 'Failed to complete JSON-RPC request to the Kodi server.'
+        };
+
+        $$.testing.callJsonRpcMethod(command).then(null, function (v) {
+          expect(v).toEqual(jasmine.objectContaining(result));
+          done();
+        });
+        xhr = jasmine.Ajax.requests.mostRecent();
+        expect(xhr.method).toBe(xhrMethod);
+        expect(xhr.url).toBe($$.jsonRpcUrl);
+        expect(xhr.requestHeaders).toEqual(jasmine.objectContaining(headers));
+        expect(xhr.data()).toEqual(jasmine.objectContaining(data));
+        xhr.respondWith(response);
+      });
+
+      it('should\'t send XMLHttpRequest if command has no "method" property and just return command object', function callJsonRpcMethod_5() {
+        command = getCommand('hello');
+        expect($$.testing.callJsonRpcMethod(command)).toBe(command);
       });
 
     });
