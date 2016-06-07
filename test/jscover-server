@@ -1,0 +1,7 @@
+#!/bin/bash
+cd -- "$(dirname "$0")"
+echo ---
+echo "Open url: http://localhost:5080/jscoverage.html?test/index.html (just copied to clipboard)"
+echo -n "http://localhost:5080/jscoverage.html?test/index.html" | pbcopy
+echo ---
+java -Dfile.encoding=UTF-8 -jar ../../../../JSCover/target/dist/JSCover-all.jar -ws --port=5080 --document-root=../ --report-dir=jscover --only-instrument-reg="/js/app.*" --detect-coalesce
