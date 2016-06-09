@@ -13,9 +13,7 @@
       return new Promise(function (resolve) {
         setTimeout(function () {
           resolve(v);
-          //#JSCOVERAGE_IF 0
         }, d || 500);
-        //#JSCOVERAGE_ENDIF
       });
     }
 
@@ -94,11 +92,46 @@
       return command.message.replace(command.regex, '$' + token);
     }
 
+    function getCommand(name) {
+      return self.commands.find(function (c) {
+        return c.name === name;
+      });
+    }
+
+    function getCommandDescription(command) {
+      var result = command.description || '';
+      if (window.d7.isArray(result)) {
+        return result.join('\n');
+      }
+      return result;
+    }
+
+    function makeLinks(text, entire) {
+      var re = /\[\[(.*?)(?:\|\|(.*?))?\]\]/g;
+
+      text = encodeHtmlEntities(text);
+      return (entire ? '[[' + text + ']]' : text).replace(re, function (m, t, c) {
+        return '<a href="#" class="new link" data-command="' + (c || t) + '">' + t + '</a>';
+      });
+    }
+
+    function messageLinkHandler(event) {
+      var message = self.messagebar.value().trim(),
+        command = event.target.dataset.command.trim();
+
+      message = (getCommand('help').regex.test(message) ? message + ' ' : '') + command;
+      self.messagebar.value(message);
+    }
+
+    function addMessageLinkHandlers(element) {
+      window.d7(element).find('.link').on('click', messageLinkHandler);
+    }
+
     function makeMessageParams(text, type) {
       var date = new Date(),
         params = {
           type: type,
-          text: encodeHtmlEntities(text)
+          text: text
         };
 
       if (date.getTime() - self.lastMessageTime > 10 * 60 * 1000) {
@@ -128,36 +161,37 @@
 
     function addQuestionMessage(command) {
       if (!command.silent) {
-        self.messages.addMessage(makeMessageParams(command.message, 'sent'));
+        var elm = self.messages.addMessage(makeMessageParams(makeLinks(command.message, true), 'sent'));
+        addMessageLinkHandlers(elm);
       }
       window.console.debug('Send command: ' + (command.silent ? '(silent) ' : '') + command.message);
       return command;
     }
 
-    function parseProperty(command, propName, toJson) {
-      var result;
+    function parseProperty(command, propName) {
+      var result = command[propName],
+        parseResult = false;
 
-      if (typeof command[propName] === 'undefined') {
+      if (typeof result === 'function') {
+        result = result(command);
+      }
+      if (typeof result === 'undefined') {
         return void 0;
       }
-      if (typeof command[propName] === 'function') {
-        result = command[propName](command);
-        if (typeof result !== 'object' && toJson) {
-          return JSON.parse(result);
+      if (typeof result === 'string' || typeof result === 'object') {
+        if (typeof result.then === 'function') {
+          return result;
         }
-        return result;
+        if (typeof result === 'object') {
+          result = JSON.stringify(result);
+          parseResult = true;
+        }
+        if (result.indexOf('$') >= 0) {
+          result = command.message.replace(command.regex, result);
+        }
+        return parseResult ? JSON.parse(result) : result.trim();
       }
-      if (typeof command[propName] === 'object') {
-        command[propName] = JSON.stringify(command[propName]);
-      } else if (typeof command[propName] !== 'string') {
-        command[propName] = command[propName].toString();
-      }
-      if (command[propName].indexOf('$') >= 0) { // regex replace
-        result = command.message.replace(command.regex, command[propName]);
-      } else {
-        result = command[propName];
-      }
-      return toJson ? JSON.parse(result) : result;
+      return result;
     }
 
     function parseKodiCommand(command) {
@@ -170,7 +204,10 @@
           command.params = c.params;
           command.answer = c.answer;
           command.method = parseProperty(command, 'method');
-          command.params = parseProperty(command, 'params', true);
+          command.params = parseProperty(command, 'params');
+          if (typeof command.params === 'string') {
+            command.params = JSON.parse(command.params);
+          }
           return true;
         }
         return false;
@@ -185,12 +222,10 @@
 
       function makeRequestBody(c) {
         var result = JSON.stringify({
-          //#JSCOVERAGE_IF 0
           id: c.id || ++self.commandId,
           jsonrpc: c.jsonrpc || '2.0',
           method: c.method,
           params: c.params || {}
-            //#JSCOVERAGE_ENDIF
         });
 
         // window.console.debug(result);
@@ -232,23 +267,24 @@
       } else if (typeof command.response === 'string') {
         result = command.response + '!';
       } else {
-        result = 'OK, the answer is:\n\n' + formatJson(command.response);
+        result = command.response;
       }
-      if (self.queue.commands.length) {
-        if (typeof result === 'object' && typeof result.then === 'function') {
-          return result.then(function (m) {
-            if (m) {
-              self.queue.answers.push(m);
-            }
-            return '';
-          });
+      return q().then(function () {
+        return result;
+      }).then(function (m) {
+        if (self.queue.commands.length) {
+          if (m) {
+            self.queue.answers.push(m);
+          }
+          return '';
         }
-        if (result) {
-          self.queue.answers.push(result);
+        if (typeof m === 'object') {
+          m = 'OK, the answer is:\n' + formatJson(m);
+        } else if (typeof m !== 'string') {
+          m = m.toString();
         }
-        return '';
-      }
-      return result;
+        return makeLinks(m);
+      });
     }
 
     function formatErrorMessage(message) {
@@ -270,13 +306,14 @@
         if (m.length === 0) {
           return null;
         }
-        var elm = self.messages.addMessage(makeMessageParams(m, 'received'));
+        var elm = self.messages.addMessage(makeMessageParams(m, 'received', true));
 
         if (m.indexOf('#') === 0) {
           elm.classList.add('debug');
         } else if (className) {
           elm.classList.add(className);
         }
+        addMessageLinkHandlers(elm);
         return elm;
       });
     }
@@ -323,12 +360,10 @@
 
     function init() {
       self.jsonRpcUrl = '/jsonrpc';
-      //#JSCOVERAGE_IF 0
       if (window.location.protocol.indexOf('http') === -1) {
         self.jsonRpcUrl = 'http://192.168.237.9:8080' + self.jsonRpcUrl;
         window.console.warn(window.location.protocol + '// connection. Using test server: ' + self.jsonRpcUrl);
       }
-      //#JSCOVERAGE_ENDIF
       self.avaRecv = 'img/apple-touch-icon-114x114.png';
       self.avaSent = 'img/i-form-name-ios-114x114.png';
       self.busy = false;
@@ -338,20 +373,33 @@
       self.commands = [{
         name: 'hello',
         regex: /^(hello)\s*[\.!\?]*$/i,
-        answer: 'Hello, I\'m a Kodi Talk bot.\n\nYou may send me an URI to play or another command (try to type "help" for the list of commands I understand)'
+        answer: 'Hello, I\'m a Kodi Talk bot.\n\nSend me a media URL you want to play or any other command\n(to list all commands I understand, type "[[help]]")'
       }, {
         name: 'help',
-        description: 'get the list of commands I understand.',
+        description: ['List of available commands. I also understand you if you type "[[Help]]", "[[Help!]]", "[[help?]]"…',
+          'Send me "help command" for detailed description of the command, for example, "[[help play]]" or "[[help tv]]"'],
         regex: /^(help)\s*[\.!\?]*$/i,
-        answer: function () {
-          var result = 'I understand the following commmands:';
+        answer: function (c) {
+          var result = 'I understand the following commmands:\n';
 
-          self.commands.forEach(function (c) {
-            if (typeof c.description !== 'undefined') {
-              result += '\n\n‣ ' + c.name + ' — ' + c.description;
+          self.commands.forEach(function (cc) {
+            if (typeof cc.description !== 'undefined') {
+              result += '‣ [[' + cc.name + ']]\n';
             }
           });
+          result += '\n' + c.description[1];
           return result;
+        }
+      }, {
+        name: 'help.detail',
+        regex: /^(help)\s+(\S[\S\s]*)$/i,
+        answer: function (c) {
+          var commandName = getMessageToken(c, 2).trim(),
+            command = getCommand(commandName);
+          if (command && command.description) {
+            return '[[' + command.name + ']]: ' + getCommandDescription(command);
+          }
+          return 'Sorry, I don\'t know anything about "' + commandName + '" command';
         }
       }, {
         name: 'play <url>',
@@ -673,7 +721,6 @@
       return (talkToKodi(message)).then(self.messagebar.clear);
     }
 
-    //#JSCOVERAGE_IF 0
     if (window.jasmine) {
       self.testing = { // reveal private methods for testing
         q: q,
@@ -687,6 +734,10 @@
         encodeHtmlEntities: encodeHtmlEntities,
         transformPlayerUri: transformPlayerUri,
         getMessageToken: getMessageToken,
+        getCommand: getCommand,
+        getCommandDescription: getCommandDescription,
+        makeLinks: makeLinks,
+        messageLinkHandler: messageLinkHandler,
         makeMessageParams: makeMessageParams,
         checkMessage: checkMessage,
         addQuestionMessage: addQuestionMessage,
@@ -704,7 +755,6 @@
         addGreetings: addGreetings
       };
     }
-    //#JSCOVERAGE_ENDIF
     self.init = init;
     self.run = run;
     self.sendMessage = sendMessage;

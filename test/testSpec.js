@@ -69,10 +69,16 @@ describe('kTalk', function kTalk_0() {
     });
   }
 
-  function getCommand(name) {
-    return self.commands.find(function (c) {
-      return c.name === name;
-    });
+  function cloneCommand(name) {
+    var command = self.testing.getCommand(name),
+      member,
+      result = {};
+    for (member in command) {
+      if (command.hasOwnProperty(member)) {
+        result[member] = command[member];
+      }
+    }
+    return result;
   }
 
   function clone(source, members) {
@@ -138,7 +144,7 @@ describe('kTalk', function kTalk_0() {
       self.commands.forEach(function (c) {
         expect(['name', 'description', 'regex', 'method', 'params', 'answer']).toEqual(jasmine.arrayContaining(Object.keys(c)));
         expect(c.name).toEqual(jasmine.any(String));
-        expect(c.description || '').toEqual(jasmine.any(String));
+        expect(['object', 'string', 'undefined']).toEqual(jasmine.arrayContaining([typeof c.description]));
         expect(c.regex).toEqual(jasmine.any(RegExp));
         expect(c.method || '').toEqual(jasmine.any(String));
         expect(['function', 'object', 'string', 'undefined']).toEqual(jasmine.arrayContaining([typeof c.params]));
@@ -391,20 +397,96 @@ describe('kTalk', function kTalk_0() {
 
     });
 
+    describe('.getCommand()', function getCommand_0() {
+
+      it('should find the command in the commands array by name', function getCommand_1() {
+        expect(self.testing.getCommand('hello')).toEqual(jasmine.any(Object));
+        expect(self.testing.getCommand('help.detail')).toEqual(jasmine.any(Object));
+        expect(self.testing.getCommand('what\'s up')).toEqual(jasmine.any(Object));
+      });
+
+    });
+
+    describe('.getCommandDescription()', function getCommandDescription_0() {
+
+      it('should return the description of the command', function getCommandDescription_1() {
+        expect(self.testing.getCommandDescription(cloneCommand('hello'))).toBe('');
+        expect(self.testing.getCommandDescription(cloneCommand('home'))).toBe('show the home screen.');
+        expect(self.testing.getCommandDescription(cloneCommand('help'))).toBe('List of available commands. I also understand you if you type "[[Help]]", "[[Help!]]", "[[help?]]"…' +
+          '\nSend me "help command" for detailed description of the command, for example, "[[help play]]" or "[[help tv]]"');
+      });
+
+    });
+
+    describe('.makeLinks()', function makeLinks_0() {
+
+      it('should replace "[[text]]" and "[[text||command]]" in the string to "<a ...>...</a>" tags', function makeLinks_1() {
+        expect(self.testing.makeLinks('Example <text> with link &templates "[[help]]", "[[Help!]]", "[[Help?..||help]]"…')).toBe('Example &lt;text&gt; with link &amp;templates &#34;<a href="#" class="new link" data-command="help">help</a>&#34;, &#34;<a href="#" class="new link" data-command="Help!">Help!</a>&#34;, &#34;<a href="#" class="new link" data-command="help">Help?..</a>&#34;&#8230;');
+      });
+
+      it('should wrap entire string into "<a ...>...</a>" tag if "entire" parameter is true', function makeLinks_2() {
+        expect(self.testing.makeLinks('Help!', true)).toBe('<a href="#" class="new link" data-command="Help!">Help!</a>');
+      });
+
+      it('should return original string if is not containing "[[...]]"', function makeLinks_3() {
+        expect(self.testing.makeLinks('Example text without link templates.')).toBe('Example text without link templates.');
+      });
+
+    });
+
+    describe('.messageLinkHandler()', function messageLinkHandler_0() {
+      var event;
+
+      beforeEach(function () {
+        event = {
+          target: {
+            dataset: {
+              command: 'command'
+            }
+          }
+        };
+        self.messagebar.clear();
+      });
+
+      it('should set message bar input to "command"', function messageLinkHandler_1() {
+        expect(self.testing.messageLinkHandler(event)).toBeUndefined();
+        expect(self.messagebar.value()).toBe('command');
+      });
+
+      it('should set message bar input to "help command" if message bar already contains "help"', function messageLinkHandler_2() {
+        self.messagebar.value('help');
+        expect(self.testing.messageLinkHandler(event)).toBeUndefined();
+        expect(self.messagebar.value()).toBe('help command');
+        self.messagebar.value('Help! ');
+        expect(self.testing.messageLinkHandler(event)).toBeUndefined();
+        expect(self.messagebar.value()).toBe('Help! command');
+        self.messagebar.value('help');
+        event.target.dataset.command = 'help';
+        expect(self.testing.messageLinkHandler(event)).toBeUndefined();
+        expect(self.messagebar.value()).toBe('help help');
+      });
+
+      it('should set message bar input to "command" if message bar contains other text but "help"', function messageLinkHandler_3() {
+        self.messagebar.value('play');
+        expect(self.testing.messageLinkHandler(event)).toBeUndefined();
+        expect(self.messagebar.value()).toBe('command');
+      });
+
+    });
+
     describe('.makeMessageParams()', function makeMessageParams_0() {
+      var params;
 
       it('should make single message parameters object for Framework7.messages.addMessage() method', function makeMessageParams_1() {
-        var params;
-
         self.lastMessageTime = 0;
-        params = self.testing.makeMessageParams('Message <text>', 'sent');
-        expect(params.text).toBe('Message &lt;text&gt;');
+        params = self.testing.makeMessageParams('Message <a href="#">text</a>', 'sent');
+        expect(params.text).toBe('Message <a href="#">text</a>');
         expect(params.type).toBe('sent');
         expect(params.day).toMatch(/^[0-9A-Z, ]+$/i);
         expect(params.time).toMatch(/^[0-9:]+$/i);
         expect(params.avatar).toBe(self.avaSent);
 
-        params = self.testing.makeMessageParams('Message <text>', 'received');
+        params = self.testing.makeMessageParams('Message <a href="#">text</a>', 'received');
         expect(params.avatar).toBe(self.avaRecv);
         expect(params.day).toBeUndefined();
         expect(params.time).toBeUndefined();
@@ -447,19 +529,24 @@ describe('kTalk', function kTalk_0() {
 
       beforeEach(function () {
         command = {
-          message: 'Help'
+          message: 'Help <span>me</span>!'
         };
+        self.lastMessageTime = Date.now();
         spyOn(self.messages, 'addMessage');
       });
 
-      it('should call kTalk.messages.addMessage method', function addQuestionMessage_1() {
-        expect(self.testing.addQuestionMessage(command)).toBe(command);
-        expect(self.messages.addMessage).toHaveBeenCalled();
+      it('should make command link from message and call kTalk.messages.addMessage method, and return unchanged command object', function addQuestionMessage_1() {
+        expect(self.testing.addQuestionMessage(clone(command, ['message']))).toEqual(command);
+        expect(self.messages.addMessage).toHaveBeenCalledWith({
+          type: 'sent',
+          text: '<a href="#" class="new link" data-command="Help &lt;span&gt;me&lt;/span&gt;!">Help &lt;span&gt;me&lt;/span&gt;!</a>',
+          avatar: 'img/i-form-name-ios-114x114.png'
+        });
       });
 
-      it('should not call kTalk.messages.addMessage method if command.silent is true', function addQuestionMessage_2() {
+      it('should not call kTalk.messages.addMessage method if command.silent is true, and return unchanged command object', function addQuestionMessage_2() {
         command.silent = true;
-        expect(self.testing.addQuestionMessage(command)).toBe(command);
+        expect(self.testing.addQuestionMessage(clone(command, ['message', 'silent']))).toEqual(command);
         expect(self.messages.addMessage).not.toHaveBeenCalled();
       });
 
@@ -481,65 +568,76 @@ describe('kTalk', function kTalk_0() {
           params_o: result,
           params_b: true,
           params_n: 123,
+          params_u: undefined,
           params_fs: function (c) {
             return JSON.stringify(result);
           },
           params_fo: function (c) {
             return result;
           },
+          params_fb: function (c) {
+            return true;
+          },
+          params_fn: function (c) {
+            return 123;
+          },
+          params_fu: function (c) {
+            return;
+          },
+          params_fp: function (c) {
+            return self.testing.qt('Promise', 5);
+          },
           params_ts: '{"command":"$1","properties":["$2",$3]}',
           params_to: {
             command: '$1',
             properties: ['$2', '$3']
-          }
+          },
+          params_ta: ['$1', '$2', '$3']
         };
       });
 
-      it('should return undefined if the property doesn\'t exists', function parseProperty_1() {
+      it('should return undefined if the property is undefined or doesn\'t exists', function parseProperty_1() {
         expect(self.testing.parseProperty(command, 'foo')).toBeUndefined();
-        expect(self.testing.parseProperty(command, 'bar', true)).toBeUndefined();
+        expect(self.testing.parseProperty(command, 'bar')).toBeUndefined();
+        expect(self.testing.parseProperty(command, 'params_u')).toBeUndefined();
       });
 
-      it('should return result of property(command) if the property is a function', function parseProperty_2() {
-        expect(self.testing.parseProperty(command, 'params_fs')).toEqual(JSON.stringify(result));
-        expect(self.testing.parseProperty(command, 'params_fs', true)).toEqual(result);
+      it('should return result of the property(command) call if the property is a function', function parseProperty_2() {
+        expect(self.testing.parseProperty(command, 'params_fs')).toBe(JSON.stringify(result));
         expect(self.testing.parseProperty(command, 'params_fo')).toEqual(result);
-        expect(self.testing.parseProperty(command, 'params_fo', 1)).toEqual(result);
+        expect(self.testing.parseProperty(command, 'params_fb')).toBe(true);
+        expect(self.testing.parseProperty(command, 'params_fn')).toBe(123);
+        expect(self.testing.parseProperty(command, 'params_fu')).toBeUndefined();
       });
 
-      it('should return a string if toJson set to false', function parseProperty_3() {
-        result = JSON.stringify(result);
-        expect(self.testing.parseProperty(command, 'params_s')).toEqual(result);
+      it('and should correctly process case if property(command) returns a promise', function parseProperty_3(done) {
+        self.testing.parseProperty(command, 'params_fp').then(function (v) {
+          expect(v).toBe('Promise');
+          done();
+        });
+      });
+
+      it('should return the property value if the property is not a function', function parseProperty_4() {
+        expect(self.testing.parseProperty(command, 'params_s')).toBe(JSON.stringify(result));
         expect(self.testing.parseProperty(command, 'params_o')).toEqual(result);
-        expect(self.testing.parseProperty(command, 'params_s', false)).toEqual(result);
-        expect(self.testing.parseProperty(command, 'params_o', 0)).toEqual(result);
-        expect(self.testing.parseProperty(command, 'params_b')).toEqual('true');
-        expect(self.testing.parseProperty(command, 'params_n')).toEqual('123');
-        expect(self.testing.parseProperty(command, 'params_b', false)).toEqual('true');
-        expect(self.testing.parseProperty(command, 'params_n', 0)).toEqual('123');
+        expect(self.testing.parseProperty(command, 'params_b')).toBe(true);
+        expect(self.testing.parseProperty(command, 'params_n')).toBe(123);
       });
 
-      it('should return an object if toJson set to true', function parseProperty_4() {
-        expect(self.testing.parseProperty(command, 'params_s', true)).toEqual(result);
-        expect(self.testing.parseProperty(command, 'params_o', 1)).toEqual(result);
-        expect(self.testing.parseProperty(command, 'params_b', true)).toEqual(true);
-        expect(self.testing.parseProperty(command, 'params_n', 1)).toEqual(123);
-      });
-
-      it('should substitute $# with the tokens from command.message', function parseProperty_5() {
-        var result_a = {
+      it('should substitute $# in result with the tokens from command.message', function parseProperty_5() {
+        var result_s = JSON.stringify({
             command: 'Hello',
             properties: ['Kodi', 123]
-          },
-          result_b = {
+          }),
+          result_o = {
             command: 'Hello',
             properties: ['Kodi', '123']
-          };
+          },
+          result_a = ['Hello', 'Kodi', '123'];
 
-        expect(self.testing.parseProperty(command, 'params_ts')).toEqual(JSON.stringify(result_a));
-        expect(self.testing.parseProperty(command, 'params_to')).toEqual(JSON.stringify(result_b));
-        expect(self.testing.parseProperty(command, 'params_ts', true)).toEqual(result_a);
-        expect(self.testing.parseProperty(command, 'params_to', true)).toEqual(result_b);
+        expect(self.testing.parseProperty(command, 'params_ts')).toBe(result_s);
+        expect(self.testing.parseProperty(command, 'params_to')).toEqual(result_o);
+        expect(self.testing.parseProperty(command, 'params_ta')).toEqual(result_a);
       });
 
     });
@@ -554,7 +652,7 @@ describe('kTalk', function kTalk_0() {
       });
 
       it('should successfully parse "hello" command', function parseKodiCommand_1() {
-        result = getCommand('hello');
+        result = cloneCommand('hello');
 
         command.message = 'hello';
         result.message = command.message;
@@ -570,7 +668,7 @@ describe('kTalk', function kTalk_0() {
       });
 
       it('should successfully parse "help" command', function parseKodiCommand_2() {
-        result = getCommand('help');
+        result = cloneCommand('help');
 
         command.message = 'help';
         result.message = command.message;
@@ -585,8 +683,30 @@ describe('kTalk', function kTalk_0() {
         expect(self.testing.parseKodiCommand(command)).toEqual(jasmine.objectContaining(result));
       });
 
-      it('should successfully parse "debug" command', function parseKodiCommand_3() {
-        result = getCommand('debug');
+      it('should successfully parse "player.getitem" command', function parseKodiCommand_3() {
+        command.message = 'player.getitem 1';
+        result = cloneCommand('player.getitem');
+        result.message = command.message;
+        result.params = {
+          playerid: 1,
+          properties: ['artist', 'channeltype']
+        };
+        expect(self.testing.parseKodiCommand(command)).toEqual(jasmine.objectContaining(result));
+      });
+
+      it('should successfully parse "player.playpause" command', function parseKodiCommand_4() {
+        command.message = 'player.playpause 2 1';
+        result = cloneCommand('player.playpause');
+        result.message = command.message;
+        result.params = {
+          playerid: 2,
+          play: true
+        };
+        expect(self.testing.parseKodiCommand(command)).toEqual(jasmine.objectContaining(result));
+      });
+
+      it('should successfully parse "debug" command', function parseKodiCommand_5() {
+        result = cloneCommand('debug');
 
         command.message = 'debug true';
         result.message = command.message;
@@ -601,7 +721,7 @@ describe('kTalk', function kTalk_0() {
         expect(self.testing.parseKodiCommand(command)).toEqual(jasmine.objectContaining(result));
       });
 
-      it('should return rejected promise for unknown command', function parseKodiCommand_4(done) {
+      it('should return rejected promise for unknown command', function parseKodiCommand_6(done) {
         command.message = 'Fake message.';
         self.testing.parseKodiCommand(command).then(null, function (v) {
           expect(v).toBe('Sorry, I can\'t understand you. I will learn more commands soon.');
@@ -639,7 +759,7 @@ describe('kTalk', function kTalk_0() {
       });
 
       it('should call JSONRPC.Ping method via XMLHttpRequest and return resolved promise with result in the command.response', function callJsonRpcMethod_1(done) {
-        command = getCommand('ping');
+        command = cloneCommand('ping');
         data.method = command.method;
         data.params = {};
         result = clone(command, ['name', 'description', 'regex', 'method']);
@@ -660,7 +780,7 @@ describe('kTalk', function kTalk_0() {
       });
 
       it('should call Player.Open method via XMLHttpRequest and return resolved promise with result in the command.response', function callJsonRpcMethod_2(done) {
-        command = getCommand('exec');
+        command = cloneCommand('exec');
         command.method = 'Player.Open';
         command.params = {
           item: {
@@ -687,15 +807,15 @@ describe('kTalk', function kTalk_0() {
       });
 
       it('should call JSONRPC.Fake method via XMLHttpRequest and return rejected promise with error description', function callJsonRpcMethod_3(done) {
-        command = getCommand('exec');
-        command.method = 'JSONRPC.Fake';
-        command.params = {
+        data.method = 'JSONRPC.Fake';
+        data.params = {
           foo: {
             bar: '!@#$%^&*()_+-={}[]:";\'<>?,./`~ \n'
           }
         };
-        data.method = command.method;
-        data.params = command.params;
+        command = cloneCommand('exec');
+        command.method = data.method;
+        command.params = data.params;
         result = {
           code: -32601,
           message: 'Method not found.'
@@ -716,7 +836,7 @@ describe('kTalk', function kTalk_0() {
       });
 
       it('should call JSONRPC.Ping method via XMLHttpRequest and return rejected promise if server responds with 404 HTTP status', function callJsonRpcMethod_4(done) {
-        command = getCommand('ping');
+        command = cloneCommand('ping');
         data.method = command.method;
         data.params = {};
         response.status = 404;
@@ -740,14 +860,14 @@ describe('kTalk', function kTalk_0() {
       });
 
       it('should\'t send XMLHttpRequest if command has no "method" property and just return command object', function callJsonRpcMethod_5() {
-        command = getCommand('hello');
+        command = cloneCommand('hello');
         expect(self.testing.callJsonRpcMethod(command)).toBe(command);
       });
 
     });
 
     describe('.formatAnswerMessage()', function formatAnswerMessage_0() {
-      var command, result;
+      var command, result, resultStr;
 
       beforeEach(function () {
         command = {};
@@ -757,91 +877,198 @@ describe('kTalk', function kTalk_0() {
           arr: [0, 1, 2],
           boot: true
         };
-        self.queue.commands = [];
-        self.queue.answers = [];
+        resultStr = 'OK, the answer is:&#10;    num: 1&#10;    str: String&#10;    arr: (&#10;        0&#10;        1&#10;        2&#10;    )&#10;    boot: true';
+        self.queue.commands.length = 0;
+        self.queue.answers.length = 0;
       });
 
-      it('should return parsed command.answer property', function formatAnswerMessage_1() {
-        command.answer = 'Test';
-        expect(self.testing.formatAnswerMessage(command)).toBe(command.answer);
-        command.answer = result;
-        expect(self.testing.formatAnswerMessage(command)).toBe(JSON.stringify(result));
-        command.answer = function () {
-          return result;
-        };
-        expect(self.testing.formatAnswerMessage(command)).toBe(result);
-        expect(self.queue.answers.length).toBe(0);
-      });
+      describe('should return promise resolved with the parsed command.answer property', function formatAnswerMessage_1() {
 
-      it('should return result of fulfilled promise if parsed command.answer is a Promise', function formatAnswerMessage_2(done) {
-        command.answer = function () {
-          return self.testing.qt(result, 5);
-        };
-        self.testing.formatAnswerMessage(command).then(function (v) {
-          expect(v).toBe(result);
-          expect(self.queue.answers.length).toBe(0);
-          done();
+        it('and command.answer is a string', function formatAnswerMessage_11(done) {
+          command.answer = 'Test';
+          self.testing.formatAnswerMessage(command).then(function (v) {
+            expect(v).toBe('Test');
+            expect(self.queue.answers.length).toBe(0);
+            done();
+          });
         });
-      });
 
-      it('should return command.response + "!" if command.answer is not defined and command.response is a string', function formatAnswerMessage_3() {
-        command.response = 'Test';
-        expect(self.testing.formatAnswerMessage(command)).toBe(command.response + '!');
-        expect(self.queue.answers.length).toBe(0);
-      });
-
-      it('should return "OK, the answer is: <formatted object>" if command.answer is not defined and command.response is not a string', function formatAnswerMessage_4() {
-        command.response = result;
-        expect(self.testing.formatAnswerMessage(command)).toBe('OK, the answer is:\n\n' + self.testing.formatJson(result));
-        expect(self.queue.answers.length).toBe(0);
-      });
-
-      it('should push result in kTalk.queue.answers if kTalk.queue.commands is not empty and return empty string', function formatAnswerMessage_5() {
-        command.response = 'Test';
-        self.queue.commands.push(command);
-        expect(self.testing.formatAnswerMessage(command)).toBe('');
-        expect(self.queue.answers.length).toBe(1);
-        expect(self.queue.answers[0]).toBe(command.response + '!');
-
-        command.answer = function () {
-          return result;
-        };
-        self.queue.commands.push(command);
-        expect(self.testing.formatAnswerMessage(command)).toBe('');
-        expect(self.queue.answers.length).toBe(2);
-        expect(self.queue.answers[1]).toBe(result);
-
-      });
-
-      it('should push result of fulfilled promise in kTalk.queue.answers if kTalk.queue.commands is not empty and parsed command.answer is a Promise, and return empty string ', function formatAnswerMessage_6(done) {
-        command.answer = function () {
-          return self.testing.qt(result, 5);
-        };
-        self.queue.commands.push(command);
-        self.testing.formatAnswerMessage(command).then(function (v) {
-          expect(v).toBe('');
-          expect(self.queue.answers.length).toBe(1);
-          expect(self.queue.answers[0]).toBe(result);
-          done();
+        it('and command.answer is a number', function formatAnswerMessage_12(done) {
+          command.answer = 123;
+          self.testing.formatAnswerMessage(command).then(function (v) {
+            expect(v).toBe('123');
+            expect(self.queue.answers.length).toBe(0);
+            done();
+          });
         });
-      });
 
-      it('should not push result in kTalk.queue.answers if kTalk.queue.commands is not empty and parsed command.answer is empty, and return empty string', function formatAnswerMessage_7(done) {
-        command.answer = '';
-        self.queue.commands.push(command);
-        expect(self.testing.formatAnswerMessage(command)).toBe('');
-        expect(self.queue.answers.length).toBe(0);
-        command.answer = function () {
-          return self.testing.qt('', 5);
-        };
-        self.queue.commands.push(command);
-        self.testing.formatAnswerMessage(command).then(function (v) {
-          expect(v).toBe('');
-          expect(self.queue.answers.length).toBe(0);
-          done();
+        it('and command.answer is an object', function formatAnswerMessage_13(done) {
+          command.answer = result;
+          self.testing.formatAnswerMessage(command).then(function (v) {
+            expect(v).toBe(resultStr);
+            expect(self.queue.answers.length).toBe(0);
+            done();
+          });
         });
+
+        it('and command.answer is a function that return a string', function formatAnswerMessage_14(done) {
+          command.answer = function () {
+            return 'Test';
+          };
+          self.testing.formatAnswerMessage(command).then(function (v) {
+            expect(v).toBe('Test');
+            expect(self.queue.answers.length).toBe(0);
+            done();
+          });
+        });
+
+        it('and command.answer is a function that return a number', function formatAnswerMessage_15(done) {
+          command.answer = function () {
+            return 123;
+          };
+          self.testing.formatAnswerMessage(command).then(function (v) {
+            expect(v).toBe('123');
+            expect(self.queue.answers.length).toBe(0);
+            done();
+          });
+        });
+
+        it('and command.answer is a function that return an object', function formatAnswerMessage_16(done) {
+          command.answer = function () {
+            return result;
+          };
+          self.testing.formatAnswerMessage(command).then(function (v) {
+            expect(v).toBe(resultStr);
+            expect(self.queue.answers.length).toBe(0);
+            done();
+          });
+        });
+
+        it('and command.answer is a function that return a promise', function formatAnswerMessage_17(done) {
+          command.answer = function () {
+            return self.testing.qt(result, 5);
+          };
+          self.testing.formatAnswerMessage(command).then(function (v) {
+            expect(v).toBe(resultStr);
+            expect(self.queue.answers.length).toBe(0);
+            done();
+          });
+        });
+
       });
 
+      describe('should return promise resolved with the formatted command.response property if command.answer is not defined', function formatAnswerMessage_2() {
+
+        it('and command.response is a string', function formatAnswerMessage_21(done) {
+          command.response = 'Test';
+          self.testing.formatAnswerMessage(command).then(function (v) {
+            expect(v).toBe('Test!');
+            expect(self.queue.answers.length).toBe(0);
+            done();
+          });
+        });
+
+        it('and command.response is a number', function formatAnswerMessage_22(done) {
+          command.response = 123;
+          self.testing.formatAnswerMessage(command).then(function (v) {
+            expect(v).toBe('123');
+            expect(self.queue.answers.length).toBe(0);
+            done();
+          });
+        });
+
+        it('and command.response is an object', function formatAnswerMessage_23(done) {
+          command.response = result;
+          self.testing.formatAnswerMessage(command).then(function (v) {
+            expect(v).toBe(resultStr);
+            expect(self.queue.answers.length).toBe(0);
+            done();
+          });
+        });
+
+      });
+
+      describe('should push non empty value in kTalk.queue.answers if kTalk.queue.commands is not empty, and return promise resolved with the empty string', function formatAnswerMessage_3() {
+
+        it('and command.answer is a string', function formatAnswerMessage_31(done) {
+          command.answer = 'Test';
+          self.queue.commands.push(command);
+          self.testing.formatAnswerMessage(command).then(function (v) {
+            expect(v).toBe('');
+            expect(self.queue.answers.length).toBe(1);
+            expect(self.queue.answers[0]).toBe('Test');
+            done();
+          });
+        });
+
+        it('and command.answer is an object', function formatAnswerMessage_32(done) {
+          command.answer = function () {
+            return result;
+          };
+          self.queue.commands.push(command);
+          self.testing.formatAnswerMessage(command).then(function (v) {
+            expect(v).toBe('');
+            expect(self.queue.answers.length).toBe(1);
+            expect(self.queue.answers[0]).toEqual(result);
+            done();
+          });
+        });
+
+        it('and command.answer is a function that return a promise resolved with an object', function formatAnswerMessage_33(done) {
+          command.answer = function () {
+            return self.testing.qt(result, 5);
+          };
+          self.queue.commands.push(command);
+          self.testing.formatAnswerMessage(command).then(function (v) {
+            expect(v).toBe('');
+            expect(self.queue.answers.length).toBe(1);
+            expect(self.queue.answers[0]).toBe(result);
+            done();
+          });
+        });
+
+        it('and command.response is a string', function formatAnswerMessage_34(done) {
+          command.response = 'Test';
+          self.queue.commands.push(command);
+          self.testing.formatAnswerMessage(command).then(function (v) {
+            expect(v).toBe('');
+            expect(self.queue.answers.length).toBe(1);
+            expect(self.queue.answers[0]).toBe('Test!');
+            done();
+          });
+        });
+
+        it('and command.response is an object', function formatAnswerMessage_35(done) {
+          command.response = result;
+          self.queue.commands.push(command);
+          self.testing.formatAnswerMessage(command).then(function (v) {
+            expect(v).toBe('');
+            expect(self.queue.answers.length).toBe(1);
+            expect(self.queue.answers[0]).toBe(result);
+            done();
+          });
+        });
+
+        it('but should not push empty value in kTalk.queue.answers', function formatAnswerMessage_36(done) {
+          command.answer = '';
+          self.queue.commands.push(command);
+          self.testing.formatAnswerMessage(command).then(function (v) {
+            expect(v).toBe('');
+            expect(self.queue.answers.length).toBe(0);
+          });
+
+          command.answer = function () {
+            return self.testing.qt('', 5);
+          };
+          self.queue.commands.push(command);
+          self.testing.formatAnswerMessage(command).then(function (v) {
+            expect(v).toBe('');
+            expect(self.queue.answers.length).toBe(0);
+            done();
+          });
+        });
+
+      });
 
     });
 
@@ -891,10 +1118,10 @@ describe('kTalk', function kTalk_0() {
       });
 
       it('should return promise with <div> element containing message', function addReceivedMessage_2(done) {
-        self.testing.addReceivedMessage('Sample message').then(function (v) {
+        self.testing.addReceivedMessage('Sample <span>message</span>').then(function (v) {
           expect(v).toEqual(jasmine.any(window.HTMLDivElement));
           expect(v.classList.contains('message-received')).toBe(true);
-          expect(v.firstElementChild.innerText).toBe('Sample message');
+          expect(v.firstElementChild.innerHTML).toBe('Sample <span>message</span>');
           done();
         });
       });
@@ -904,7 +1131,7 @@ describe('kTalk', function kTalk_0() {
           expect(v).toEqual(jasmine.any(window.HTMLDivElement));
           expect(v.classList.contains('message-received')).toBe(true);
           expect(v.classList.contains('error')).toBe(true);
-          expect(v.firstElementChild.innerText).toBe('Sample message');
+          expect(v.firstElementChild.innerHTML).toBe('Sample message');
           done();
         });
       });
@@ -915,7 +1142,7 @@ describe('kTalk', function kTalk_0() {
           expect(v.classList.contains('message-received')).toBe(true);
           expect(v.classList.contains('error')).toBe(false);
           expect(v.classList.contains('debug')).toBe(true);
-          expect(v.firstElementChild.innerText).toBe('#Debug message');
+          expect(v.firstElementChild.innerHTML).toBe('#Debug message');
           done();
         });
       });
@@ -927,16 +1154,16 @@ describe('kTalk', function kTalk_0() {
 
       beforeEach(function () {
         command = {};
-        self.queue.commands = [];
+        self.queue.commands.length = 0;
         self.messages.clean();
       });
 
       it('should return promise with <div> element containing formatted message from command object', function addAnswerMessage_1(done) {
-        command.answer = 'Sample message';
+        command.answer = 'Sample <span>message</span>';
         self.testing.addAnswerMessage(command).then(function (v) {
           expect(v).toEqual(jasmine.any(window.HTMLDivElement));
           expect(v.classList.contains('message-received')).toBe(true);
-          expect(v.firstElementChild.innerText).toBe('Sample message');
+          expect(v.firstElementChild.innerHTML).toBe('Sample &lt;span&gt;message&lt;/span&gt;');
           done();
         });
       });
@@ -946,11 +1173,11 @@ describe('kTalk', function kTalk_0() {
     describe('.addErrorMessage()', function addErrorMessage_0() {
 
       it('should return promise with <div> element containing formatted error message', function addErrorMessage_1(done) {
-        self.testing.addErrorMessage('Sample error message').then(function (v) {
+        self.testing.addErrorMessage('Sample error <span>message</span>').then(function (v) {
           expect(v).toEqual(jasmine.any(window.HTMLDivElement));
           expect(v.classList.contains('message-received')).toBe(true);
           expect(v.classList.contains('error')).toBe(true);
-          expect(v.firstElementChild.innerText).toBe('Sample error message');
+          expect(v.firstElementChild.innerHTML).toBe('Sample error <span>message</span>');
           done();
         });
       });
@@ -973,7 +1200,7 @@ describe('kTalk', function kTalk_0() {
         self.testing.sendCommand('Hello!').then(function (v) {
           expect(v).toEqual(jasmine.any(window.HTMLDivElement));
           expect(v.classList.contains('message-received')).toBe(true);
-          expect(v.firstElementChild.innerText).toBe(getCommand('hello').answer);
+          expect(v.firstElementChild.innerHTML).toBe('Hello, I\'m a Kodi Talk bot.\n\nSend me a media URL you want to play or any other command\n(to list all commands I understand, type "<a href="#" class="new link" data-command="help">help</a>")');
           done();
         });
       });
@@ -982,7 +1209,7 @@ describe('kTalk', function kTalk_0() {
         self.testing.sendCommand('Ping').then(function (v) {
           expect(v).toEqual(jasmine.any(window.HTMLDivElement));
           expect(v.classList.contains('message-received')).toBe(true);
-          expect(v.firstElementChild.innerText).toBe('pong!');
+          expect(v.firstElementChild.innerHTML).toBe('pong!');
           done();
         });
       });
@@ -1014,7 +1241,7 @@ describe('kTalk', function kTalk_0() {
         self.queue.commands.push('Ping');
         self.testing.sendQueuedCommand().then(function (v) {
           expect(v).toBe('Finished.');
-          expect(self.commandId).toBe(2); // Two JSON-RPC commands should be sent 
+          expect(self.commandId).toBe(2); // Two JSON-RPC commands should be sent
           done();
         });
       });
@@ -1039,7 +1266,7 @@ describe('kTalk', function kTalk_0() {
       it('should send "ping" command and return "Finished." string', function talkToKodi_1(done) {
         self.testing.talkToKodi('Ping').then(function (v) {
           expect(v).toBe('Finished.');
-          expect(self.commandId).toBe(1); // Two JSON-RPC commands should be sent 
+          expect(self.commandId).toBe(1); // Two JSON-RPC commands should be sent
           done();
         });
       });
@@ -1067,9 +1294,9 @@ describe('kTalk', function kTalk_0() {
           expect(v).toBe('Finished.');
           messages = window.d7('.message-text');
           expect(messages.length).toBe(3);
-          expect(messages[0].innerText).toBe(getCommand('hello').answer);
-          expect(messages[1].innerText).toBe('Kodi 16.1 (rev. 60a76d9)\nKodi Talk addon 1.2.3');
-          expect(messages[2].innerText).toBe('Now playing:\n‣ TV channel: World News (#33)');
+          expect(messages[0].innerHTML).toBe('Hello, I\'m a Kodi Talk bot.\n\nSend me a media URL you want to play or any other command\n(to list all commands I understand, type "<a href="#" class="new link" data-command="help">help</a>")');
+          expect(messages[1].innerHTML).toBe('Kodi 16.1 (rev. 60a76d9)\nKodi Talk addon 1.2.3');
+          expect(messages[2].innerHTML).toBe('Now playing:\n‣ TV channel: World News (#33)');
           expect(self.commandId).toBe(4);
           done();
         });
@@ -1095,7 +1322,7 @@ describe('kTalk', function kTalk_0() {
           expect(self.busy).toBe(false);
           messages = window.d7('.message-text');
           expect(messages.length).toBe(2);
-          expect(messages[1].innerText).toBe('Waiting ' + delay_1 + ' ms.');
+          expect(messages[1].innerHTML).toBe('Waiting ' + delay_1 + ' ms.');
         });
 
         delay_2 = 50;
@@ -1108,7 +1335,7 @@ describe('kTalk', function kTalk_0() {
           expect(self.messagebar.value()).toBe('');
           messages = window.d7('.message-text');
           expect(messages.length).toBe(4);
-          expect(messages[3].innerText).toBe('Waiting ' + delay_2 + ' ms.');
+          expect(messages[3].innerHTML).toBe('Waiting ' + delay_2 + ' ms.');
           done();
         });
         expect(self.busy).toBe(true);
