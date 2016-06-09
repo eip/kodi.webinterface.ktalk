@@ -170,6 +170,9 @@ describe('kTalk', function kTalk_0() {
         self.testing.q('Resolved').then(function (v) {
           expect(v).toBe('Resolved');
           done();
+        }, function () {
+          expect('Promise not').toBe('rejected');
+          done();
         });
       });
 
@@ -181,6 +184,9 @@ describe('kTalk', function kTalk_0() {
         self.testing.qt('Resolved', 1).then(function (v) {
           expect(v).toBe('Resolved');
           done();
+        }, function () {
+          expect('Promise not').toBe('rejected');
+          done();
         });
       });
 
@@ -189,6 +195,9 @@ describe('kTalk', function kTalk_0() {
           startTime = Date.now();
         self.testing.qt('Resolved', delay).then(function (v) {
           expect(Date.now() - startTime).toBeCloseTo(delay, -2);
+          done();
+        }, function () {
+          expect('Promise not').toBe('rejected');
           done();
         });
       });
@@ -199,6 +208,9 @@ describe('kTalk', function kTalk_0() {
         self.testing.qt('Resolved').then(function (v) {
           expect(Date.now() - startTime).toBeCloseTo(delay, -2);
           done();
+        }, function () {
+          expect('Promise not').toBe('rejected');
+          done();
         });
       });
 
@@ -207,7 +219,10 @@ describe('kTalk', function kTalk_0() {
     describe('.r()', function r_0() {
 
       it('should return rejected promise with the given value', function r_1(done) {
-        self.testing.r('Rejected').then(null, function (v) {
+        self.testing.r('Rejected').then(function () {
+          expect('Promise not').toBe('resolved');
+          done();
+        }, function (v) {
           expect(v).toBe('Rejected');
           done();
         });
@@ -497,27 +512,61 @@ describe('kTalk', function kTalk_0() {
     describe('.checkMessage()', function checkMessage_0() {
 
       it('should return rejected promise if message string is empty', function checkMessage_1(done) {
-        self.testing.checkMessage('').then(null, function (v) {
+        self.testing.checkMessage('').then(function () {
+          expect('Promise not').toBe('resolved');
+          done();
+        }, function (v) {
           expect(v).toBeUndefined();
           done();
         });
       });
 
-      it('should return resolved promise with the command object and command.message set to message string', function checkMessage_2(done) {
+      it('should return rejected promise if message string is "."', function checkMessage_2(done) {
+        self.testing.checkMessage('.').then(function () {
+          expect('Promise not').toBe('resolved');
+          done();
+        }, function (v) {
+          expect(v).toBeUndefined();
+        });
+        self.testing.checkMessage('....').then(function () {
+          expect('Promise not').toBe('resolved');
+          done();
+        }, function (v) {
+          expect(v).toBeUndefined();
+          done();
+        });
+      });
+
+      it('should return resolved promise with the command object and command.message set to message string', function checkMessage_3(done) {
         self.testing.checkMessage('Help').then(function (v) {
           expect(v).toEqual({
             message: 'Help'
           });
           done();
+        }, function () {
+          expect('Promise not').toBe('rejected');
+          done();
         });
       });
 
-      it('should set command.silent to true if message string starts with "."', function checkMessage_3(done) {
+      it('should set command.silent to true if message string starts with "."', function checkMessage_4(done) {
         self.testing.checkMessage('.Help').then(function (v) {
           expect(v).toEqual({
             message: 'Help',
             silent: true
           });
+        }, function () {
+          expect('Promise not').toBe('rejected');
+          done();
+        });
+        self.testing.checkMessage('....Help').then(function (v) {
+          expect(v).toEqual({
+            message: 'Help',
+            silent: true
+          });
+          done();
+        }, function () {
+          expect('Promise not').toBe('rejected');
           done();
         });
       });
@@ -613,6 +662,9 @@ describe('kTalk', function kTalk_0() {
       it('and should correctly process case if property(command) returns a promise', function parseProperty_3(done) {
         self.testing.parseProperty(command, 'params_fp').then(function (v) {
           expect(v).toBe('Promise');
+          done();
+        }, function () {
+          expect('Promise not').toBe('rejected');
           done();
         });
       });
@@ -723,7 +775,10 @@ describe('kTalk', function kTalk_0() {
 
       it('should return rejected promise for unknown command', function parseKodiCommand_6(done) {
         command.message = 'Fake message.';
-        self.testing.parseKodiCommand(command).then(null, function (v) {
+        self.testing.parseKodiCommand(command).then(function () {
+          expect('Promise not').toBe('resolved');
+          done();
+        }, function (v) {
           expect(v).toBe('Sorry, I can\'t understand you. I will learn more commands soon.');
           done();
         });
@@ -770,6 +825,9 @@ describe('kTalk', function kTalk_0() {
         self.testing.callJsonRpcMethod(command).then(function (v) {
           expect(v).toEqual(jasmine.objectContaining(result));
           done();
+        }, function () {
+          expect('Promise not').toBe('rejected');
+          done();
         });
         xhr = jasmine.Ajax.requests.mostRecent();
         expect(xhr.method).toBe(xhrMethod);
@@ -797,6 +855,9 @@ describe('kTalk', function kTalk_0() {
         self.testing.callJsonRpcMethod(command).then(function (v) {
           expect(v).toEqual(jasmine.objectContaining(result));
           done();
+        }, function () {
+          expect('Promise not').toBe('rejected');
+          done();
         });
         xhr = jasmine.Ajax.requests.mostRecent();
         expect(xhr.method).toBe(xhrMethod);
@@ -823,7 +884,10 @@ describe('kTalk', function kTalk_0() {
         response.responseText.error = result;
         response.responseText = JSON.stringify(response.responseText);
 
-        self.testing.callJsonRpcMethod(command).then(null, function (v) {
+        self.testing.callJsonRpcMethod(command).then(function () {
+          expect('Promise not').toBe('resolved');
+          done();
+        }, function (v) {
           expect(v).toEqual(jasmine.objectContaining(result));
           done();
         });
@@ -847,7 +911,10 @@ describe('kTalk', function kTalk_0() {
           message: 'Failed to complete JSON-RPC request to the Kodi server.'
         };
 
-        self.testing.callJsonRpcMethod(command).then(null, function (v) {
+        self.testing.callJsonRpcMethod(command).then(function () {
+          expect('Promise not').toBe('resolved');
+          done();
+        }, function (v) {
           expect(v).toEqual(jasmine.objectContaining(result));
           done();
         });
@@ -890,6 +957,9 @@ describe('kTalk', function kTalk_0() {
             expect(v).toBe('Test');
             expect(self.queue.answers.length).toBe(0);
             done();
+          }, function () {
+            expect('Promise not').toBe('rejected');
+            done();
           });
         });
 
@@ -899,6 +969,9 @@ describe('kTalk', function kTalk_0() {
             expect(v).toBe('123');
             expect(self.queue.answers.length).toBe(0);
             done();
+          }, function () {
+            expect('Promise not').toBe('rejected');
+            done();
           });
         });
 
@@ -907,6 +980,9 @@ describe('kTalk', function kTalk_0() {
           self.testing.formatAnswerMessage(command).then(function (v) {
             expect(v).toBe(resultStr);
             expect(self.queue.answers.length).toBe(0);
+            done();
+          }, function () {
+            expect('Promise not').toBe('rejected');
             done();
           });
         });
@@ -919,6 +995,9 @@ describe('kTalk', function kTalk_0() {
             expect(v).toBe('Test');
             expect(self.queue.answers.length).toBe(0);
             done();
+          }, function () {
+            expect('Promise not').toBe('rejected');
+            done();
           });
         });
 
@@ -929,6 +1008,9 @@ describe('kTalk', function kTalk_0() {
           self.testing.formatAnswerMessage(command).then(function (v) {
             expect(v).toBe('123');
             expect(self.queue.answers.length).toBe(0);
+            done();
+          }, function () {
+            expect('Promise not').toBe('rejected');
             done();
           });
         });
@@ -941,6 +1023,9 @@ describe('kTalk', function kTalk_0() {
             expect(v).toBe(resultStr);
             expect(self.queue.answers.length).toBe(0);
             done();
+          }, function () {
+            expect('Promise not').toBe('rejected');
+            done();
           });
         });
 
@@ -951,6 +1036,9 @@ describe('kTalk', function kTalk_0() {
           self.testing.formatAnswerMessage(command).then(function (v) {
             expect(v).toBe(resultStr);
             expect(self.queue.answers.length).toBe(0);
+            done();
+          }, function () {
+            expect('Promise not').toBe('rejected');
             done();
           });
         });
@@ -965,6 +1053,9 @@ describe('kTalk', function kTalk_0() {
             expect(v).toBe('Test!');
             expect(self.queue.answers.length).toBe(0);
             done();
+          }, function () {
+            expect('Promise not').toBe('rejected');
+            done();
           });
         });
 
@@ -974,6 +1065,9 @@ describe('kTalk', function kTalk_0() {
             expect(v).toBe('123');
             expect(self.queue.answers.length).toBe(0);
             done();
+          }, function () {
+            expect('Promise not').toBe('rejected');
+            done();
           });
         });
 
@@ -982,6 +1076,9 @@ describe('kTalk', function kTalk_0() {
           self.testing.formatAnswerMessage(command).then(function (v) {
             expect(v).toBe(resultStr);
             expect(self.queue.answers.length).toBe(0);
+            done();
+          }, function () {
+            expect('Promise not').toBe('rejected');
             done();
           });
         });
@@ -998,6 +1095,9 @@ describe('kTalk', function kTalk_0() {
             expect(self.queue.answers.length).toBe(1);
             expect(self.queue.answers[0]).toBe('Test');
             done();
+          }, function () {
+            expect('Promise not').toBe('rejected');
+            done();
           });
         });
 
@@ -1010,6 +1110,9 @@ describe('kTalk', function kTalk_0() {
             expect(v).toBe('');
             expect(self.queue.answers.length).toBe(1);
             expect(self.queue.answers[0]).toEqual(result);
+            done();
+          }, function () {
+            expect('Promise not').toBe('rejected');
             done();
           });
         });
@@ -1024,6 +1127,9 @@ describe('kTalk', function kTalk_0() {
             expect(self.queue.answers.length).toBe(1);
             expect(self.queue.answers[0]).toBe(result);
             done();
+          }, function () {
+            expect('Promise not').toBe('rejected');
+            done();
           });
         });
 
@@ -1034,6 +1140,9 @@ describe('kTalk', function kTalk_0() {
             expect(v).toBe('');
             expect(self.queue.answers.length).toBe(1);
             expect(self.queue.answers[0]).toBe('Test!');
+            done();
+          }, function () {
+            expect('Promise not').toBe('rejected');
             done();
           });
         });
@@ -1046,6 +1155,9 @@ describe('kTalk', function kTalk_0() {
             expect(self.queue.answers.length).toBe(1);
             expect(self.queue.answers[0]).toBe(result);
             done();
+          }, function () {
+            expect('Promise not').toBe('rejected');
+            done();
           });
         });
 
@@ -1055,6 +1167,9 @@ describe('kTalk', function kTalk_0() {
           self.testing.formatAnswerMessage(command).then(function (v) {
             expect(v).toBe('');
             expect(self.queue.answers.length).toBe(0);
+          }, function () {
+            expect('Promise not').toBe('rejected');
+            done();
           });
 
           command.answer = function () {
@@ -1064,6 +1179,9 @@ describe('kTalk', function kTalk_0() {
           self.testing.formatAnswerMessage(command).then(function (v) {
             expect(v).toBe('');
             expect(self.queue.answers.length).toBe(0);
+            done();
+          }, function () {
+            expect('Promise not').toBe('rejected');
             done();
           });
         });
@@ -1114,6 +1232,9 @@ describe('kTalk', function kTalk_0() {
         self.testing.addReceivedMessage('').then(function (v) {
           expect(v).toBe(null);
           done();
+        }, function () {
+          expect('Promise not').toBe('rejected');
+          done();
         });
       });
 
@@ -1122,6 +1243,9 @@ describe('kTalk', function kTalk_0() {
           expect(v).toEqual(jasmine.any(window.HTMLDivElement));
           expect(v.classList.contains('message-received')).toBe(true);
           expect(v.firstElementChild.innerHTML).toBe('Sample <span>message</span>');
+          done();
+        }, function () {
+          expect('Promise not').toBe('rejected');
           done();
         });
       });
@@ -1133,6 +1257,9 @@ describe('kTalk', function kTalk_0() {
           expect(v.classList.contains('error')).toBe(true);
           expect(v.firstElementChild.innerHTML).toBe('Sample message');
           done();
+        }, function () {
+          expect('Promise not').toBe('rejected');
+          done();
         });
       });
 
@@ -1143,6 +1270,9 @@ describe('kTalk', function kTalk_0() {
           expect(v.classList.contains('error')).toBe(false);
           expect(v.classList.contains('debug')).toBe(true);
           expect(v.firstElementChild.innerHTML).toBe('#Debug message');
+          done();
+        }, function () {
+          expect('Promise not').toBe('rejected');
           done();
         });
       });
@@ -1165,6 +1295,9 @@ describe('kTalk', function kTalk_0() {
           expect(v.classList.contains('message-received')).toBe(true);
           expect(v.firstElementChild.innerHTML).toBe('Sample &lt;span&gt;message&lt;/span&gt;');
           done();
+        }, function () {
+          expect('Promise not').toBe('rejected');
+          done();
         });
       });
 
@@ -1178,6 +1311,9 @@ describe('kTalk', function kTalk_0() {
           expect(v.classList.contains('message-received')).toBe(true);
           expect(v.classList.contains('error')).toBe(true);
           expect(v.firstElementChild.innerHTML).toBe('Sample error <span>message</span>');
+          done();
+        }, function () {
+          expect('Promise not').toBe('rejected');
           done();
         });
       });
@@ -1202,6 +1338,9 @@ describe('kTalk', function kTalk_0() {
           expect(v.classList.contains('message-received')).toBe(true);
           expect(v.firstElementChild.innerHTML).toBe('Hello, I\'m a Kodi Talk bot.\n\nSend me a media URL you want to play or any other command\n(to list all commands I understand, type "<a href="#" class="new link" data-command="help">help</a>")');
           done();
+        }, function () {
+          expect('Promise not').toBe('rejected');
+          done();
         });
       });
 
@@ -1210,6 +1349,9 @@ describe('kTalk', function kTalk_0() {
           expect(v).toEqual(jasmine.any(window.HTMLDivElement));
           expect(v.classList.contains('message-received')).toBe(true);
           expect(v.firstElementChild.innerHTML).toBe('pong!');
+          done();
+        }, function () {
+          expect('Promise not').toBe('rejected');
           done();
         });
       });
@@ -1243,6 +1385,9 @@ describe('kTalk', function kTalk_0() {
           expect(v).toBe('Finished.');
           expect(self.commandId).toBe(2); // Two JSON-RPC commands should be sent
           done();
+        }, function () {
+          expect('Promise not').toBe('rejected');
+          done();
         });
       });
 
@@ -1267,6 +1412,9 @@ describe('kTalk', function kTalk_0() {
         self.testing.talkToKodi('Ping').then(function (v) {
           expect(v).toBe('Finished.');
           expect(self.commandId).toBe(1); // Two JSON-RPC commands should be sent
+          done();
+        }, function () {
+          expect('Promise not').toBe('rejected');
           done();
         });
       });
@@ -1299,6 +1447,9 @@ describe('kTalk', function kTalk_0() {
           expect(messages[2].innerHTML).toBe('Now playing:\n‣ TV channel: World News (#33)');
           expect(self.commandId).toBe(4);
           done();
+        }, function () {
+          expect('Promise not').toBe('rejected');
+          done();
         });
       });
 
@@ -1323,6 +1474,9 @@ describe('kTalk', function kTalk_0() {
           messages = window.d7('.message-text');
           expect(messages.length).toBe(2);
           expect(messages[1].innerHTML).toBe('Waiting ' + delay_1 + ' ms.');
+        }, function () {
+          expect('Promise not').toBe('rejected');
+          done();
         });
 
         delay_2 = 50;
@@ -1336,6 +1490,9 @@ describe('kTalk', function kTalk_0() {
           messages = window.d7('.message-text');
           expect(messages.length).toBe(4);
           expect(messages[3].innerHTML).toBe('Waiting ' + delay_2 + ' ms.');
+          done();
+        }, function () {
+          expect('Promise not').toBe('rejected');
           done();
         });
         expect(self.busy).toBe(true);
