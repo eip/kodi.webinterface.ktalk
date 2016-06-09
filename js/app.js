@@ -148,11 +148,11 @@
 
       self.busy = true;
       message = message.trim();
+      while (message.indexOf('.') === 0) { // silent command
+        command.silent = true;
+        message = message.substr(1);
+      }
       if (message.length > 0) {
-        if (message.indexOf('.') === 0) { // silent command
-          command.silent = true;
-          message = message.substr(1);
-        }
         command.message = message;
         return q(command);
       }
