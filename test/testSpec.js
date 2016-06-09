@@ -426,9 +426,10 @@ describe('kTalk', function kTalk_0() {
 
       it('should return the description of the command', function getCommandDescription_1() {
         expect(self.testing.getCommandDescription(cloneCommand('hello'))).toBe('');
-        expect(self.testing.getCommandDescription(cloneCommand('home'))).toBe('show the home screen.');
-        expect(self.testing.getCommandDescription(cloneCommand('help'))).toBe('List of available commands. I also understand you if you type "[[Help]]", "[[Help!]]", "[[help?]]"…' +
-          '\nSend me "help command" for detailed description of the command, for example, "[[help play]]" or "[[help tv]]"');
+        expect(self.testing.getCommandDescription(cloneCommand('home'))).toBe('Show the home screen.');
+        expect(self.testing.getCommandDescription(cloneCommand('help'))).toBe('List of available commands.' +
+          '\nI also understand you if you type "[[Help]]", "[[Help!]]", "[[help?]]"…' +
+          '\nSend me "help command" for detailed description of the command, for example, "[[help play]]" or "[[help tv]]".');
       });
 
     });
@@ -1336,7 +1337,9 @@ describe('kTalk', function kTalk_0() {
         self.testing.sendCommand('Hello!').then(function (v) {
           expect(v).toEqual(jasmine.any(window.HTMLDivElement));
           expect(v.classList.contains('message-received')).toBe(true);
-          expect(v.firstElementChild.innerHTML).toBe('Hello, I\'m a Kodi Talk bot.\n\nSend me a media URL you want to play or any other command\n(to list all commands I understand, type "<a href="#" class="new link" data-command="help">help</a>")');
+          expect(v.firstElementChild.innerHTML).toBe('Hello, I\'m a Kodi Talk bot.' +
+            '\n\nSend me a media URL you want to play or any other command' +
+            '\n(to list all commands I understand, type "<a href="#" class="new link" data-command="help">help</a>").');
           done();
         }, function () {
           expect('Promise not').toBe('rejected');
@@ -1442,7 +1445,9 @@ describe('kTalk', function kTalk_0() {
           expect(v).toBe('Finished.');
           messages = window.d7('.message-text');
           expect(messages.length).toBe(3);
-          expect(messages[0].innerHTML).toBe('Hello, I\'m a Kodi Talk bot.\n\nSend me a media URL you want to play or any other command\n(to list all commands I understand, type "<a href="#" class="new link" data-command="help">help</a>")');
+          expect(messages[0].innerHTML).toBe('Hello, I\'m a Kodi Talk bot.' +
+            '\n\nSend me a media URL you want to play or any other command' +
+            '\n(to list all commands I understand, type "<a href="#" class="new link" data-command="help">help</a>").');
           expect(messages[1].innerHTML).toBe('Kodi 16.1 (rev. 60a76d9)\nKodi Talk addon 1.2.3');
           expect(messages[2].innerHTML).toBe('Now playing:\n‣ TV channel: World News (#33)');
           expect(self.commandId).toBe(4);

@@ -373,11 +373,12 @@
       self.commands = [{
         name: 'hello',
         regex: /^(hello)\s*[\.!\?]*$/i,
-        answer: 'Hello, I\'m a Kodi Talk bot.\n\nSend me a media URL you want to play or any other command\n(to list all commands I understand, type "[[help]]")'
+        answer: 'Hello, I\'m a Kodi Talk bot.\n\nSend me a media URL you want to play or any other command\n(to list all commands I understand, type "[[help]]").'
       }, {
         name: 'help',
-        description: ['List of available commands. I also understand you if you type "[[Help]]", "[[Help!]]", "[[help?]]"…',
-          'Send me "help command" for detailed description of the command, for example, "[[help play]]" or "[[help tv]]"'],
+        description: ['List of available commands.',
+          'I also understand you if you type "[[Help]]", "[[Help!]]", "[[help?]]"…',
+          'Send me "help command" for detailed description of the command, for example, "[[help play]]" or "[[help tv]]".'],
         regex: /^(help)\s*[\.!\?]*$/i,
         answer: function (c) {
           var result = 'I understand the following commmands:\n';
@@ -387,7 +388,7 @@
               result += '‣ [[' + cc.name + ']]\n';
             }
           });
-          result += '\n' + c.description[1];
+          result += c.description[2];
           return result;
         }
       }, {
@@ -402,8 +403,7 @@
           return 'Sorry, I don\'t know anything about "' + commandName + '" command';
         }
       }, {
-        name: 'play <url>',
-        description: 'start playing the given URL. For example,\n"play http://www.sample-videos.com/video/mp4/720/big_buck_bunny_720p_50mb.mp4",\n"play https://youtu.be/YE7VzlLtp-4",\nor simply "https://youtu.be/YE7VzlLtp-4".',
+        name: 'play.url',
         regex: /^(?:play)?\s*((?:https?|plugin):\/\/.+)$/i,
         answer: function (c) {
           var file = transformPlayerUri(getMessageToken(c, 1));
@@ -416,8 +416,7 @@
           return 'Start playing URL: ' + file;
         }
       }, {
-        name: 'play tv <channel>',
-        description: 'start playing the given TV channel. For example, "play tv 1".\nUse "tv" command to get the list of TV channels.',
+        name: 'play.tv',
         regex: /^play\s+tv\s+(\d+)\s*[\.!\?]*$/i,
         answer: function (c) {
           var id = getMessageToken(c, 1);
@@ -431,7 +430,11 @@
         }
       }, {
         name: 'play',
-        description: 'resume paused playback.',
+        description: ['Start playing the given media URL or TV channel or resume paused playback.',
+          'Send me "[[play http://www.sample-videos.com/video/mp4/720/big_buck_bunny_720p_50mb.mp4]]" or simply "[[http://www.sample-videos.com/video/mp4/720/big_buck_bunny_720p_50mb.mp4]]" to start playing video file.',
+          'I also understand links to YouTube: "[[play https://youtu.be/YE7VzlLtp-4]]" or "[[https://youtu.be/YE7VzlLtp-4]]", (you should have Kodi Youtube addon to be installed).',
+          'Type "[[play tv 1]]" to start playing the TV channel 1. Use "[[tv]]" command to list of available channels.',
+          'Send me "[[play]]" command if you have paused playback and it will be resumed.'],
         regex: /^(play)\s*[\.!\?]*$/i,
         method: 'Player.GetActivePlayers',
         answer: function (c) {
@@ -446,7 +449,7 @@
         }
       }, {
         name: 'pause',
-        description: 'pause playback.',
+        description: 'Pause playback.',
         regex: /^(pause)\s*[\.!\?]*$/i,
         method: 'Player.GetActivePlayers',
         answer: function (c) {
@@ -461,7 +464,7 @@
         }
       }, {
         name: 'stop',
-        description: 'stop playback.',
+        description: 'Stop playback.',
         regex: /^(stop)\s*[\.!\?]*$/i,
         method: 'Player.GetActivePlayers',
         answer: function (c) {
@@ -485,7 +488,7 @@
         }
       }, {
         name: 'what\'s up',
-        description: 'check what Kodi is doing now.',
+        description: 'Check what Kodi is doing now.',
         regex: /^(w(?:hat'?s\s*|ass|azz)up)\s*[\.!\?]*$/i,
         method: 'Player.GetActivePlayers',
         answer: function (c) {
@@ -507,7 +510,9 @@
         }
       }, {
         name: 'tv',
-        description: 'get the list of TV channels. You may add a string to filter the channels by name, for example, "tv discovery". For sorting the list by number, use "tv#" command.',
+        description: ['List of available TV channels.',
+          'You may add a (sub)string to filter the list by name, for example, "[[tv discovery]]".',
+          'For sorting the list by channel number, use "[[tv#]]" or "[[tv# discovery]]".'],
         regex: /^(tv#?)(?:$|\s+(.*)$)/i,
         method: 'PVR.GetChannels',
         params: {
@@ -533,7 +538,7 @@
         }
       }, {
         name: 'fullscreen',
-        description: 'set the fullscrin player mode.',
+        description: 'Set the fullscreen player mode.',
         regex: /^(fullscreen)\s*[\.!\?]*$/i,
         method: 'GUI.SetFullscreen',
         params: {
@@ -544,7 +549,7 @@
         }
       }, {
         name: 'home',
-        description: 'show the home screen.',
+        description: 'Show the home screen.',
         regex: /^(home)\s*[\.!\?]*$/i,
         method: 'GUI.ActivateWindow',
         params: {
@@ -552,7 +557,7 @@
         }
       }, {
         name: 'weather',
-        description: 'show the weather screen.',
+        description: 'Show the weather forecast.',
         regex: /^(weather)\s*[\.!\?]*$/i,
         method: 'GUI.ActivateWindow',
         params: {
@@ -560,8 +565,10 @@
         }
       }, {
         // !!! requires script.sleep addon by robwebset http://kodi.wiki/view/Add-on:Sleep
-        name: 'sleep <N>',
-        description: 'put Kodi to sleep after <N> minutes. Requires "Sleep" addon by robwebset.\nFor example, "sleep 30". Send "sleep 0" to disable sleep timer',
+        name: 'sleep',
+        description: ['Put Kodi to sleep after <N> minutes *.',
+          'Requires "Sleep" addon by robwebset.',
+          'For example, if you type "[[sleep 30]]", Kodi will sleep in 30 minutes. Send "[[sleep 0]]" to disable sleep timer.'],
         regex: /^(sleep)\s+(\d+)\s*[\.!\?]*$/i,
         method: 'Addons.GetAddons',
         params: {
@@ -597,7 +604,7 @@
         }
       }, {
         name: 'version',
-        description: 'get the Kodi version.',
+        description: 'Show the Kodi and the Kodi Talk addon versions.',
         regex: /^(version)\s*[\.!\?]*$/i,
         method: 'Application.GetProperties',
         params: {
@@ -618,28 +625,31 @@
         }
       }, {
         name: 'ping',
-        description: 'check the availability of the Kodi web server.',
+        description: 'Check the availability of the Kodi.',
         regex: /^(ping)\s*[\.!\?]*$/i,
         method: 'JSONRPC.Ping'
       }, {
-        name: 'say <message>',
-        description: 'display the message on the Kodi screen.',
+        name: 'say',
+        description: ['Display the message on the Kodi screen.',
+          'For example, "[[say Hello there!]]".'],
         regex: /^(say)\s+([\S\s]+?)\s*$/i,
         method: 'GUI.ShowNotification',
         params: '{"title":"Kodi Talk","message":"$2"}'
       }, {
         name: 'reboot',
-        description: 'reboot the system running Kodi.',
+        description: 'Reboot the system running Kodi.',
         regex: /^(reboot)\s*[\.!\?]*$/i,
         method: 'System.Reboot'
       }, {
         name: 'shutdown',
-        description: 'shutdown the system running Kodi.',
+        description: 'Shutdown the system running Kodi.',
         regex: /^(shutdown)\s*[\.!\?]*$/i,
         method: 'System.Shutdown'
       }, {
         name: 'exec',
-        description: 'for geeks only: execute the JSON-RPC <method> with <params>. For example,\n"exec GUI.ActivateWindow {"window":"home"}".',
+        description: ['* For geeks only: execute the JSON-RPC method with the given parameters.',
+          'For example, "[[exec GUI.ActivateWindow {"window":"home"}]]".',
+          'See the Kodi Wiki for JSON-RPC API description.'],
         regex: /^exec\s+([\w\.]+)\s+(\S+)$/i,
         method: '$1',
         params: '$2'
