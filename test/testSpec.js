@@ -432,6 +432,13 @@ describe('kTalk', function kTalk_0() {
           '\nSend me "help command" for detailed description of the command, for example, "[[help play]]" or "[[help tv]]".');
       });
 
+      it('should return the first line of the description of the command if "short" parameter is true', function getCommandDescription_2() {
+        expect(self.testing.getCommandDescription(cloneCommand('hello'), true)).toBe('');
+        expect(self.testing.getCommandDescription(cloneCommand('home'), 1)).toBe('Show the home screen.');
+        expect(self.testing.getCommandDescription(cloneCommand('help'), true)).toBe('List of available commands.');
+        expect(self.testing.getCommandDescription(cloneCommand('help'), 'short')).toBe('List of available commands.');
+      });
+
     });
 
     describe('.makeLinks()', function makeLinks_0() {
@@ -1338,8 +1345,8 @@ describe('kTalk', function kTalk_0() {
           expect(v).toEqual(jasmine.any(window.HTMLDivElement));
           expect(v.classList.contains('message-received')).toBe(true);
           expect(v.firstElementChild.innerHTML).toBe('Hello, I\'m a Kodi Talk bot.' +
-            '\n\nSend me a media URL you want to play or any other command' +
-            '\n(to list all commands I understand, type "<a href="#" class="new link" data-command="help">help</a>").');
+            '\n\nSend me a media URL you want to play or any other command.' +
+            '\nTo list all commands I understand, type "<a href="#" class="new link" data-command="help">help</a>".');
           done();
         }, function () {
           expect('Promise not').toBe('rejected');
@@ -1446,8 +1453,8 @@ describe('kTalk', function kTalk_0() {
           messages = window.d7('.message-text');
           expect(messages.length).toBe(3);
           expect(messages[0].innerHTML).toBe('Hello, I\'m a Kodi Talk bot.' +
-            '\n\nSend me a media URL you want to play or any other command' +
-            '\n(to list all commands I understand, type "<a href="#" class="new link" data-command="help">help</a>").');
+            '\n\nSend me a media URL you want to play or any other command.' +
+            '\nTo list all commands I understand, type "<a href="#" class="new link" data-command="help">help</a>".');
           expect(messages[1].innerHTML).toBe('Kodi 16.1 (rev. 60a76d9)\nKodi Talk addon 1.2.3');
           expect(messages[2].innerHTML).toBe('Now playing:\n‣ TV channel: World News (#33)');
           expect(self.commandId).toBe(4);
@@ -1501,6 +1508,30 @@ describe('kTalk', function kTalk_0() {
           done();
         });
         expect(self.busy).toBe(true);
+      });
+
+    });
+
+  });
+
+  describe('Commands', function commands_0() {
+
+    describe('descriptions', function descriptions_0() {
+
+      it('each line should begins with uppercase letter (may be prefixed with "★ ") and ends with "." or "…"', function sendMessage_1() {
+        self.commands.forEach(function (c) {
+          var d = c.description;
+
+          if (!d) {
+            return;
+          }
+          if (!window.d7.isArray(d)) {
+            d = [d];
+          }
+          d.forEach(function (s) {
+            expect(s).toMatch(/^(?:★ )?[A-Z].*?[\.…]$/);
+          });
+        });
       });
 
     });
