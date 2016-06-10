@@ -231,11 +231,7 @@ describe('kTalk', function kTalk_0() {
         expect(self.testing.capitalize('S')).toBe('S');
         expect(self.testing.capitalize('s')).toBe('S');
         expect(self.testing.capitalize('string')).toBe('String');
-      });
-
-      it('should return rest of the string in lower case', function capitalize_2() {
-        expect(self.testing.capitalize('STRING')).toBe('String');
-        expect(self.testing.capitalize('sTrInG')).toBe('String');
+        expect(self.testing.capitalize('sTrInG')).toBe('STrInG');
       });
 
     });
@@ -1055,6 +1051,14 @@ describe('kTalk', function kTalk_0() {
           self.testing.formatAnswerMessage(command).then(function (v) {
             expect(v).toBe('Test!');
             expect(self.queue.answers.length).toBe(0);
+          }, function () {
+            expect('Promise not').toBe('rejected');
+            done();
+          });
+          command.response = 'tesT';
+          self.testing.formatAnswerMessage(command).then(function (v) {
+            expect(v).toBe('TesT!');
+            expect(self.queue.answers.length).toBe(0);
             done();
           }, function () {
             expect('Promise not').toBe('rejected');
@@ -1353,7 +1357,7 @@ describe('kTalk', function kTalk_0() {
         self.testing.sendCommand('Ping').then(function (v) {
           expect(v).toEqual(jasmine.any(window.HTMLDivElement));
           expect(v.classList.contains('message-received')).toBe(true);
-          expect(v.firstElementChild.innerHTML).toBe('pong!');
+          expect(v.firstElementChild.innerHTML).toBe('Pong!');
           done();
         }, function () {
           expect('Promise not').toBe('rejected');
@@ -1524,7 +1528,7 @@ describe('kTalk', function kTalk_0() {
             d = [d];
           }
           d.forEach(function (s) {
-            expect(s).toMatch(/^(?:★ )?[A-Z].*?[\.…]$/);
+            expect(s).toMatch(/^(?:★ )?[A-Z].*\S[\.…]$/);
           });
         });
       });

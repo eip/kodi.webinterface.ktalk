@@ -22,7 +22,7 @@
     }
 
     function capitalize(s) {
-      return s.charAt(0).toLocaleUpperCase() + s.slice(1).toLocaleLowerCase();
+      return s.charAt(0).toLocaleUpperCase() + s.slice(1);//.toLocaleLowerCase();
     }
 
     function formatDay(d) {
@@ -271,7 +271,7 @@
       if (typeof command.answer !== 'undefined') {
         result = parseProperty(command, 'answer');
       } else if (typeof command.response === 'string') {
-        result = command.response + '!';
+        result = capitalize(command.response) + '!';
       } else {
         result = command.response;
       }
