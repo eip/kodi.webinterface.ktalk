@@ -394,7 +394,7 @@
               result += '‣ [[' + cc.name + ']]: ' + getCommandDescription(cc, 'short') + '\n';
             }
           });
-          result += c.description[2];
+          result += '\n' + c.description[2];
           return result;
         }
       }, {
