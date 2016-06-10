@@ -435,8 +435,8 @@ describe('kTalk', function kTalk_0() {
       it('should return the first line of the description of the command if "short" parameter is true', function getCommandDescription_2() {
         expect(self.testing.getCommandDescription(cloneCommand('hello'), true)).toBe('');
         expect(self.testing.getCommandDescription(cloneCommand('home'), 1)).toBe('Show the home screen.');
-        expect(self.testing.getCommandDescription(cloneCommand('help'), true)).toBe('List of available commands.');
-        expect(self.testing.getCommandDescription(cloneCommand('help'), 'short')).toBe('List of available commands.');
+        expect(self.testing.getCommandDescription(cloneCommand('help'), true)).toBe('List of available commands. [[(…)||help help]]');
+        expect(self.testing.getCommandDescription(cloneCommand('help'), 'short')).toBe('List of available commands. [[(…)||help help]]');
       });
 
     });

@@ -101,7 +101,13 @@
     function getCommandDescription(command, short) {
       var result = command.description || '';
       if (window.d7.isArray(result)) {
-        return short ? result[0] || '' : result.join('\n');
+        if (short) {
+          result = result[0];
+          if (command.description.length > 1) {
+            return result + ' [[(…)||help ' + command.name + ']]';
+          }
+        }
+        return result.join('\n');
       }
       return result;
     }
@@ -566,7 +572,7 @@
       }, {
         // !!! requires script.sleep addon by robwebset http://kodi.wiki/view/Add-on:Sleep
         name: 'sleep',
-        description: ['Put Kodi to sleep after <N> minutes.',
+        description: ['Put Kodi to sleep after specified time in minutes.',
           '★ Requires "Sleep" addon by robwebset.',
           'For example, if you type "[[sleep 30]]", Kodi will sleep in 30 minutes. Send "[[sleep 0]]" to disable sleep timer.'],
         regex: /^(sleep)\s+(\d+)\s*[\.!\?]*$/i,
