@@ -69,25 +69,20 @@ describe('kTalk', function kTalk_0() {
     });
   }
 
-  function cloneCommand(name) {
-    var command = self.testing.getCommand(name),
-      member,
+  function cloneObject(source) {
+    var member,
       result = {};
-    for (member in command) {
-      if (command.hasOwnProperty(member)) {
-        result[member] = command[member];
+
+    for (member in source) {
+      if (source.hasOwnProperty(member)) {
+        result[member] = source[member];
       }
     }
     return result;
   }
 
-  function clone(source, members) {
-    var result = {};
-
-    members.forEach(function (m) {
-      result[m] = source[m];
-    });
-    return result;
+  function cloneCommand(name) {
+    return cloneObject(self.testing.getCommand(name));
   }
 
   describe('Initialization', function initialization_0() {
@@ -593,7 +588,7 @@ describe('kTalk', function kTalk_0() {
       });
 
       it('should make command link from message and call kTalk.messages.addMessage method, and return unchanged command object', function addQuestionMessage_1() {
-        expect(self.testing.addQuestionMessage(clone(command, ['message']))).toEqual(command);
+        expect(self.testing.addQuestionMessage(cloneObject(command))).toEqual(command);
         expect(self.messages.addMessage).toHaveBeenCalledWith({
           type: 'sent',
           text: '<a href="#" class="new link" data-command="Help &lt;span&gt;me&lt;/span&gt;!">Help &lt;span&gt;me&lt;/span&gt;!</a>',
@@ -603,7 +598,7 @@ describe('kTalk', function kTalk_0() {
 
       it('should not call kTalk.messages.addMessage method if command.silent is true, and return unchanged command object', function addQuestionMessage_2() {
         command.silent = true;
-        expect(self.testing.addQuestionMessage(clone(command, ['message', 'silent']))).toEqual(command);
+        expect(self.testing.addQuestionMessage(cloneObject(command))).toEqual(command);
         expect(self.messages.addMessage).not.toHaveBeenCalled();
       });
 
@@ -825,7 +820,7 @@ describe('kTalk', function kTalk_0() {
         command = cloneCommand('ping');
         data.method = command.method;
         data.params = {};
-        result = clone(command, ['name', 'description', 'regex', 'method']);
+        result = cloneObject(command);
         result.response = 'pong';
         response.responseText.result = result.response;
         response.responseText = JSON.stringify(response.responseText);
@@ -855,7 +850,7 @@ describe('kTalk', function kTalk_0() {
         };
         data.method = command.method;
         data.params = command.params;
-        result = clone(command, ['name', 'description', 'regex', 'method', 'params']);
+        result = cloneObject(command);
         result.response = 'OK';
         response.responseText.result = result.response;
         response.responseText = JSON.stringify(response.responseText);
@@ -1456,7 +1451,7 @@ describe('kTalk', function kTalk_0() {
             '\n\nSend me a media URL you want to play or any other command.' +
             '\nTo list all commands I understand, type "<a href="#" class="new link" data-command="help">help</a>".');
           expect(messages[1].innerHTML).toBe('Kodi 16.1 (rev. 60a76d9)\nKodi Talk addon 1.2.3');
-          expect(messages[2].innerHTML).toBe('Now playing:\n‣ TV channel: World News (#33)');
+          expect(messages[2].innerHTML).toBe('Now playing:\n‣ TV channel <a href="#" class="new link" data-command="play tv 33">33</a>: World News');
           expect(self.commandId).toBe(4);
           done();
         }, function () {
@@ -1518,7 +1513,7 @@ describe('kTalk', function kTalk_0() {
 
     describe('descriptions', function descriptions_0() {
 
-      it('each line should begins with uppercase letter (may be prefixed with "★ ") and ends with "." or "…"', function sendMessage_1() {
+      it('each line should begins with uppercase letter (may be prefixed with "★ ") and ends with "." or "…"', function descriptions_1() {
         self.commands.forEach(function (c) {
           var d = c.description;
 
@@ -1534,6 +1529,30 @@ describe('kTalk', function kTalk_0() {
         });
       });
 
+    });
+
+    describe('answers', function answers_0() {
+      var command;
+
+      describe('player.getitem', function answers_1() {
+
+        beforeEach(function () {
+          command = cloneCommand('player.getitem');
+        });
+
+        it('should format TV channel', function answers_11() {
+          command.response = {
+            item: {
+              channeltype: 'tv',
+              id: 33,
+              label: 'World News',
+              type: 'channel'
+            }
+          };
+          expect(command.answer(command)).toBe('‣ TV channel [[33||play tv 33]]: World News');
+        });
+
+      });
     });
 
   });
