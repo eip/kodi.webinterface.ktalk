@@ -661,6 +661,10 @@
         method: '$1',
         params: '$2'
       }, {
+        name: 'echo',
+        regex: /^(echo)\s+([\S\s]+?)\s*$/i,
+        answer: '$2'
+      }, {
         name: 'delay',
         regex: /^(delay)\s+(\d+)$/i,
         answer: function (c) {
@@ -682,7 +686,7 @@
           var d = getMessageToken(c, 2);
 
           d = d.indexOf('"') === 0 ? JSON.parse(d) : d;
-          return self.queue.answers.join(d);
+          return self.queue.answers.join(d).replace(/[\s\S]\u2408/, '');
         }
       }, {
         name: 'answers.format',
