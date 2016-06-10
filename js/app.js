@@ -510,9 +510,10 @@
         method: 'Player.GetItem',
         params: '{"playerid":$2,"properties":["artist","channeltype"]}',
         answer: function (c) {
-          return '‣' + (c.response.item.type && c.response.item.type !== 'unknown' ? (c.response.item.type === 'channel' ? ' ' + c.response.item.channeltype.toUpperCase() : '') + ' ' + c.response.item.type + ': ' : ' ') +
-            (c.response.item.artist && c.response.item.artist.length ? c.response.item.artist.join(', ') + ' — ' : '') + c.response.item.label +
-            (c.response.item.type === 'channel' ? ' (#' + c.response.item.id + ')' : '');
+          var i = c.response.item;
+
+          return '‣' + (i.type && i.type !== 'unknown' ? (i.type === 'channel' ? ' ' + i.channeltype.toUpperCase() : '') + ' ' + i.type + (i.type === 'channel' ? ' [[' + i.id + '||play tv ' + i.id + ']]' : '') + ': ' : ' ') +
+            (i.artist && i.artist.length ? i.artist.join(', ') + ' — ' : '') + i.label;
         }
       }, {
         name: 'tv',
@@ -537,7 +538,7 @@
           });
           c.response.channels.forEach(function (ch) {
             if (ch.label.toLowerCase().indexOf(filter) >= 0) {
-              result += ch.channelid + ': ' + ch.label + '\n';
+              result += '[[' + ch.channelid + '||play tv ' + ch.channelid + ']]: ' + ch.label + '\n';
             }
           });
           return result;
