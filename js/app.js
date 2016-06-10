@@ -98,10 +98,10 @@
       });
     }
 
-    function getCommandDescription(command) {
+    function getCommandDescription(command, short) {
       var result = command.description || '';
       if (window.d7.isArray(result)) {
-        return result.join('\n');
+        return short ? result[0] || '' : result.join('\n');
       }
       return result;
     }
@@ -373,7 +373,7 @@
       self.commands = [{
         name: 'hello',
         regex: /^(hello)\s*[\.!\?]*$/i,
-        answer: 'Hello, I\'m a Kodi Talk bot.\n\nSend me a media URL you want to play or any other command\n(to list all commands I understand, type "[[help]]").'
+        answer: 'Hello, I\'m a Kodi Talk bot.\n\nSend me a media URL you want to play or any other command.\nTo list all commands I understand, type "[[help]]".'
       }, {
         name: 'help',
         description: ['List of available commands.',
@@ -385,7 +385,7 @@
 
           self.commands.forEach(function (cc) {
             if (typeof cc.description !== 'undefined') {
-              result += '‣ [[' + cc.name + ']]\n';
+              result += '‣ [[' + cc.name + ']]: ' + getCommandDescription(cc, 'short') + '\n';
             }
           });
           result += c.description[2];
@@ -430,7 +430,7 @@
         }
       }, {
         name: 'play',
-        description: ['Start playing the given media URL or TV channel or resume paused playback.',
+        description: ['Start playing the given media URL, or TV channel, or resume paused playback.',
           'Send me "[[play http://www.sample-videos.com/video/mp4/720/big_buck_bunny_720p_50mb.mp4]]" or simply "[[http://www.sample-videos.com/video/mp4/720/big_buck_bunny_720p_50mb.mp4]]" to start playing video file.',
           'I also understand links to YouTube: "[[play https://youtu.be/YE7VzlLtp-4]]" or "[[https://youtu.be/YE7VzlLtp-4]]", (you should have Kodi Youtube addon to be installed).',
           'Type "[[play tv 1]]" to start playing the TV channel 1. Use "[[tv]]" command to list of available channels.',
@@ -566,8 +566,8 @@
       }, {
         // !!! requires script.sleep addon by robwebset http://kodi.wiki/view/Add-on:Sleep
         name: 'sleep',
-        description: ['Put Kodi to sleep after <N> minutes *.',
-          'Requires "Sleep" addon by robwebset.',
+        description: ['Put Kodi to sleep after <N> minutes.',
+          '★ Requires "Sleep" addon by robwebset.',
           'For example, if you type "[[sleep 30]]", Kodi will sleep in 30 minutes. Send "[[sleep 0]]" to disable sleep timer.'],
         regex: /^(sleep)\s+(\d+)\s*[\.!\?]*$/i,
         method: 'Addons.GetAddons',
@@ -647,7 +647,7 @@
         method: 'System.Shutdown'
       }, {
         name: 'exec',
-        description: ['* For geeks only: execute the JSON-RPC method with the given parameters.',
+        description: ['★ For geeks only: execute the JSON-RPC method.',
           'For example, "[[exec GUI.ActivateWindow {"window":"home"}]]".',
           'See the Kodi Wiki for JSON-RPC API description.'],
         regex: /^exec\s+([\w\.]+)\s+(\S+)$/i,
