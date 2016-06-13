@@ -22,7 +22,7 @@
     }
 
     function capitalize(s) {
-      return s.charAt(0).toLocaleUpperCase() + s.slice(1);//.toLocaleLowerCase();
+      return s.charAt(0).toLocaleUpperCase() + s.slice(1); //.toLocaleLowerCase();
     }
 
     function formatDay(d) {
@@ -133,19 +133,44 @@
       window.d7(element).find('.link').on('click', messageLinkHandler);
     }
 
-    function makeMessageParams(text, type) {
-      var date = new Date(),
-        params = {
-          type: type,
-          text: text
-        };
+    function loadSettings() {
+      self.appData = JSON.parse(self.dataStorage.getItem(self.dataKey) || '{}');
+    }
 
+    function saveSettings() {
+      self.dataStorage.setItem(self.dataKey, JSON.stringify(self.appData || {}));
+    }
+
+    function addMessageToHistory(text, type, date) {
+
+      self.appData.messages = self.appData.messages || [];
+      while (self.appData.messages.length >= self.messageHistorySize) {
+        self.appData.messages.shift();
+      }
+      self.appData.messages.push({
+        date: date,
+        text: text,
+        type: type
+      });
+      saveSettings();
+    }
+
+    function makeMessageParams(text, type, date, noHistory) {
+      var params = {
+        type: type,
+        text: text
+      };
+
+      date = date ? new Date(date) : new Date();
       if (date.getTime() - self.lastMessageTime > 10 * 60 * 1000) {
         params.day = formatDay(date);
         params.time = formatTime(date);
       }
       params.avatar = params.type === 'sent' ? self.avaSent : self.avaRecv;
       self.lastMessageTime = date.getTime();
+      if (!noHistory) {
+        addMessageToHistory(text, type, date);
+      }
       return params;
     }
 
@@ -312,7 +337,7 @@
         if (m.length === 0) {
           return null;
         }
-        var elm = self.messages.addMessage(makeMessageParams(m, 'received', true));
+        var elm = self.messages.addMessage(makeMessageParams(m, 'received'));
 
         if (m.indexOf('#') === 0) {
           elm.classList.add('debug');
@@ -364,17 +389,30 @@
       }, q());
     }
 
+    function addMessagesFromHistory() {
+      if (!self.appData.messages || self.appData.messages.length < 1) {
+        return;
+      }
+      self.appData.messages.forEach(function (m) {
+        var elm = self.messages.addMessage(makeMessageParams(m.text, m.type, m.date, 'no history'));
+        addMessageLinkHandlers(elm);
+      });
+    }
+
     function init() {
       self.jsonRpcUrl = '/jsonrpc';
       if (window.location.protocol.indexOf('http') === -1) {
         self.jsonRpcUrl = 'http://192.168.237.9:8080' + self.jsonRpcUrl;
         window.console.warn(window.location.protocol + '// connection. Using test server: ' + self.jsonRpcUrl);
       }
+      self.dataStorage = window.localStorage;
+      self.dataKey = 'kodi.webinterface.ktalk';
       self.avaRecv = 'img/apple-touch-icon-114x114.png';
       self.avaSent = 'img/i-form-name-ios-114x114.png';
       self.busy = false;
       self.commandId = 0;
       self.lastMessageTime = 0;
+      self.messageHistorySize = 100;
 
       self.commands = [{
         name: 'hello',
@@ -708,24 +746,38 @@
           return f.join(d);
         }
       }, {
+        name: 'history.clear',
+        regex: /^(history\.clear)$/i,
+        answer: function () {
+          delete self.appData.messages;
+          saveSettings();
+          return '';
+        }
+      }, {
         name: 'debug',
         regex: /^(debug)\s+(.+)$/i,
         answer: function (c) {
           var val = getMessageToken(c, 2);
 
+          /*jslint evil: true*/
           return '# ' + val + ' =\n' + JSON.stringify(eval(val), null, 2);
         }
       }];
+      /*jslint evil: false*/
 
       self.queue = {
         commands: [],
         answers: []
       };
-
+      loadSettings();
     }
 
     function run() {
-      addGreetings();
+      if (self.appData.messages && self.appData.messages.length > 0) {
+        addMessagesFromHistory();
+      } else {
+        addGreetings();
+      }
 
       if (!window.f7App.device.os) {
         setTimeout(function () {
@@ -759,6 +811,10 @@
         getCommandDescription: getCommandDescription,
         makeLinks: makeLinks,
         messageLinkHandler: messageLinkHandler,
+        addMessageLinkHandlers: addMessageLinkHandlers,
+        loadSettings: loadSettings,
+        saveSettings: saveSettings,
+        addMessageToHistory: addMessageToHistory,
         makeMessageParams: makeMessageParams,
         checkMessage: checkMessage,
         addQuestionMessage: addQuestionMessage,

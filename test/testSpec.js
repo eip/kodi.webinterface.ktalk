@@ -1,11 +1,21 @@
 /*global jasmine, expect, describe, xdescribe, it, beforeEach, afterEach, spyOn*/
 /*global Framework7*/
-/*jshint -W053*/
 
 describe('kTalk', function kTalk_0() {
   'use strict';
 
   var self = window.kTalk,
+    store = {
+      getItem: function (key) {
+        return store[key];
+      },
+      setItem: function (key, value) {
+        return (store[key] = value.toString());
+      },
+      removeItem: function (key) {
+        delete store[key];
+      }
+    },
     jsonRpcProps = {
       kodi: {
         name: 'Kodi',
@@ -85,6 +95,8 @@ describe('kTalk', function kTalk_0() {
     return cloneObject(self.testing.getCommand(name));
   }
 
+  self.dataStorage = store;
+
   describe('Initialization', function initialization_0() {
 
     it('kTalk should be an object', function initialization_1() {
@@ -125,6 +137,7 @@ describe('kTalk', function kTalk_0() {
 
     it('kTalk\'s members of primitive data types shold be initialized', function initialization_6() {
       expect(self.jsonRpcUrl).toEqual(jasmine.any(String));
+      expect(self.dataKey).toEqual(jasmine.any(String));
       expect(self.avaRecv).toEqual(jasmine.any(String));
       expect(self.avaSent).toEqual(jasmine.any(String));
       expect(self.busy).toBe(false);
@@ -153,6 +166,14 @@ describe('kTalk', function kTalk_0() {
       expect(self.queue.commands.length).toBe(0);
       expect(self.queue.answers).toEqual(jasmine.any(Array));
       expect(self.queue.answers.length).toBe(0);
+    });
+
+    it('kTalk.dataStorage should be initialized', function initialization_9() {
+      expect(self.dataStorage).toEqual(jasmine.any(Object));
+      expect(self.dataStorage.getItem).toEqual(jasmine.any(Function));
+      expect(self.dataStorage.setItem).toEqual(jasmine.any(Function));
+      expect(self.dataStorage.removeItem).toEqual(jasmine.any(Function));
+      expect(self.dataStorage.clear).toBeUndefined(); // should not to be real localStorage object
     });
 
   });
@@ -488,8 +509,129 @@ describe('kTalk', function kTalk_0() {
 
     });
 
+    describe('.loadSettings()', function loadSettings_0() {
+
+      beforeEach(function () {
+        var i,
+          history,
+          date,
+          text,
+          type;
+
+        delete self.appData.messages;
+        history = [];
+        text = 'Message text';
+        type = 'received';
+        date = new Date(2001, 0, 1, 12, 30, 0);
+        for (i = 1; i <= self.messageHistorySize; ++i) {
+          history.push({
+            text: text + '-' + i,
+            type: type,
+            date: new Date(date.getTime() + i * 60000)
+          });
+        }
+        self.dataStorage.setItem(self.dataKey, JSON.stringify({
+          messages: history
+        }));
+      });
+
+      it('should load kTalk.appData.messages from the data storage', function loadSettings_1() {
+        expect(self.appData.messages).toBeUndefined();
+        self.testing.loadSettings();
+        expect(self.appData.messages).toEqual(jasmine.any(Array));
+        expect(self.appData.messages.length).toBe(self.messageHistorySize);
+      });
+
+    });
+
+    describe('.saveSettings()', function saveSettings_0() {
+
+      beforeEach(function () {
+        var i,
+          date,
+          text,
+          type;
+
+        self.appData.messages = [];
+        text = 'Message text';
+        type = 'received';
+        date = new Date(2001, 0, 1, 12, 30, 0);
+        for (i = 1; i <= self.messageHistorySize; ++i) {
+          self.appData.messages.push({
+            text: text + '-' + i,
+            type: type,
+            date: new Date(date.getTime() + i * 60000)
+          });
+        }
+        self.dataStorage.removeItem(self.dataKey);
+      });
+
+      it('should save kTalk.appData.messages to the data storage', function saveSettings_1() {
+        expect(self.dataStorage.getItem(self.dataKey)).toBeUndefined();
+        self.testing.saveSettings();
+        expect(self.dataStorage.getItem(self.dataKey)).toBe(JSON.stringify({
+          messages: self.appData.messages
+        }));
+      });
+
+    });
+
+    describe('.addMessageToHistory()', function addMessageToHistory_0() {
+      var date,
+        text,
+        type;
+
+      beforeEach(function () {
+        date = new Date(2001, 0, 1, 12, 30, 0);
+        text = 'Message text';
+        type = 'received';
+        delete self.appData.messages;
+        self.dataStorage.removeItem(self.dataKey);
+      });
+
+      it('should add message to the history', function addMessageToHistory_1() {
+        self.testing.addMessageToHistory(text, type, date);
+        expect(self.appData.messages.length).toBe(1);
+        expect(self.appData.messages[0]).toEqual({
+          date: date,
+          text: text,
+          type: type
+        });
+        expect(self.dataStorage.getItem(self.dataKey)).toBe(JSON.stringify({
+          messages: self.appData.messages
+        }));
+      });
+
+      it('should remove old messages from the history to maintain maximum history size', function addMessageToHistory_2() {
+        var i;
+
+        for (i = 1; i <= self.messageHistorySize + 10; ++i) {
+          self.testing.addMessageToHistory(text + '-' + i, type, new Date(date.getTime() + i * 60000));
+        }
+        expect(self.appData.messages.length).toBe(self.messageHistorySize);
+        expect(self.appData.messages[0]).toEqual({
+          date: new Date(date.getTime() + 11 * 60000),
+          text: text + '-' + 11,
+          type: type
+        });
+        expect(self.appData.messages[self.messageHistorySize - 1]).toEqual({
+          date: new Date(date.getTime() + (self.messageHistorySize + 10) * 60000),
+          text: text + '-' + (self.messageHistorySize + 10),
+          type: type
+        });
+        expect(self.dataStorage.getItem(self.dataKey)).toBe(JSON.stringify({
+          messages: self.appData.messages
+        }));
+      });
+
+    });
+
     describe('.makeMessageParams()', function makeMessageParams_0() {
       var params;
+
+      beforeEach(function () {
+        self.appData.messages.length = 0;
+      });
 
       it('should make single message parameters object for Framework7.messages.addMessage() method', function makeMessageParams_1() {
         self.lastMessageTime = 0;
@@ -504,6 +646,29 @@ describe('kTalk', function kTalk_0() {
         expect(params.avatar).toBe(self.avaRecv);
         expect(params.day).toBeUndefined();
         expect(params.time).toBeUndefined();
+      });
+
+      it('should use "date" parameter if defined', function makeMessageParams_2() {
+        self.lastMessageTime = 0;
+        params = self.testing.makeMessageParams('Message text', 'received', new Date(2001, 0, 1, 12, 30, 0));
+        expect(params.day).toBe('Monday, Jan 1');
+        expect(params.time).toBe('12:30');
+        expect(self.lastMessageTime).toBe(new Date(2001, 0, 1, 12, 30, 0).getTime());
+      });
+
+      it('should add message to history', function makeMessageParams_3() {
+        params = self.testing.makeMessageParams('Message text', 'received', new Date(2001, 0, 1, 12, 30, 0));
+        expect(self.appData.messages.length).toBe(1);
+        expect(self.appData.messages[0]).toEqual({
+          date: new Date(2001, 0, 1, 12, 30, 0),
+          text: 'Message text',
+          type: 'received'
+        });
+      });
+
+      it('should not add message to history if "noHistory" parameter is set', function makeMessageParams_4() {
+        params = self.testing.makeMessageParams('Message text', 'received', new Date(2001, 0, 1, 12, 30, 0), true);
+        expect(self.appData.messages.length).toBe(0);
       });
 
     });
@@ -1439,6 +1604,8 @@ describe('kTalk', function kTalk_0() {
         self.queue.answers.length = 0;
         self.commandId = 0;
         self.messages.clean();
+        delete self.appData.messages;
+        self.dataStorage.removeItem(self.dataKey);
       });
 
       afterEach(function () {
@@ -1457,6 +1624,20 @@ describe('kTalk', function kTalk_0() {
           expect(messages[1].innerHTML).toBe('Kodi 16.1 (rev. 60a76d9)\nKodi Talk addon 1.2.3');
           expect(messages[2].innerHTML).toBe('Now playing:\n‣ TV channel <a href="#" class="new link" data-command="play tv 33">33</a>: World News');
           expect(self.commandId).toBe(4);
+          expect(self.appData.messages).toEqual(jasmine.any(Array));
+          expect(self.appData.messages.length).toBe(3);
+          expect(JSON.parse(self.dataStorage.getItem(self.dataKey))).toEqual(jasmine.objectContaining({
+            messages: [jasmine.objectContaining({
+              text: 'Hello, I\'m a Kodi Talk bot.&#10;&#10;Send me a media URL you want to play or any other command.&#10;To list all commands I understand, type &#34;<a href="#" class="new link" data-command="help">help</a>&#34;.',
+              type: 'received'
+            }), jasmine.objectContaining({
+              text: 'Kodi 16.1 (rev. 60a76d9)&#10;Kodi Talk addon 1.2.3',
+              type: 'received'
+            }), jasmine.objectContaining({
+              text: 'Now playing:&#10;&#8227; TV channel <a href="#" class="new link" data-command="play tv 33">33</a>: World News',
+              type: 'received'
+            })]
+          }));
           done();
         }, function () {
           expect('Promise not').toBe('rejected');
