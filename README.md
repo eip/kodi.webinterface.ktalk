@@ -7,7 +7,7 @@ Kodi Talk's code written in pure JavaScript and UI made with [Framework7](http:/
 
 ## Requirements
 
-- XBMC v13 (Gotham) or Kodi v14 (Helix) or newer version. 
+- XBMC v13 (Gotham) or Kodi v14 (Helix) or newer version.
 
 ## Installation
 

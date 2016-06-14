@@ -691,6 +691,17 @@
         regex: /^(shutdown)\s*[\.!\?]*$/i,
         method: 'System.Shutdown'
       }, {
+        name: 'new chat',
+        description: 'Clean up the existing conversation and start the new chat.',
+        regex: /^(new\s+chat)\s*[\.!\?]*$/i,
+        answer: function () {
+          self.messages.clean();
+          delete self.appData.messages;
+          saveSettings();
+          addGreetings();
+          return '';
+        }
+      }, {
         name: 'exec',
         description: ['★ For geeks only: execute the JSON-RPC method.',
           'For example, "[[exec GUI.ActivateWindow {"window":"home"}]]".',
@@ -744,14 +755,6 @@
             f[i] = f[i].replace('[#]', a);
           }
           return f.join(d);
-        }
-      }, {
-        name: 'history.clear',
-        regex: /^(history\.clear)$/i,
-        answer: function () {
-          delete self.appData.messages;
-          saveSettings();
-          return '';
         }
       }, {
         name: 'debug',
