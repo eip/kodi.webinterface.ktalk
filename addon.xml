@@ -1,24 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<addon
-  id="plugin.webinterface.ktalk"
-  version="0.2.1"
-  name="Kodi Talk"
-  provider-name="eip">
+<addon id="plugin.webinterface.ktalk" name="Kodi Talk" provider-name="eip" version="0.2.2">
   <requires>
     <import addon="xbmc.json" version="6.0.0"/>
   </requires>
-  <extension
-    point="xbmc.webinterface"/>
+  <extension point="xbmc.webinterface"/>
   <extension point="xbmc.addon.metadata">
-    <summary lang="en_AU">Kodi Talk - a chat-like webinterface for Kodi</summary>
-    <summary lang="en_GB">Kodi Talk - a chat-like webinterface for Kodi</summary>
-    <summary lang="en_NZ">Kodi Talk - a chat-like webinterface for Kodi</summary>
-    <summary lang="en_US">Kodi Talk - a chat-like webinterface for Kodi</summary>
-    <description lang="en_AU">This remote allows you to send links and commands to the Kodi in a chat manner.</description>
-    <description lang="en_GB">This remote allows you to send links and commands to the Kodi in a chat manner.</description>
-    <description lang="en_NZ">This remote allows you to send links and commands to the Kodi in a chat manner.</description>
-    <description lang="en_US">This remote allows you to send links and commands to the Kodi in a chat manner.</description>
+    <summary lang="en">Kodi Talk - a chat-like webinterface for Kodi</summary>
+    <description lang="en">This remote allows you to send links and commands to the Kodi in a chat manner.</description>
     <platform>all</platform>
   </extension>
 </addon>
-
