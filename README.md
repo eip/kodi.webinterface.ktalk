@@ -11,9 +11,9 @@ Kodi Talk's code written in pure JavaScript and UI made with [Framework7](http:/
 
 ## Installation
 
-Download the [webinterface.ktalk-0.2.1.zip](https://github.com/eip/kodi.webinterface.ktalk/raw/master/webinterface.ktalk-0.2.1.zip) file and install the addon (Settings → Add-ons → Install from zip file -> Navigate to the ZIP file).
+Download the [webinterface.ktalk-0.2.1.zip](https://github.com/eip/kodi.webinterface.ktalk/raw/master/webinterface.ktalk-0.2.1.zip) file and install the addon (Settings → Add-ons → Install from zip file → Navigate to the ZIP file).
 
-To set Kodi Talk as the default web UI, go to System -> Services -> Webserver and select Kodi Talk add-on for the Default value.
+To set Kodi Talk as the default web UI, go to System → Services → Webserver and select Kodi Talk add-on for the Default value.
 
 See [Kodi Wiki](http://kodi.wiki/view/Web_interface) for more details.
 
