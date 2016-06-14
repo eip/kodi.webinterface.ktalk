@@ -17,6 +17,7 @@ To set Kodi Talk as the default web UI, go to System → Services → Webserver 
 
 See [Kodi Wiki](http://kodi.wiki/view/Web_interface) for more details.
 
-## Screenshot
+## Screenshots
 
-<img src="https://github.com/eip/kodi.webinterface.ktalk/raw/master/screenshot.png" alt="Screenshot" width="360"/>
+<img src="https://github.com/eip/kodi.webinterface.ktalk/raw/master/screenshot.png" alt="Screenshot" width="360" height="640"/>
+<img src="https://github.com/eip/kodi.webinterface.ktalk/raw/master/screenshot-2.png" alt="Screenshot" width="360" height="640"/>
