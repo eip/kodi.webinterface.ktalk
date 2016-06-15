@@ -446,7 +446,7 @@
           if (command && command.description) {
             return '[[' + command.name + ']]: ' + getCommandDescription(command);
           }
-          return 'Sorry, I don\'t know anything about "' + commandName + '" command';
+          return 'Sorry, I don\'t know anything about "' + commandName + '" command.';
         }
       }, {
         name: 'play.url',
