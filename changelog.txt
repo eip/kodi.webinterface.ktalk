@@ -1,3 +1,7 @@
+0.2.3
+- "hello" command should be used to start a new conversation. "new chat" command removed.
+- "version" command output changed.
+
 0.2.2
 - "new chat" command added.
 

@@ -1617,8 +1617,8 @@ describe('kTalk', function kTalk_0() {
           messages = window.d7('.message-text');
           expect(messages.length).toBe(1);
           expect(messages[0].innerHTML).toBe('Hello, I\'m a Kodi Talk bot.' +
-            '\nMy version is 1.2.3' +
-            '\nKodi version is 16.1 (rev. 60a76d9)' +
+            '\nMy version is 1.2.3.' +
+            '\nKodi version is 16.1 (rev. 60a76d9).' +
             '\n\nSend me a media URL you want to play or any other command.' +
             '\nTo list all commands I understand, type "<a href="#" class="new link" data-command="help">help</a>".' +
             '\n\nNow playing:' +
@@ -1628,7 +1628,7 @@ describe('kTalk', function kTalk_0() {
           expect(self.appData.messages.length).toBe(1);
           expect(JSON.parse(self.dataStorage.getItem(self.dataKey))).toEqual(jasmine.objectContaining({
             messages: [jasmine.objectContaining({
-              text: 'Hello, I\'m a Kodi Talk bot.&#10;My version is 1.2.3&#10;Kodi version is 16.1 (rev. 60a76d9)&#10;&#10;' +
+              text: 'Hello, I\'m a Kodi Talk bot.&#10;My version is 1.2.3.&#10;Kodi version is 16.1 (rev. 60a76d9).&#10;&#10;' +
                 'Send me a media URL you want to play or any other command.&#10;' +
                 'To list all commands I understand, type &#34;<a href="#" class="new link" data-command="help">help</a>&#34;.&#10;&#10;' +
                 'Now playing:&#10;&#8227; TV channel <a href="#" class="new link" data-command="play tv 33">33</a>: World News',
@@ -1836,13 +1836,13 @@ describe('kTalk', function kTalk_0() {
 
       });
 
-      describe('player.getitem', function answers_2() {
+      describe('player.getitem', function answers_5() {
 
         beforeEach(function () {
           command = cloneCommand('player.getitem');
         });
 
-        it('should format TV channel', function answers_21() {
+        it('should format TV channel', function answers_51() {
           command.response = {
             item: {
               channeltype: 'tv',

@@ -414,7 +414,7 @@
 
       self.commands = [{
         name: 'hello',
-        description: 'Start the new conversation with me.',
+        description: 'Start a new conversation with me.',
         regex: /^(hello)\s*[\.!\?]*$/i,
         answer: function () {
           self.messages.clean();
