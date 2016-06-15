@@ -384,11 +384,7 @@
     }
 
     function addGreetings() {
-      return ['.hello', '.version', '.what\'s up?'].reduce(function (p, c) {
-        return p.then(function () {
-          return talkToKodi(c);
-        });
-      }, q());
+      return talkToKodi('Hello!');
     }
 
     function addMessagesFromHistory() {
@@ -418,8 +414,20 @@
 
       self.commands = [{
         name: 'hello',
+        description: 'Start the new conversation with me.',
         regex: /^(hello)\s*[\.!\?]*$/i,
-        answer: 'Hello, I\'m a Kodi Talk bot.\n\nSend me a media URL you want to play or any other command.\nTo list all commands I understand, type "[[help]]".'
+        answer: function () {
+          self.messages.clean();
+          delete self.appData.messages;
+          saveSettings();
+          self.queue.commands.push('.version.addon plugin.webinterface.ktalk');
+          self.queue.commands.push('.version.kodi');
+          self.queue.commands.push('.echo');
+          self.queue.commands.push('.echo Send me a media URL you want to play or any other command.\nTo list all commands I understand, type "[[help]]".');
+          self.queue.commands.push('.echo');
+          self.queue.commands.push('.what\'s up');
+          return 'Hello, I\'m a Kodi Talk bot.';
+        }
       }, {
         name: 'help',
         description: ['List of available commands.',
@@ -699,17 +707,6 @@
         regex: /^(shutdown)\s*[\.!\?]*$/i,
         method: 'System.Shutdown'
       }, {
-        name: 'new chat',
-        description: 'Clean up the existing conversation and start the new chat.',
-        regex: /^(new\s+chat)\s*[\.!\?]*$/i,
-        answer: function () {
-          self.messages.clean();
-          delete self.appData.messages;
-          saveSettings();
-          addGreetings();
-          return '';
-        }
-      }, {
         name: 'exec',
         description: ['★ For geeks only: execute the JSON-RPC method.',
           'For example, "[[exec GUI.ActivateWindow {"window":"home"}]]".',
@@ -843,7 +840,8 @@
         sendCommand: sendCommand,
         sendQueuedCommand: sendQueuedCommand,
         talkToKodi: talkToKodi,
-        addGreetings: addGreetings
+        addGreetings: addGreetings,
+        addMessagesFromHistory: addMessagesFromHistory
       };
     }
     self.init = init;
