@@ -437,7 +437,7 @@ describe('kTalk', function kTalk_0() {
     describe('.getCommandDescription()', function getCommandDescription_0() {
 
       it('should return the description of the command', function getCommandDescription_1() {
-        expect(self.testing.getCommandDescription(cloneCommand('hello'))).toBe('');
+        expect(self.testing.getCommandDescription(cloneCommand('echo'))).toBe('');
         expect(self.testing.getCommandDescription(cloneCommand('home'))).toBe('Show the home screen.');
         expect(self.testing.getCommandDescription(cloneCommand('help'))).toBe('List of available commands.' +
           '\nI also understand you if you type "[[Help]]", "[[Help!]]", "[[help?]]"…' +
@@ -445,7 +445,7 @@ describe('kTalk', function kTalk_0() {
       });
 
       it('should return the first line of the description of the command if "short" parameter is true', function getCommandDescription_2() {
-        expect(self.testing.getCommandDescription(cloneCommand('hello'), true)).toBe('');
+        expect(self.testing.getCommandDescription(cloneCommand('echo'), true)).toBe('');
         expect(self.testing.getCommandDescription(cloneCommand('home'), 1)).toBe('Show the home screen.');
         expect(self.testing.getCommandDescription(cloneCommand('help'), true)).toBe('List of available commands. [[(…)||help help]]');
         expect(self.testing.getCommandDescription(cloneCommand('help'), 'short')).toBe('List of available commands. [[(…)||help help]]');
@@ -1333,8 +1333,8 @@ describe('kTalk', function kTalk_0() {
           });
         });
 
-        it('but should not push empty value in kTalk.queue.answers', function formatAnswerMessage_36(done) {
-          command.answer = '';
+        it('but should not push undefined value in kTalk.queue.answers', function formatAnswerMessage_36(done) {
+          command.answer = void 0;
           self.queue.commands.push(command);
           self.testing.formatAnswerMessage(command).then(function (v) {
             expect(v).toBe('');
@@ -1345,7 +1345,7 @@ describe('kTalk', function kTalk_0() {
           });
 
           command.answer = function () {
-            return self.testing.qt('', 5);
+            return self.testing.qt(void 0, 5);
           };
           self.queue.commands.push(command);
           self.testing.formatAnswerMessage(command).then(function (v) {
@@ -1504,13 +1504,11 @@ describe('kTalk', function kTalk_0() {
         jasmine.Ajax.uninstall();
       });
 
-      it('should send "hello" command and return greetings message', function sendCommand_1(done) {
-        self.testing.sendCommand('Hello!').then(function (v) {
+      it('should send "echo" command and return a given message', function sendCommand_1(done) {
+        self.testing.sendCommand('Echo Hello!').then(function (v) {
           expect(v).toEqual(jasmine.any(window.HTMLDivElement));
           expect(v.classList.contains('message-received')).toBe(true);
-          expect(v.firstElementChild.innerHTML).toBe('Hello, I\'m a Kodi Talk bot.' +
-            '\n\nSend me a media URL you want to play or any other command.' +
-            '\nTo list all commands I understand, type "<a href="#" class="new link" data-command="help">help</a>".');
+          expect(v.firstElementChild.innerHTML).toBe('Hello!');
           done();
         }, function () {
           expect('Promise not').toBe('rejected');
@@ -1551,8 +1549,8 @@ describe('kTalk', function kTalk_0() {
         expect(self.testing.sendQueuedCommand()).toBe('Finished.');
       });
 
-      it('should send "hello" and "ping" queued commands and return "Finished." string', function sendQueuedCommand_2(done) {
-        self.queue.commands.push('Hello!');
+      it('should send "echo" and "ping" queued commands and return "Finished." string', function sendQueuedCommand_2(done) {
+        self.queue.commands.push('echo Hello!');
         self.queue.commands.push('Ping');
         self.queue.commands.push('Ping');
         self.testing.sendQueuedCommand().then(function (v) {
@@ -1612,29 +1610,28 @@ describe('kTalk', function kTalk_0() {
         jasmine.Ajax.uninstall();
       });
 
-      it('should add messages with answers from ".hello", ".version" and ".what\'s up?" commands', function addGreetings_1(done) {
+      it('should send ".hello" command', function addGreetings_1(done) {
         var messages;
         self.testing.addGreetings().then(function (v) {
           expect(v).toBe('Finished.');
           messages = window.d7('.message-text');
-          expect(messages.length).toBe(3);
+          expect(messages.length).toBe(1);
           expect(messages[0].innerHTML).toBe('Hello, I\'m a Kodi Talk bot.' +
+            '\nMy version is 1.2.3' +
+            '\nKodi version is 16.1 (rev. 60a76d9)' +
             '\n\nSend me a media URL you want to play or any other command.' +
-            '\nTo list all commands I understand, type "<a href="#" class="new link" data-command="help">help</a>".');
-          expect(messages[1].innerHTML).toBe('Kodi 16.1 (rev. 60a76d9)\nKodi Talk addon 1.2.3');
-          expect(messages[2].innerHTML).toBe('Now playing:\n‣ TV channel <a href="#" class="new link" data-command="play tv 33">33</a>: World News');
+            '\nTo list all commands I understand, type "<a href="#" class="new link" data-command="help">help</a>".' +
+            '\n\nNow playing:' +
+            '\n‣ TV channel <a href="#" class="new link" data-command="play tv 33">33</a>: World News');
           expect(self.commandId).toBe(4);
           expect(self.appData.messages).toEqual(jasmine.any(Array));
-          expect(self.appData.messages.length).toBe(3);
+          expect(self.appData.messages.length).toBe(1);
           expect(JSON.parse(self.dataStorage.getItem(self.dataKey))).toEqual(jasmine.objectContaining({
             messages: [jasmine.objectContaining({
-              text: 'Hello, I\'m a Kodi Talk bot.&#10;&#10;Send me a media URL you want to play or any other command.&#10;To list all commands I understand, type &#34;<a href="#" class="new link" data-command="help">help</a>&#34;.',
-              type: 'received'
-            }), jasmine.objectContaining({
-              text: 'Kodi 16.1 (rev. 60a76d9)&#10;Kodi Talk addon 1.2.3',
-              type: 'received'
-            }), jasmine.objectContaining({
-              text: 'Now playing:&#10;&#8227; TV channel <a href="#" class="new link" data-command="play tv 33">33</a>: World News',
+              text: 'Hello, I\'m a Kodi Talk bot.&#10;My version is 1.2.3&#10;Kodi version is 16.1 (rev. 60a76d9)&#10;&#10;' +
+                'Send me a media URL you want to play or any other command.&#10;' +
+                'To list all commands I understand, type &#34;<a href="#" class="new link" data-command="help">help</a>&#34;.&#10;&#10;' +
+                'Now playing:&#10;&#8227; TV channel <a href="#" class="new link" data-command="play tv 33">33</a>: World News',
               type: 'received'
             })]
           }));
@@ -1643,6 +1640,52 @@ describe('kTalk', function kTalk_0() {
           expect('Promise not').toBe('rejected');
           done();
         });
+      });
+
+    });
+
+    describe('.addMessagesFromHistory()', function addMessagesFromHistory_0() {
+
+      beforeEach(function () {
+        self.messages.clean();
+        self.appData.messages = [{
+          text: 'Hello, I\'m a Kodi Talk bot.&#10;&#10;Send me a media URL you want to play or any other command.&#10;To list all commands I understand, type &#34;<a href="#" class="new link" data-command="help">help</a>&#34;.',
+          type: 'received',
+          date: new Date(2001, 0, 1, 12, 30, 0)
+        }, {
+          text: 'Kodi 16.1 (rev. 60a76d9)&#10;Kodi Talk addon 1.2.3',
+          type: 'received',
+          date: new Date(2001, 0, 1, 12, 31, 0)
+        }, {
+          text: 'Now playing:&#10;&#8227; TV channel <a href="#" class="new link" data-command="play tv 33">33</a>: World News',
+          type: 'received',
+          date: new Date(2001, 0, 1, 12, 32, 0)
+        }];
+        self.dataStorage.setItem(self.dataKey, JSON.stringify(self.appData));
+      });
+
+      it('should add messages stored in the message history', function addMessagesFromHistory_1() {
+        var messages;
+        self.testing.addMessagesFromHistory();
+        messages = window.d7('.message-text');
+        expect(messages.length).toBe(3);
+        expect(messages[0].innerHTML).toBe('Hello, I\'m a Kodi Talk bot.' +
+          '\n\nSend me a media URL you want to play or any other command.' +
+          '\nTo list all commands I understand, type "<a href="#" class="new link" data-command="help">help</a>".');
+        expect(messages[1].innerHTML).toBe('Kodi 16.1 (rev. 60a76d9)\nKodi Talk addon 1.2.3');
+        expect(messages[2].innerHTML).toBe('Now playing:\n‣ TV channel <a href="#" class="new link" data-command="play tv 33">33</a>: World News');
+        expect(self.appData.messages).toEqual(jasmine.any(Array));
+        expect(self.appData.messages.length).toBe(3);
+      });
+
+      it('should do nothing if the message history is empty', function addMessagesFromHistory_2() {
+        var messages;
+        self.appData.messages.length = 0;
+        self.testing.addMessagesFromHistory();
+        messages = window.d7('.message-text');
+        expect(messages.length).toBe(0);
+        expect(self.appData.messages).toEqual(jasmine.any(Array));
+        expect(self.appData.messages.length).toBe(0);
       });
 
     });
@@ -1719,13 +1762,87 @@ describe('kTalk', function kTalk_0() {
     describe('answers', function answers_0() {
       var command;
 
-      describe('player.getitem', function answers_1() {
+      describe('help', function answers_1() {
+
+        beforeEach(function () {
+          command = cloneCommand('help');
+        });
+
+        it('should return the formatted list of the commands names and descriptions', function answers_11() {
+          var answer = command.answer(command);
+
+          expect(answer).toEqual(jasmine.any(String));
+          expect(answer).toMatch(/^I understand the following commmands:\n(?:‣.*\.(?: \[\[\(…\)\|\|[\w ]*\]\])?\n)+\nSend me.*"\[\[help tv\]\]"\.$/);
+        });
+
+      });
+
+      describe('help.detail', function answers_2() {
+
+        beforeEach(function () {
+          command = cloneCommand('help.detail');
+        });
+
+        it('should return the formatted name and full description of the "stop" command', function answers_21() {
+          command.message = 'help stop';
+          expect(command.answer(command)).toBe('[[stop]]: Stop playback.');
+        });
+
+        it('should return "Sorry..." if the given command has no description', function answers_22() {
+          command.message = 'help player.getitem';
+          expect(command.answer(command)).toBe('Sorry, I don\'t know anything about "player.getitem" command.');
+        });
+
+        it('should return "Sorry..." if the given command doesn\'t exists', function answers_23() {
+          command.message = 'help foo';
+          expect(command.answer(command)).toBe('Sorry, I don\'t know anything about "foo" command.');
+        });
+
+      });
+
+      describe('play.url', function answers_3() {
+
+        beforeEach(function () {
+          command = cloneCommand('play.url');
+          command.message = 'play https://youtu.be/YE7VzlLtp-4';
+          self.queue.commands.length = 0;
+          self.queue.answers.length = 0;
+        });
+
+        it('should push commands to kTalk.queue.commands and return "Start playing URL..." string', function answers_31() {
+          expect(command.answer(command)).toBe('Start playing URL: plugin://plugin.video.youtube/?path=/root&search&action=play_video&videoid=YE7VzlLtp-4');
+          expect(self.queue.commands.length).toBeGreaterThan(3);
+          expect(self.queue.commands[0]).toBe('.stop');
+          expect(self.queue.commands.slice(-1)[0]).toBe('.what\'s up');
+        });
+
+      });
+
+      describe('play.tv', function answers_4() {
+
+        beforeEach(function () {
+          command = cloneCommand('play.tv');
+          command.message = 'play tv 123';
+          self.queue.commands.length = 0;
+          self.queue.answers.length = 0;
+        });
+
+        it('should push commands to kTalk.queue.commands and return "Start playing URL..." string', function answers_41() {
+          expect(command.answer(command)).toBe('Start playing TV channel #123');
+          expect(self.queue.commands.length).toBeGreaterThan(3);
+          expect(self.queue.commands[0]).toBe('.stop');
+          expect(self.queue.commands.slice(-1)[0]).toBe('.what\'s up');
+        });
+
+      });
+
+      describe('player.getitem', function answers_2() {
 
         beforeEach(function () {
           command = cloneCommand('player.getitem');
         });
 
-        it('should format TV channel', function answers_11() {
+        it('should format TV channel', function answers_21() {
           command.response = {
             item: {
               channeltype: 'tv',
@@ -1738,6 +1855,7 @@ describe('kTalk', function kTalk_0() {
         });
 
       });
+
     });
 
   });
