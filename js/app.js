@@ -653,14 +653,20 @@
         name: 'version',
         description: 'Show the Kodi and the Kodi Talk addon versions.',
         regex: /^(version)\s*[\.!\?]*$/i,
+        answer: function (c) {
+          self.queue.commands.push('.version.addon plugin.webinterface.ktalk');
+          self.queue.commands.push('.version.kodi');
+          self.queue.commands.push('.answers.join ' + JSON.stringify('\n'));
+        }
+      }, {
+        name: 'version.kodi',
+        regex: /^(version\.kodi)$/i,
         method: 'Application.GetProperties',
         params: {
           properties: ['name', 'version']
         },
         answer: function (c) {
-          self.queue.commands.push('.version.addon plugin.webinterface.ktalk');
-          self.queue.commands.push('.answers.join ' + JSON.stringify('\n'));
-          return c.response.name + ' ' + c.response.version.major + '.' + c.response.version.minor + (c.response.version.tag === 'releasecandidate' ? ' RC ' + c.response.version.tagversion : '') + ' (rev. ' + c.response.version.revision + ')';
+          return c.response.name + ' version is ' + c.response.version.major + '.' + c.response.version.minor + (c.response.version.tag === 'releasecandidate' ? ' RC ' + c.response.version.tagversion : '') + ' (rev. ' + c.response.version.revision + ').';
         }
       }, {
         name: 'version.addon',
@@ -668,7 +674,7 @@
         method: 'Addons.GetAddonDetails',
         params: '{"addonid":"$2","properties":["name","version"]}',
         answer: function (c) {
-          return c.response.addon.name + ' addon ' + c.response.addon.version;
+          return (c.response.addon.addonid === 'plugin.webinterface.ktalk' ? 'My' : c.response.addon.name + ' addon') + ' version is ' + c.response.addon.version + '.';
         }
       }, {
         name: 'ping',
