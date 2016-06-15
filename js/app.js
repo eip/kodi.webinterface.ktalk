@@ -304,13 +304,15 @@
         return result;
       }).then(function (m) {
         if (self.queue.commands.length) {
-          if (m) {
+          if (typeof m !== 'undefined') {
             self.queue.answers.push(m);
           }
           return '';
         }
         if (typeof m === 'object') {
           m = 'OK, the answer is:\n' + formatJson(m);
+        } else if (typeof m === 'undefined') {
+          m = '';
         } else if (typeof m !== 'string') {
           m = m.toString();
         }
@@ -711,7 +713,7 @@
         params: '$2'
       }, {
         name: 'echo',
-        regex: /^(echo)\s+([\S\s]+?)\s*$/i,
+        regex: /^(echo)\s*([\S\s]*)$/i,
         answer: '$2'
       }, {
         name: 'delay',
@@ -732,10 +734,13 @@
         name: 'answers.join',
         regex: /^(answers\.join)\s+(.+)$/i,
         answer: function (c) {
-          var d = getMessageToken(c, 2);
+          var d = getMessageToken(c, 2),
+            result;
 
           d = d.indexOf('"') === 0 ? JSON.parse(d) : d;
-          return self.queue.answers.join(d).replace(/[\s\S]\u2408/, '');
+          result = self.queue.answers.join(d).replace(/[\s\S]\u2408/, '');
+          self.queue.answers.length = 0;
+          return result;
         }
       }, {
         name: 'answers.format',
