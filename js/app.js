@@ -684,7 +684,17 @@
           properties: ['name', 'version']
         },
         answer: function (c) {
-          return c.response.name + ' version is ' + c.response.version.major + '.' + c.response.version.minor + (c.response.version.tag === 'releasecandidate' ? ' RC ' + c.response.version.tagversion : '') + ' (rev. ' + c.response.version.revision + ').';
+          switch (c.response.version.tag) {
+          case 'stable':
+            c.response.version.tagversion = '';
+            break;
+          case 'releasecandidate':
+            c.response.version.tagversion = [' RC', c.response.version.tagversion].join(' ').trimRight();
+            break;
+          default:
+            c.response.version.tagversion = ['', capitalize(c.response.version.tag), c.response.version.tagversion].join(' ').trimRight();
+          }
+          return c.response.name + ' version is ' + c.response.version.major + '.' + c.response.version.minor + c.response.version.tagversion + ' (rev. ' + c.response.version.revision + ').';
         }
       }, {
         name: 'version.addon',
@@ -734,6 +744,7 @@
         answer: function (c) {
           var ms = parseInt(getMessageToken(c, 2), 10);
 
+          ms = ms <= 10000 ? ms : 10000;
           return qt('Waiting ' + ms + ' ms.', ms);
         }
       }, {
@@ -751,7 +762,10 @@
             result;
 
           d = d.indexOf('"') === 0 ? JSON.parse(d) : d;
-          result = self.queue.answers.join(d).replace(/[\s\S]\u2408/, '');
+          result = self.queue.answers.join(d);
+          while (/\u2408/.test(result)) {
+            result = result.replace(/[^\u2408]\u2408/g, '');
+          }
           self.queue.answers.length = 0;
           return result;
         }
@@ -761,18 +775,22 @@
         answer: function (c) {
           var a,
             d = getMessageToken(c, 2),
-            f = self.queue.answers[0],
+            result = self.queue.answers[0],
             i;
 
           d = d.indexOf('"') === 0 ? JSON.parse(d) : d;
-          if (typeof f === 'string') {
-            f = [f];
+          if (typeof result.join === 'function') {
+            result = result.join(d);
           }
-          for (i = 0; i < f.length; ++i) {
-            a = self.queue.answers[i + 1] || '';
-            f[i] = f[i].replace('[#]', a);
+          for (i = 1; i < self.queue.answers.length; ++i) {
+            a = self.queue.answers[i];
+            result = result.replace('[#]', a);
           }
-          return f.join(d);
+          while (/\u2408/.test(result)) {
+            result = result.replace(/[^\u2408]\u2408/g, '');
+          }
+          self.queue.answers.length = 0;
+          return result;
         }
       }, {
         name: 'debug',

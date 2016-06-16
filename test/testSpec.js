@@ -5,6 +5,7 @@ describe('kTalk', function kTalk_0() {
   'use strict';
 
   var self = window.kTalk,
+    realSetTimeout = window.setTimeout,
     store = {
       getItem: function (key) {
         return store[key];
@@ -95,6 +96,19 @@ describe('kTalk', function kTalk_0() {
     return cloneObject(self.testing.getCommand(name));
   }
 
+  function checkSpyDelayedCall(delay, spy, done) {
+    jasmine.clock().tick(delay - 1);
+    realSetTimeout(function () {
+      expect(spy).not.toHaveBeenCalled();
+      jasmine.clock().tick(2);
+      realSetTimeout(function () {
+        expect(spy).toHaveBeenCalled();
+        done();
+      }, 1);
+    }, 1);
+  }
+
+  self.dataStorage = store;
   self.dataStorage = store;
 
   describe('Initialization', function initialization_0() {
@@ -187,8 +201,7 @@ describe('kTalk', function kTalk_0() {
           expect(v).toBe('Resolved');
           done();
         }, function () {
-          expect('Promise not').toBe('rejected');
-          done();
+          done.fail('Promise should not be rejected');
         });
       });
 
@@ -201,8 +214,7 @@ describe('kTalk', function kTalk_0() {
           expect(v).toBe('Resolved');
           done();
         }, function () {
-          expect('Promise not').toBe('rejected');
-          done();
+          done.fail('Promise should not be rejected');
         });
       });
 
@@ -213,8 +225,7 @@ describe('kTalk', function kTalk_0() {
           expect(Date.now() - startTime).toBeCloseTo(delay, -2);
           done();
         }, function () {
-          expect('Promise not').toBe('rejected');
-          done();
+          done.fail('Promise should not be rejected');
         });
       });
 
@@ -225,8 +236,7 @@ describe('kTalk', function kTalk_0() {
           expect(Date.now() - startTime).toBeCloseTo(delay, -2);
           done();
         }, function () {
-          expect('Promise not').toBe('rejected');
-          done();
+          done.fail('Promise should not be rejected');
         });
       });
 
@@ -236,8 +246,7 @@ describe('kTalk', function kTalk_0() {
 
       it('should return rejected promise with the given value', function r_1(done) {
         self.testing.r('Rejected').then(function () {
-          expect('Promise not').toBe('resolved');
-          done();
+          done.fail('Promise should not be resolved');
         }, function (v) {
           expect(v).toBe('Rejected');
           done();
@@ -677,8 +686,7 @@ describe('kTalk', function kTalk_0() {
 
       it('should return rejected promise if message string is empty', function checkMessage_1(done) {
         self.testing.checkMessage('').then(function () {
-          expect('Promise not').toBe('resolved');
-          done();
+          done.fail('Promise should not be resolved');
         }, function (v) {
           expect(v).toBeUndefined();
           done();
@@ -687,14 +695,12 @@ describe('kTalk', function kTalk_0() {
 
       it('should return rejected promise if message string is "."', function checkMessage_2(done) {
         self.testing.checkMessage('.').then(function () {
-          expect('Promise not').toBe('resolved');
-          done();
+          done.fail('Promise should not be resolved');
         }, function (v) {
           expect(v).toBeUndefined();
         });
         self.testing.checkMessage('....').then(function () {
-          expect('Promise not').toBe('resolved');
-          done();
+          done.fail('Promise should not be resolved');
         }, function (v) {
           expect(v).toBeUndefined();
           done();
@@ -708,8 +714,7 @@ describe('kTalk', function kTalk_0() {
           });
           done();
         }, function () {
-          expect('Promise not').toBe('rejected');
-          done();
+          done.fail('Promise should not be rejected');
         });
       });
 
@@ -720,8 +725,7 @@ describe('kTalk', function kTalk_0() {
             silent: true
           });
         }, function () {
-          expect('Promise not').toBe('rejected');
-          done();
+          done.fail('Promise should not be rejected');
         });
         self.testing.checkMessage('....Help').then(function (v) {
           expect(v).toEqual({
@@ -730,8 +734,7 @@ describe('kTalk', function kTalk_0() {
           });
           done();
         }, function () {
-          expect('Promise not').toBe('rejected');
-          done();
+          done.fail('Promise should not be rejected');
         });
       });
 
@@ -828,8 +831,7 @@ describe('kTalk', function kTalk_0() {
           expect(v).toBe('Promise');
           done();
         }, function () {
-          expect('Promise not').toBe('rejected');
-          done();
+          done.fail('Promise should not be rejected');
         });
       });
 
@@ -940,8 +942,7 @@ describe('kTalk', function kTalk_0() {
       it('should return rejected promise for unknown command', function parseKodiCommand_6(done) {
         command.message = 'Fake message.';
         self.testing.parseKodiCommand(command).then(function () {
-          expect('Promise not').toBe('resolved');
-          done();
+          done.fail('Promise should not be resolved');
         }, function (v) {
           expect(v).toBe('Sorry, I can\'t understand you. I will learn more commands soon.');
           done();
@@ -990,8 +991,7 @@ describe('kTalk', function kTalk_0() {
           expect(v).toEqual(jasmine.objectContaining(result));
           done();
         }, function () {
-          expect('Promise not').toBe('rejected');
-          done();
+          done.fail('Promise should not be rejected');
         });
         xhr = jasmine.Ajax.requests.mostRecent();
         expect(xhr.method).toBe(xhrMethod);
@@ -1020,8 +1020,7 @@ describe('kTalk', function kTalk_0() {
           expect(v).toEqual(jasmine.objectContaining(result));
           done();
         }, function () {
-          expect('Promise not').toBe('rejected');
-          done();
+          done.fail('Promise should not be rejected');
         });
         xhr = jasmine.Ajax.requests.mostRecent();
         expect(xhr.method).toBe(xhrMethod);
@@ -1049,8 +1048,7 @@ describe('kTalk', function kTalk_0() {
         response.responseText = JSON.stringify(response.responseText);
 
         self.testing.callJsonRpcMethod(command).then(function () {
-          expect('Promise not').toBe('resolved');
-          done();
+          done.fail('Promise should not be resolved');
         }, function (v) {
           expect(v).toEqual(jasmine.objectContaining(result));
           done();
@@ -1076,8 +1074,7 @@ describe('kTalk', function kTalk_0() {
         };
 
         self.testing.callJsonRpcMethod(command).then(function () {
-          expect('Promise not').toBe('resolved');
-          done();
+          done.fail('Promise should not be resolved');
         }, function (v) {
           expect(v).toEqual(jasmine.objectContaining(result));
           done();
@@ -1122,8 +1119,7 @@ describe('kTalk', function kTalk_0() {
             expect(self.queue.answers.length).toBe(0);
             done();
           }, function () {
-            expect('Promise not').toBe('rejected');
-            done();
+            done.fail('Promise should not be rejected');
           });
         });
 
@@ -1134,8 +1130,7 @@ describe('kTalk', function kTalk_0() {
             expect(self.queue.answers.length).toBe(0);
             done();
           }, function () {
-            expect('Promise not').toBe('rejected');
-            done();
+            done.fail('Promise should not be rejected');
           });
         });
 
@@ -1146,8 +1141,7 @@ describe('kTalk', function kTalk_0() {
             expect(self.queue.answers.length).toBe(0);
             done();
           }, function () {
-            expect('Promise not').toBe('rejected');
-            done();
+            done.fail('Promise should not be rejected');
           });
         });
 
@@ -1160,8 +1154,7 @@ describe('kTalk', function kTalk_0() {
             expect(self.queue.answers.length).toBe(0);
             done();
           }, function () {
-            expect('Promise not').toBe('rejected');
-            done();
+            done.fail('Promise should not be rejected');
           });
         });
 
@@ -1174,8 +1167,7 @@ describe('kTalk', function kTalk_0() {
             expect(self.queue.answers.length).toBe(0);
             done();
           }, function () {
-            expect('Promise not').toBe('rejected');
-            done();
+            done.fail('Promise should not be rejected');
           });
         });
 
@@ -1188,8 +1180,7 @@ describe('kTalk', function kTalk_0() {
             expect(self.queue.answers.length).toBe(0);
             done();
           }, function () {
-            expect('Promise not').toBe('rejected');
-            done();
+            done.fail('Promise should not be rejected');
           });
         });
 
@@ -1202,8 +1193,7 @@ describe('kTalk', function kTalk_0() {
             expect(self.queue.answers.length).toBe(0);
             done();
           }, function () {
-            expect('Promise not').toBe('rejected');
-            done();
+            done.fail('Promise should not be rejected');
           });
         });
 
@@ -1217,8 +1207,7 @@ describe('kTalk', function kTalk_0() {
             expect(v).toBe('Test!');
             expect(self.queue.answers.length).toBe(0);
           }, function () {
-            expect('Promise not').toBe('rejected');
-            done();
+            done.fail('Promise should not be rejected');
           });
           command.response = 'tesT';
           self.testing.formatAnswerMessage(command).then(function (v) {
@@ -1226,8 +1215,7 @@ describe('kTalk', function kTalk_0() {
             expect(self.queue.answers.length).toBe(0);
             done();
           }, function () {
-            expect('Promise not').toBe('rejected');
-            done();
+            done.fail('Promise should not be rejected');
           });
         });
 
@@ -1238,8 +1226,7 @@ describe('kTalk', function kTalk_0() {
             expect(self.queue.answers.length).toBe(0);
             done();
           }, function () {
-            expect('Promise not').toBe('rejected');
-            done();
+            done.fail('Promise should not be rejected');
           });
         });
 
@@ -1250,8 +1237,7 @@ describe('kTalk', function kTalk_0() {
             expect(self.queue.answers.length).toBe(0);
             done();
           }, function () {
-            expect('Promise not').toBe('rejected');
-            done();
+            done.fail('Promise should not be rejected');
           });
         });
 
@@ -1268,8 +1254,7 @@ describe('kTalk', function kTalk_0() {
             expect(self.queue.answers[0]).toBe('Test');
             done();
           }, function () {
-            expect('Promise not').toBe('rejected');
-            done();
+            done.fail('Promise should not be rejected');
           });
         });
 
@@ -1284,8 +1269,7 @@ describe('kTalk', function kTalk_0() {
             expect(self.queue.answers[0]).toEqual(result);
             done();
           }, function () {
-            expect('Promise not').toBe('rejected');
-            done();
+            done.fail('Promise should not be rejected');
           });
         });
 
@@ -1300,8 +1284,7 @@ describe('kTalk', function kTalk_0() {
             expect(self.queue.answers[0]).toBe(result);
             done();
           }, function () {
-            expect('Promise not').toBe('rejected');
-            done();
+            done.fail('Promise should not be rejected');
           });
         });
 
@@ -1314,8 +1297,7 @@ describe('kTalk', function kTalk_0() {
             expect(self.queue.answers[0]).toBe('Test!');
             done();
           }, function () {
-            expect('Promise not').toBe('rejected');
-            done();
+            done.fail('Promise should not be rejected');
           });
         });
 
@@ -1328,8 +1310,7 @@ describe('kTalk', function kTalk_0() {
             expect(self.queue.answers[0]).toBe(result);
             done();
           }, function () {
-            expect('Promise not').toBe('rejected');
-            done();
+            done.fail('Promise should not be rejected');
           });
         });
 
@@ -1340,8 +1321,7 @@ describe('kTalk', function kTalk_0() {
             expect(v).toBe('');
             expect(self.queue.answers.length).toBe(0);
           }, function () {
-            expect('Promise not').toBe('rejected');
-            done();
+            done.fail('Promise should not be rejected');
           });
 
           command.answer = function () {
@@ -1353,8 +1333,7 @@ describe('kTalk', function kTalk_0() {
             expect(self.queue.answers.length).toBe(0);
             done();
           }, function () {
-            expect('Promise not').toBe('rejected');
-            done();
+            done.fail('Promise should not be rejected');
           });
         });
 
@@ -1405,8 +1384,7 @@ describe('kTalk', function kTalk_0() {
           expect(v).toBe(null);
           done();
         }, function () {
-          expect('Promise not').toBe('rejected');
-          done();
+          done.fail('Promise should not be rejected');
         });
       });
 
@@ -1417,8 +1395,7 @@ describe('kTalk', function kTalk_0() {
           expect(v.firstElementChild.innerHTML).toBe('Sample <span>message</span>');
           done();
         }, function () {
-          expect('Promise not').toBe('rejected');
-          done();
+          done.fail('Promise should not be rejected');
         });
       });
 
@@ -1430,8 +1407,7 @@ describe('kTalk', function kTalk_0() {
           expect(v.firstElementChild.innerHTML).toBe('Sample message');
           done();
         }, function () {
-          expect('Promise not').toBe('rejected');
-          done();
+          done.fail('Promise should not be rejected');
         });
       });
 
@@ -1444,8 +1420,7 @@ describe('kTalk', function kTalk_0() {
           expect(v.firstElementChild.innerHTML).toBe('#Debug message');
           done();
         }, function () {
-          expect('Promise not').toBe('rejected');
-          done();
+          done.fail('Promise should not be rejected');
         });
       });
 
@@ -1468,8 +1443,7 @@ describe('kTalk', function kTalk_0() {
           expect(v.firstElementChild.innerHTML).toBe('Sample &lt;span&gt;message&lt;/span&gt;');
           done();
         }, function () {
-          expect('Promise not').toBe('rejected');
-          done();
+          done.fail('Promise should not be rejected');
         });
       });
 
@@ -1485,8 +1459,7 @@ describe('kTalk', function kTalk_0() {
           expect(v.firstElementChild.innerHTML).toBe('Sample error <span>message</span>');
           done();
         }, function () {
-          expect('Promise not').toBe('rejected');
-          done();
+          done.fail('Promise should not be rejected');
         });
       });
 
@@ -1511,8 +1484,7 @@ describe('kTalk', function kTalk_0() {
           expect(v.firstElementChild.innerHTML).toBe('Hello!');
           done();
         }, function () {
-          expect('Promise not').toBe('rejected');
-          done();
+          done.fail('Promise should not be rejected');
         });
       });
 
@@ -1523,8 +1495,7 @@ describe('kTalk', function kTalk_0() {
           expect(v.firstElementChild.innerHTML).toBe('Pong!');
           done();
         }, function () {
-          expect('Promise not').toBe('rejected');
-          done();
+          done.fail('Promise should not be rejected');
         });
       });
 
@@ -1558,8 +1529,7 @@ describe('kTalk', function kTalk_0() {
           expect(self.commandId).toBe(2); // Two JSON-RPC commands should be sent
           done();
         }, function () {
-          expect('Promise not').toBe('rejected');
-          done();
+          done.fail('Promise should not be rejected');
         });
       });
 
@@ -1586,8 +1556,7 @@ describe('kTalk', function kTalk_0() {
           expect(self.commandId).toBe(1); // Two JSON-RPC commands should be sent
           done();
         }, function () {
-          expect('Promise not').toBe('rejected');
-          done();
+          done.fail('Promise should not be rejected');
         });
       });
 
@@ -1683,8 +1652,7 @@ describe('kTalk', function kTalk_0() {
           expect(self.appData.messages.length).toBe(1);
           done();
         }, function () {
-          expect('Promise not').toBe('rejected');
-          done();
+          done.fail('Promise should not be rejected');
         });
       });
 
@@ -1707,8 +1675,7 @@ describe('kTalk', function kTalk_0() {
           expect(self.appData.messages.length).toBe(1);
           done();
         }, function () {
-          expect('Promise not').toBe('rejected');
-          done();
+          done.fail('Promise should not be rejected');
         });
       });
 
@@ -1734,8 +1701,7 @@ describe('kTalk', function kTalk_0() {
           expect(messages.length).toBe(2);
           expect(messages[1].innerHTML).toBe('Waiting ' + delay_1 + ' ms.');
         }, function () {
-          expect('Promise not').toBe('rejected');
-          done();
+          done.fail('Promise should not be rejected');
         });
 
         delay_2 = 50;
@@ -1751,8 +1717,7 @@ describe('kTalk', function kTalk_0() {
           expect(messages[3].innerHTML).toBe('Waiting ' + delay_2 + ' ms.');
           done();
         }, function () {
-          expect('Promise not').toBe('rejected');
-          done();
+          done.fail('Promise should not be rejected');
         });
         expect(self.busy).toBe(true);
       });
@@ -1786,7 +1751,7 @@ describe('kTalk', function kTalk_0() {
     describe('answers', function answers_0() {
       var command;
 
-      describe('hello', function answers_hello() {
+      describe('hello', function answers_hello_0() {
 
         beforeEach(function () {
           command = cloneCommand('hello');
@@ -1813,7 +1778,7 @@ describe('kTalk', function kTalk_0() {
 
       });
 
-      describe('help', function answers_help() {
+      describe('help', function answers_help_0() {
 
         beforeEach(function () {
           command = cloneCommand('help');
@@ -1828,7 +1793,7 @@ describe('kTalk', function kTalk_0() {
 
       });
 
-      describe('help.detail', function answers_help_detail() {
+      describe('help.detail', function answers_help_detail_0() {
 
         beforeEach(function () {
           command = cloneCommand('help.detail');
@@ -1851,7 +1816,7 @@ describe('kTalk', function kTalk_0() {
 
       });
 
-      describe('play.url', function answers_play_url() {
+      describe('play.url', function answers_play_url_0() {
 
         beforeEach(function () {
           command = cloneCommand('play.url');
@@ -1869,7 +1834,7 @@ describe('kTalk', function kTalk_0() {
 
       });
 
-      describe('play.tv', function answers_play_tv() {
+      describe('play.tv', function answers_play_tv_0() {
 
         beforeEach(function () {
           command = cloneCommand('play.tv');
@@ -1887,7 +1852,7 @@ describe('kTalk', function kTalk_0() {
 
       });
 
-      describe('play', function answers_play() {
+      describe('play', function answers_play_0() {
 
         beforeEach(function () {
           command = cloneCommand('play');
@@ -1951,7 +1916,7 @@ describe('kTalk', function kTalk_0() {
 
       });
 
-      describe('pause', function answers_pause() {
+      describe('pause', function answers_pause_0() {
 
         beforeEach(function () {
           command = cloneCommand('pause');
@@ -2015,7 +1980,7 @@ describe('kTalk', function kTalk_0() {
 
       });
 
-      describe('stop', function answers_stop() {
+      describe('stop', function answers_stop_0() {
 
         beforeEach(function () {
           command = cloneCommand('stop');
@@ -2055,7 +2020,7 @@ describe('kTalk', function kTalk_0() {
 
       });
 
-      describe('player.playpause', function answers_player_playpause() {
+      describe('player.playpause', function answers_player_playpause_0() {
 
         beforeEach(function () {
           command = cloneCommand('player.playpause');
@@ -2081,7 +2046,7 @@ describe('kTalk', function kTalk_0() {
 
       });
 
-      describe('what\'s up', function answers_whatsup() {
+      describe('what\'s up', function answers_whatsup_0() {
 
         beforeEach(function () {
           command = cloneCommand('what\'s up');
@@ -2123,7 +2088,7 @@ describe('kTalk', function kTalk_0() {
 
       });
 
-      describe('player.getitem', function answers_player_getitem() {
+      describe('player.getitem', function answers_player_getitem_0() {
 
         beforeEach(function () {
           command = cloneCommand('player.getitem');
@@ -2217,316 +2182,241 @@ describe('kTalk', function kTalk_0() {
 
       });
 
-      describe('tv', function answers_tv() {
+      describe('tv', function answers_tv_0() {
 
         beforeEach(function () {
           command = cloneCommand('tv');
           command.message = 'tv';
           command.response = {
             "channels": [{
-                channelid: 16,
-                label: "Animal Planet"
-              },
-              {
-                channelid: 13,
-                label: "FIDO"
-              },
-              {
-                channelid: 31,
-                label: "TNT"
-              },
-              {
-                channelid: 36,
-                label: "Pivot"
-              },
-              {
-                channelid: 58,
-                label: "Reelz"
-              },
-              {
-                channelid: 25,
-                label: "FXX"
-              },
-              {
-                channelid: 46,
-                label: "Syfy"
-              },
-              {
-                channelid: 35,
-                label: "Investigation Discovery"
-              },
-              {
-                channelid: 56,
-                label: "American Heroes Channel"
-              },
-              {
-                channelid: 60,
-                label: "BBC America"
-              },
-              {
-                channelid: 72,
-                label: "MTV"
-              },
-              {
-                channelid: 32,
-                label: "Logo TV"
-              },
-              {
-                channelid: 11,
-                label: "Centric"
-              },
-              {
-                channelid: 71,
-                label: "Comedy.tv"
-              },
-              {
-                channelid: 61,
-                label: "Cooking Channel"
-              },
-              {
-                channelid: 1,
-                label: "Universal HD"
-              },
-              {
-                channelid: 49,
-                label: "AWE"
-              },
-              {
-                channelid: 15,
-                label: "CMT"
-              },
-              {
-                channelid: 57,
-                label: "Pop"
-              },
-              {
-                channelid: 52,
-                label: "Adult Swim"
-              },
-              {
-                channelid: 41,
-                label: "Spike"
-              },
-              {
-                channelid: 4,
-                label: "DIY Network"
-              },
-              {
-                channelid: 53,
-                label: "Lifetime"
-              },
-              {
-                channelid: 17,
-                label: "TBS"
-              },
-              {
-                channelid: 34,
-                label: "Travel Channel"
-              },
-              {
-                channelid: 40,
-                label: "TLC"
-              },
-              {
-                channelid: 67,
-                label: "LMN"
-              },
-              {
-                channelid: 26,
-                label: "History"
-              },
-              {
-                channelid: 39,
-                label: "Destination America"
-              },
-              {
-                channelid: 65,
-                label: "Create"
-              },
-              {
-                channelid: 68,
-                label: "Discovery Life"
-              },
-              {
-                channelid: 38,
-                label: "Military History"
-              },
-              {
-                channelid: 48,
-                label: "mydestination.tv"
-              },
-              {
-                channelid: 47,
-                label: "National Geographic Channel"
-              },
-              {
-                channelid: 69,
-                label: "Bravo"
-              },
-              {
-                channelid: 14,
-                label: "Recipe.TV"
-              },
-              {
-                channelid: 44,
-                label: "Nat Geo Wild"
-              },
-              {
-                channelid: 43,
-                label: "MTV2"
-              },
-              {
-                channelid: 59,
-                label: "Chiller"
-              },
-              {
-                channelid: 55,
-                label: "Smithsonian Channel"
-              },
-              {
-                channelid: 70,
-                label: "A&E"
-              },
-              {
-                channelid: 66,
-                label: "Food Network"
-              },
-              {
-                channelid: 28,
-                label: "Science"
-              },
-              {
-                channelid: 45,
-                label: "Esquire Network"
-              },
-              {
-                channelid: 33,
-                label: "AMC"
-              },
-              {
-                channelid: 74,
-                label: "ASPiRE"
-              },
-              {
-                channelid: 10,
-                label: "FYI"
-              },
-              {
-                channelid: 75,
-                label: "Z Living"
-              },
-              {
-                channelid: 30,
-                label: "Audience Network"
-              },
-              {
-                channelid: 37,
-                label: "Crime & Investigation Network"
-              },
-              {
-                channelid: 73,
-                label: "Cloo"
-              },
-              {
-                channelid: 64,
-                label: "FX"
-              },
-              {
-                channelid: 18,
-                label: "WE tv"
-              },
-              {
-                channelid: 7,
-                label: "Lifetime Real Women"
-              },
-              {
-                channelid: 76,
-                label: "El Rey Network"
-              },
-              {
-                channelid: 5,
-                label: "Ovation"
-              },
-              {
-                channelid: 27,
-                label: "E!"
-              },
-              {
-                channelid: 62,
-                label: "Discovery Channel"
-              },
-              {
-                channelid: 8,
-                label: "AXS TV"
-              },
-              {
-                channelid: 51,
-                label: "USA Network"
-              },
-              {
-                channelid: 63,
-                label: "TV One"
-              },
-              {
-                channelid: 20,
-                label: "Pets.TV"
-              },
-              {
-                channelid: 21,
-                label: "Comedy Central"
-              },
-              {
-                channelid: 9,
-                label: "OWN"
-              },
-              {
-                channelid: 19,
-                label: "GSN"
-              },
-              {
-                channelid: 3,
-                label: "VH1"
-              },
-              {
-                channelid: 2,
-                label: "Ion Life"
-              },
-              {
-                channelid: 42,
-                label: "RLTV"
-              },
-              {
-                channelid: 22,
-                label: "Oxygen"
-              },
-              {
-                channelid: 50,
-                label: "BET"
-              },
-              {
-                channelid: 12,
-                label: "truTV"
-              },
-              {
-                channelid: 54,
-                label: "Viceland"
-              },
-              {
-                channelid: 6,
-                label: "WGN America"
-              },
-              {
-                channelid: 23,
-                label: "Es.tv"
-              },
-              {
-                channelid: 24,
-                label: "HGTV"
-              },
-              {
-                channelid: 29,
-                label: "VH1 Classic"
-              }],
+              channelid: 16,
+              label: "Animal Planet"
+            }, {
+              channelid: 13,
+              label: "FIDO"
+            }, {
+              channelid: 31,
+              label: "TNT"
+            }, {
+              channelid: 36,
+              label: "Pivot"
+            }, {
+              channelid: 58,
+              label: "Reelz"
+            }, {
+              channelid: 25,
+              label: "FXX"
+            }, {
+              channelid: 46,
+              label: "Syfy"
+            }, {
+              channelid: 35,
+              label: "Investigation Discovery"
+            }, {
+              channelid: 56,
+              label: "American Heroes Channel"
+            }, {
+              channelid: 60,
+              label: "BBC America"
+            }, {
+              channelid: 72,
+              label: "MTV"
+            }, {
+              channelid: 32,
+              label: "Logo TV"
+            }, {
+              channelid: 11,
+              label: "Centric"
+            }, {
+              channelid: 71,
+              label: "Comedy.tv"
+            }, {
+              channelid: 61,
+              label: "Cooking Channel"
+            }, {
+              channelid: 1,
+              label: "Universal HD"
+            }, {
+              channelid: 49,
+              label: "AWE"
+            }, {
+              channelid: 15,
+              label: "CMT"
+            }, {
+              channelid: 57,
+              label: "Pop"
+            }, {
+              channelid: 52,
+              label: "Adult Swim"
+            }, {
+              channelid: 41,
+              label: "Spike"
+            }, {
+              channelid: 4,
+              label: "DIY Network"
+            }, {
+              channelid: 53,
+              label: "Lifetime"
+            }, {
+              channelid: 17,
+              label: "TBS"
+            }, {
+              channelid: 34,
+              label: "Travel Channel"
+            }, {
+              channelid: 40,
+              label: "TLC"
+            }, {
+              channelid: 67,
+              label: "LMN"
+            }, {
+              channelid: 26,
+              label: "History"
+            }, {
+              channelid: 39,
+              label: "Destination America"
+            }, {
+              channelid: 65,
+              label: "Create"
+            }, {
+              channelid: 68,
+              label: "Discovery Life"
+            }, {
+              channelid: 38,
+              label: "Military History"
+            }, {
+              channelid: 48,
+              label: "mydestination.tv"
+            }, {
+              channelid: 47,
+              label: "National Geographic Channel"
+            }, {
+              channelid: 69,
+              label: "Bravo"
+            }, {
+              channelid: 14,
+              label: "Recipe.TV"
+            }, {
+              channelid: 44,
+              label: "Nat Geo Wild"
+            }, {
+              channelid: 43,
+              label: "MTV2"
+            }, {
+              channelid: 59,
+              label: "Chiller"
+            }, {
+              channelid: 55,
+              label: "Smithsonian Channel"
+            }, {
+              channelid: 70,
+              label: "A&E"
+            }, {
+              channelid: 66,
+              label: "Food Network"
+            }, {
+              channelid: 28,
+              label: "Science"
+            }, {
+              channelid: 45,
+              label: "Esquire Network"
+            }, {
+              channelid: 33,
+              label: "AMC"
+            }, {
+              channelid: 74,
+              label: "ASPiRE"
+            }, {
+              channelid: 10,
+              label: "FYI"
+            }, {
+              channelid: 75,
+              label: "Z Living"
+            }, {
+              channelid: 30,
+              label: "Audience Network"
+            }, {
+              channelid: 37,
+              label: "Crime & Investigation Network"
+            }, {
+              channelid: 73,
+              label: "Cloo"
+            }, {
+              channelid: 64,
+              label: "FX"
+            }, {
+              channelid: 18,
+              label: "WE tv"
+            }, {
+              channelid: 7,
+              label: "Lifetime Real Women"
+            }, {
+              channelid: 76,
+              label: "El Rey Network"
+            }, {
+              channelid: 5,
+              label: "Ovation"
+            }, {
+              channelid: 27,
+              label: "E!"
+            }, {
+              channelid: 62,
+              label: "Discovery Channel"
+            }, {
+              channelid: 8,
+              label: "AXS TV"
+            }, {
+              channelid: 51,
+              label: "USA Network"
+            }, {
+              channelid: 63,
+              label: "TV One"
+            }, {
+              channelid: 20,
+              label: "Pets.TV"
+            }, {
+              channelid: 21,
+              label: "Comedy Central"
+            }, {
+              channelid: 9,
+              label: "OWN"
+            }, {
+              channelid: 19,
+              label: "GSN"
+            }, {
+              channelid: 3,
+              label: "VH1"
+            }, {
+              channelid: 2,
+              label: "Ion Life"
+            }, {
+              channelid: 42,
+              label: "RLTV"
+            }, {
+              channelid: 22,
+              label: "Oxygen"
+            }, {
+              channelid: 50,
+              label: "BET"
+            }, {
+              channelid: 12,
+              label: "truTV"
+            }, {
+              channelid: 54,
+              label: "Viceland"
+            }, {
+              channelid: 6,
+              label: "WGN America"
+            }, {
+              channelid: 23,
+              label: "Es.tv"
+            }, {
+              channelid: 24,
+              label: "HGTV"
+            }, {
+              channelid: 29,
+              label: "VH1 Classic"
+            }],
             "limits": {
               "end": 76,
               "start": 0,
@@ -2579,7 +2469,7 @@ describe('kTalk', function kTalk_0() {
 
       });
 
-      describe('fullscreen', function answers_fullscreen() {
+      describe('fullscreen', function answers_fullscreen_0() {
 
         beforeEach(function () {
           command = cloneCommand('fullscreen');
@@ -2597,7 +2487,7 @@ describe('kTalk', function kTalk_0() {
 
       });
 
-      describe('sleep', function answers_sleep() {
+      describe('sleep', function answers_sleep_0() {
 
         beforeEach(function () {
           command = cloneCommand('sleep');
@@ -2626,14 +2516,13 @@ describe('kTalk', function kTalk_0() {
         it('should return rejected promise with "The required "Sleep" addon by robwebset is not installed." value', function answers_sleep_1(done) {
           command.response.addons.shift();
           command.answer(command).then(function () {
-            expect('Promise not').toBe('resolved');
-            done();
+            done.fail('Promise should not be resolved');
           }, function (v) {
             expect(v).toBe('The required "Sleep" addon by robwebset is not installed.');
             done();
           });
         });
-        
+
         it('should push commands to kTalk.queue.commands to disable sleep timer', function answers_sleep_2() {
           expect(command.answer(command)).toBeUndefined();
           expect(self.queue.commands.length).toBe(13);
@@ -2706,6 +2595,293 @@ describe('kTalk', function kTalk_0() {
           expect(self.queue.commands[17]).toBe('.delay 1500');
           expect(self.queue.commands[18]).toBe('.exec Input.Back {}');
           expect(self.queue.commands[19]).toBe('.echo Sleep timer is set for 1 hour.');
+        });
+
+      });
+
+      describe('version', function answers_version_0() {
+
+        beforeEach(function () {
+          command = cloneCommand('version');
+          self.queue.commands.length = 0;
+          self.queue.answers.length = 0;
+        });
+
+        it('should push commands to kTalk.queue.commands', function answers_version_1() {
+          expect(command.answer(command)).toBeUndefined();
+          expect(self.queue.commands.length).toBe(3);
+          expect(self.queue.commands[0]).toBe('.version.addon plugin.webinterface.ktalk');
+          expect(self.queue.commands[1]).toBe('.version.kodi');
+          expect(self.queue.commands[2]).toBe('.answers.join "\\n"');
+        });
+
+      });
+
+      describe('version.kodi', function answers_version_kodi_0() {
+
+        beforeEach(function () {
+          command = cloneCommand('version.kodi');
+          command.response = {
+            name: 'Kodi',
+            version: {
+              major: 15,
+              minor: 2,
+              tag: 'stable',
+              tagversion: '',
+              revision: '02e7013'
+            }
+          };
+        });
+
+        it('should format a Kodi version if it is a stable release', function answers_version_kodi_1() {
+          expect(command.answer(command)).toBe('Kodi version is 15.2 (rev. 02e7013).');
+        });
+
+        it('should format a Kodi version if it is a release candidate', function answers_version_kodi_2() {
+          command.response.version.tag = 'releasecandidate';
+          command.response.version.tagversion = '1';
+          command.response.version.revision = '59716ca';
+
+          expect(command.answer(command)).toBe('Kodi version is 15.2 RC 1 (rev. 59716ca).');
+        });
+
+        it('should format a Kodi version if it is a beta release', function answers_version_kodi_3() {
+          command.response.version.major = 16;
+          command.response.version.minor = 0;
+          command.response.version.tag = 'beta';
+          command.response.version.tagversion = '4';
+          command.response.version.revision = 'a724f29';
+
+          expect(command.answer(command)).toBe('Kodi version is 16.0 Beta 4 (rev. a724f29).');
+        });
+
+        it('should format a Kodi version if it is a alpha release', function answers_version_kodi_4() {
+          command.response.version.major = 16;
+          command.response.version.minor = 0;
+          command.response.version.tag = 'alpha';
+          command.response.version.tagversion = '2';
+          command.response.version.revision = 'b4afc20';
+
+          expect(command.answer(command)).toBe('Kodi version is 16.0 Alpha 2 (rev. b4afc20).');
+        });
+
+        it('should format a Kodi version if it is a prealpha release', function answers_version_kodi_5() {
+          command.response.version.major = 13;
+          command.response.version.minor = 0;
+          command.response.version.tag = 'prealpha';
+          command.response.version.tagversion = '11';
+          command.response.version.revision = '8eb49b3';
+
+          expect(command.answer(command)).toBe('Kodi version is 13.0 Prealpha 11 (rev. 8eb49b3).');
+        });
+
+      });
+
+      describe('version.addon', function answers_version_addon_0() {
+
+        beforeEach(function () {
+          command = cloneCommand('version.addon');
+          command.response = {
+            addon: {
+              addonid: 'plugin.webinterface.ktalk',
+              name: 'Kodi Talk',
+              type: 'xbmc.webinterface',
+              version: '0.2.3'
+            }
+          };
+        });
+
+        it('should format a given addon name and version', function answers_version_addon_1() {
+          command.response.addon.addonid = 'plugin.video.youtube';
+          command.response.addon.name = 'YouTube';
+          command.response.addon.type = 'xbmc.python.pluginsource';
+          command.response.addon.version = '5.2.1';
+
+          expect(command.answer(command)).toBe('YouTube addon version is 5.2.1.');
+        });
+
+        it('should return "My version is..." if the addon is Kodi Talk', function answers_version_addon_2() {
+          expect(command.answer(command)).toBe('My version is 0.2.3.');
+        });
+
+      });
+
+      describe('delay', function answers_delay_0() {
+        var spy;
+
+        beforeEach(function () {
+          jasmine.clock().install();
+          spy = jasmine.createSpy("After Delay");
+          command = cloneCommand('delay');
+          command.message = 'delay 50';
+        });
+
+        afterEach(function () {
+          jasmine.clock().uninstall();
+        });
+
+        it('should return promise resolved after given time with "Waiting ### ms." result', function answers_delay_1(done) {
+          command.answer(command).then(function (v) {
+            spy();
+            expect(v).toBe('Waiting 50 ms.');
+          }, function () {
+            done.fail('Promise should not be rejected');
+          });
+          checkSpyDelayedCall(50, spy, done);
+        });
+
+        it("should limit delay to 10 s", function answers_delay_2(done) {
+          command.message = 'delay 90000';
+
+          command.answer(command).then(function (v) {
+            spy();
+            expect(v).toBe('Waiting 10000 ms.');
+          }, function () {
+            done.fail('Promise should not be rejected');
+          });
+          checkSpyDelayedCall(10000, spy, done);
+        });
+
+      });
+
+      describe('answers.clear', function answers_answers_clear_0() {
+
+        beforeEach(function () {
+          command = cloneCommand('answers.clear');
+          self.queue.answers = ['One', 'Two', 'Three', 'Four'];
+        });
+
+        it('should clear kTalk.queue.answers and return an empty string', function answers_answers_clear_1() {
+          expect(self.queue.answers.length).toBeGreaterThan(0);
+          expect(command.answer(command)).toBe('');
+          expect(self.queue.answers.length).toBe(0);
+        });
+
+      });
+
+      describe('answers.join', function answers_answers_join_0() {
+
+        beforeEach(function () {
+          command = cloneCommand('answers.join');
+          self.queue.answers = ['Answer one', 'Answer two', 'Answer three', 'Answer four'];
+        });
+
+        it('should return the string of kTalk.queue.answers values divided with space', function answers_answers_join_1() {
+          command.message = 'answers.join " "';
+          
+          expect(self.queue.answers.length).toBeGreaterThan(0);
+          expect(command.answer(command)).toBe('Answer one Answer two Answer three Answer four');
+          expect(self.queue.answers.length).toBe(0);
+        });
+
+        it('should return the string of kTalk.queue.answers values divided with comma', function answers_answers_join_2() {
+          command.message = 'answers.join , ';
+          
+          expect(self.queue.answers.length).toBeGreaterThan(0);
+          expect(command.answer(command)).toBe('Answer one, Answer two, Answer three, Answer four');
+          expect(self.queue.answers.length).toBe(0);
+        });
+
+        it('should return the string of kTalk.queue.answers values as lines', function answers_answers_join_3() {
+          command.message = 'answers.join "\\n"';
+          
+          expect(self.queue.answers.length).toBeGreaterThan(0);
+          expect(command.answer(command)).toBe('Answer one\nAnswer two\nAnswer three\nAnswer four');
+          expect(self.queue.answers.length).toBe(0);
+        });
+
+        it('should process "\u2408" (BS) symbol by deleting it and leftward symbol', function answers_answers_join_4() {
+          self.queue.answers.push('\u2408...');
+          command.message = 'answers.join "\\n"';
+          
+          expect(self.queue.answers.length).toBeGreaterThan(0);
+          expect(command.answer(command)).toBe('Answer one\nAnswer two\nAnswer three\nAnswer four...');
+          expect(self.queue.answers.length).toBe(0);
+        });
+
+        it('should process successive "\u2408" (BS) symbols', function answers_answers_join_5() {
+          self.queue.answers.push('\u2408...ZZZZ\u2408\u2408\u2408\u2408');
+          command.message = 'answers.join "\\n"';
+          
+          expect(self.queue.answers.length).toBeGreaterThan(0);
+          expect(command.answer(command)).toBe('Answer one\nAnswer two\nAnswer three\nAnswer four...');
+          expect(self.queue.answers.length).toBe(0);
+        });
+
+      });
+
+      describe('answers.format', function answers_answers_format_0() {
+
+        beforeEach(function () {
+          command = cloneCommand('answers.format');
+          self.queue.answers = [['Player 1 is: "[#]"', 'Player 2 is: "[#]"', 'Player 3 is: "[#]"'], 'Audio', 'Video', 'Photo'];
+        });
+
+        it('should return the string of formatted kTalk.queue.answers values when format value is a string', function answers_answers_format_1() {
+          command.message = 'answers.format " "';
+          self.queue.answers = ['Player 1 is: "[#]"; Player 2 is: "[#]"; Player 3 is: "[#]"', 'Audio', 'Video', 'Photo'];
+          
+          expect(self.queue.answers.length).toBeGreaterThan(0);
+          expect(command.answer(command)).toBe('Player 1 is: "Audio"; Player 2 is: "Video"; Player 3 is: "Photo"');
+          expect(self.queue.answers.length).toBe(0);
+        });
+
+        it('should return the string of formatted kTalk.queue.answers values divided with space when format value is an array', function answers_answers_format_2() {
+          command.message = 'answers.format " "';
+          
+          expect(self.queue.answers.length).toBeGreaterThan(0);
+          expect(command.answer(command)).toBe('Player 1 is: "Audio" Player 2 is: "Video" Player 3 is: "Photo"');
+          expect(self.queue.answers.length).toBe(0);
+        });
+
+        it('should return the string of formatted kTalk.queue.answers values divided with comma', function answers_answers_format_3() {
+          command.message = 'answers.format , ';
+          
+          expect(self.queue.answers.length).toBeGreaterThan(0);
+          expect(command.answer(command)).toBe('Player 1 is: "Audio", Player 2 is: "Video", Player 3 is: "Photo"');
+          expect(self.queue.answers.length).toBe(0);
+        });
+
+        it('should return the string of formatted kTalk.queue.answers values as lines', function answers_answers_format_4() {
+          command.message = 'answers.format "\\n"';
+          
+          expect(self.queue.answers.length).toBeGreaterThan(0);
+          expect(command.answer(command)).toBe('Player 1 is: "Audio"\nPlayer 2 is: "Video"\nPlayer 3 is: "Photo"');
+          expect(self.queue.answers.length).toBe(0);
+        });
+
+        it('should process "\u2408" (BS) symbol by deleting it and leftward symbol', function answers_answers_format_5() {
+          self.queue.answers[0].push('\u2408...');
+          command.message = 'answers.format "\\n"';
+          
+          expect(self.queue.answers.length).toBeGreaterThan(0);
+          expect(command.answer(command)).toBe('Player 1 is: "Audio"\nPlayer 2 is: "Video"\nPlayer 3 is: "Photo"...');
+          expect(self.queue.answers.length).toBe(0);
+        });
+
+        it('should process successive "\u2408" (BS) symbols', function answers_answers_format_6() {
+          self.queue.answers[0].push('\u2408...ZZZZ\u2408\u2408\u2408\u2408');
+          command.message = 'answers.format "\\n"';
+          
+          expect(self.queue.answers.length).toBeGreaterThan(0);
+          expect(command.answer(command)).toBe('Player 1 is: "Audio"\nPlayer 2 is: "Video"\nPlayer 3 is: "Photo"...');
+          expect(self.queue.answers.length).toBe(0);
+        });
+
+      });
+
+      describe('debug', function answers_debug_0() {
+
+        beforeEach(function () {
+          command = cloneCommand('debug');
+        });
+
+        it('should return the result of evaluation of the string expression', function answers_debug_1() {
+          command.message = 'debug typeof window.kTalk';
+          expect(command.answer(command)).toBe('# typeof window.kTalk =\n"object"');
+
+          command.message = 'debug document.title';
+          expect(command.answer(command)).toBe('# document.title =\n"Kodi Talk Tests"');
         });
 
       });
