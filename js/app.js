@@ -377,13 +377,10 @@
       return sendCommand(message).then(sendQueuedCommand);
     }
 
-    function addGreetings() {
-      return talkToKodi('Hello!');
-    }
-
     function addMessagesFromHistory() {
-      if (!self.appData.messages || self.appData.messages.length < 1) {
-        return;
+      if (!self.appData.messages || self.appData.messages.length < 2) {
+        self.appData.messages = [];
+        return talkToKodi('.hello');
       }
       self.appData.messages.forEach(function (m) {
         var elm = self.messages.addMessage(makeMessageParams(m.text, m.type, m.date, 'no history'));
@@ -412,6 +409,7 @@
         regex: /^(hello)\s*[\.!\?]*$/i,
         answer: function () {
           self.messages.clean();
+          self.lastMessageTime = 0;
           delete self.appData.messages;
           saveSettings();
           self.queue.commands.push('.version.addon plugin.webinterface.ktalk');
@@ -778,11 +776,7 @@
     }
 
     function run() {
-      if (self.appData.messages && self.appData.messages.length > 0) {
-        addMessagesFromHistory();
-      } else {
-        addGreetings();
-      }
+      addMessagesFromHistory();
 
       if (!window.f7App.device.os) {
         setTimeout(function () {
@@ -834,7 +828,6 @@
         sendCommand: sendCommand,
         sendQueuedCommand: sendQueuedCommand,
         talkToKodi: talkToKodi,
-        addGreetings: addGreetings,
         addMessagesFromHistory: addMessagesFromHistory
       };
     }

@@ -1593,48 +1593,94 @@ describe('kTalk', function kTalk_0() {
 
     });
 
-    describe('.addGreetings()', function addGreetings_0() {
+    describe('.addMessagesFromHistory()', function addMessagesFromHistory_0() {
 
       beforeEach(function () {
-        jasmine.Ajax.install();
-        stubAjaxRequests();
-        self.queue.commands.length = 0;
-        self.queue.answers.length = 0;
-        self.commandId = 0;
         self.messages.clean();
-        delete self.appData.messages;
-        self.dataStorage.removeItem(self.dataKey);
+        spyOn(self.testing.getCommand('hello'), 'answer').and.returnValue('Hello!');
       });
 
-      afterEach(function () {
-        jasmine.Ajax.uninstall();
-      });
-
-      it('should send ".hello" command', function addGreetings_1(done) {
+      it('should add messages stored in the message history', function addMessagesFromHistory_1() {
         var messages;
-        self.testing.addGreetings().then(function (v) {
-          expect(v).toBe('Finished.');
+
+        self.appData.messages = [{
+          text: 'Hi!',
+          type: 'sent',
+          date: new Date(2001, 0, 1, 12, 10, 0)
+        }, {
+          text: 'Hello!',
+          type: 'received',
+          date: new Date(2001, 0, 1, 12, 11, 0)
+        }, {
+          text: 'What?',
+          type: 'sent',
+          date: new Date(2001, 0, 1, 12, 25, 0)
+        }, {
+          text: 'Sorry, I can\'t understand you.',
+          type: 'received error',
+          date: new Date(2001, 0, 1, 12, 26, 0)
+        }, {
+          text: 'debug 2+2',
+          type: 'sent',
+          date: new Date(2001, 0, 1, 12, 40, 0)
+        }, {
+          text: '# answer: 4',
+          type: 'received debug',
+          date: new Date(2001, 0, 1, 12, 41, 0)
+        }];
+        self.dataStorage.setItem(self.dataKey, JSON.stringify(self.appData));
+
+        self.testing.addMessagesFromHistory();
+        messages = window.d7('.message-text');
+        expect(messages.length).toBe(6);
+
+        expect(messages[0].innerHTML).toBe('Hi!');
+        expect(messages[0].parentElement.classList.contains('message-sent')).toBe(true);
+        expect(messages[0].parentElement.classList.contains('error')).toBe(false);
+        expect(messages[0].parentElement.classList.contains('debug')).toBe(false);
+
+        expect(messages[1].innerHTML).toBe('Hello!');
+        expect(messages[1].parentElement.classList.contains('message-received')).toBe(true);
+        expect(messages[1].parentElement.classList.contains('error')).toBe(false);
+        expect(messages[1].parentElement.classList.contains('debug')).toBe(false);
+
+        expect(messages[2].innerHTML).toBe('What?');
+        expect(messages[2].parentElement.classList.contains('message-sent')).toBe(true);
+        expect(messages[2].parentElement.classList.contains('error')).toBe(false);
+        expect(messages[2].parentElement.classList.contains('debug')).toBe(false);
+
+        expect(messages[3].innerHTML).toBe('Sorry, I can\'t understand you.');
+        expect(messages[3].parentElement.classList.contains('message-received')).toBe(true);
+        expect(messages[3].parentElement.classList.contains('error')).toBe(true);
+        expect(messages[3].parentElement.classList.contains('debug')).toBe(false);
+
+        expect(messages[4].innerHTML).toBe('debug 2+2');
+        expect(messages[4].parentElement.classList.contains('message-sent')).toBe(true);
+        expect(messages[4].parentElement.classList.contains('error')).toBe(false);
+        expect(messages[4].parentElement.classList.contains('debug')).toBe(false);
+
+        expect(messages[5].innerHTML).toBe('# answer: 4');
+        expect(messages[5].parentElement.classList.contains('message-received')).toBe(true);
+        expect(messages[5].parentElement.classList.contains('error')).toBe(false);
+        expect(messages[5].parentElement.classList.contains('debug')).toBe(true);
+
+        expect(self.appData.messages).toEqual(jasmine.any(Array));
+        expect(self.appData.messages.length).toBe(6);
+      });
+
+      it('should add welcome message if the message history is empty', function addMessagesFromHistory_2(done) {
+        var messages;
+        
+        self.appData.messages.length = 0;
+        self.testing.addMessagesFromHistory().then(function (v) {
           messages = window.d7('.message-text');
           expect(messages.length).toBe(1);
-          expect(messages[0].innerHTML).toBe('Hello, I\'m a Kodi Talk bot.' +
-            '\nMy version is 1.2.3.' +
-            '\nKodi version is 16.1 (rev. 60a76d9).' +
-            '\n\nSend me a media URL you want to play or any other command.' +
-            '\nTo list all commands I understand, type "<a href="#" class="new link" data-command="help">help</a>".' +
-            '\n\nNow playing:' +
-            '\n‣ TV channel <a href="#" class="new link" data-command="play tv 33">33</a>: World News');
-          expect(self.commandId).toBe(4);
+          expect(messages[0].innerHTML).toBe('Hello!');
+          expect(messages[0].parentElement.classList.contains('message-received')).toBe(true);
+          expect(messages[0].parentElement.classList.contains('error')).toBe(false);
+          expect(messages[0].parentElement.classList.contains('debug')).toBe(false);
           expect(self.appData.messages).toEqual(jasmine.any(Array));
           expect(self.appData.messages.length).toBe(1);
-          expect(JSON.parse(self.dataStorage.getItem(self.dataKey))).toEqual(jasmine.objectContaining({
-            messages: [jasmine.objectContaining({
-              text: 'Hello, I\'m a Kodi Talk bot.&#10;My version is 1.2.3.&#10;Kodi version is 16.1 (rev. 60a76d9).&#10;&#10;' +
-                'Send me a media URL you want to play or any other command.&#10;' +
-                'To list all commands I understand, type &#34;<a href="#" class="new link" data-command="help">help</a>&#34;.&#10;&#10;' +
-                'Now playing:&#10;&#8227; TV channel <a href="#" class="new link" data-command="play tv 33">33</a>: World News',
-              type: 'received'
-            })]
-          }));
           done();
         }, function () {
           expect('Promise not').toBe('rejected');
@@ -1642,50 +1688,28 @@ describe('kTalk', function kTalk_0() {
         });
       });
 
-    });
-
-    describe('.addMessagesFromHistory()', function addMessagesFromHistory_0() {
-
-      beforeEach(function () {
-        self.messages.clean();
+      it('should add welcome message if the message history contains single message', function addMessagesFromHistory_3(done) {
+        var messages;
+        
         self.appData.messages = [{
-          text: 'Hello, I\'m a Kodi Talk bot.&#10;&#10;Send me a media URL you want to play or any other command.&#10;To list all commands I understand, type &#34;<a href="#" class="new link" data-command="help">help</a>&#34;.',
+          text: 'Welcome!',
           type: 'received',
-          date: new Date(2001, 0, 1, 12, 30, 0)
-        }, {
-          text: 'Kodi 16.1 (rev. 60a76d9)&#10;Kodi Talk addon 1.2.3',
-          type: 'received',
-          date: new Date(2001, 0, 1, 12, 31, 0)
-        }, {
-          text: 'Now playing:&#10;&#8227; TV channel <a href="#" class="new link" data-command="play tv 33">33</a>: World News',
-          type: 'received',
-          date: new Date(2001, 0, 1, 12, 32, 0)
+          date: new Date(2001, 0, 1, 12, 0, 0)
         }];
-        self.dataStorage.setItem(self.dataKey, JSON.stringify(self.appData));
-      });
-
-      it('should add messages stored in the message history', function addMessagesFromHistory_1() {
-        var messages;
-        self.testing.addMessagesFromHistory();
-        messages = window.d7('.message-text');
-        expect(messages.length).toBe(3);
-        expect(messages[0].innerHTML).toBe('Hello, I\'m a Kodi Talk bot.' +
-          '\n\nSend me a media URL you want to play or any other command.' +
-          '\nTo list all commands I understand, type "<a href="#" class="new link" data-command="help">help</a>".');
-        expect(messages[1].innerHTML).toBe('Kodi 16.1 (rev. 60a76d9)\nKodi Talk addon 1.2.3');
-        expect(messages[2].innerHTML).toBe('Now playing:\n‣ TV channel <a href="#" class="new link" data-command="play tv 33">33</a>: World News');
-        expect(self.appData.messages).toEqual(jasmine.any(Array));
-        expect(self.appData.messages.length).toBe(3);
-      });
-
-      it('should do nothing if the message history is empty', function addMessagesFromHistory_2() {
-        var messages;
-        self.appData.messages.length = 0;
-        self.testing.addMessagesFromHistory();
-        messages = window.d7('.message-text');
-        expect(messages.length).toBe(0);
-        expect(self.appData.messages).toEqual(jasmine.any(Array));
-        expect(self.appData.messages.length).toBe(0);
+        self.testing.addMessagesFromHistory().then(function (v) {
+          messages = window.d7('.message-text');
+          expect(messages.length).toBe(1);
+          expect(messages[0].innerHTML).toBe('Hello!');
+          expect(messages[0].parentElement.classList.contains('message-received')).toBe(true);
+          expect(messages[0].parentElement.classList.contains('error')).toBe(false);
+          expect(messages[0].parentElement.classList.contains('debug')).toBe(false);
+          expect(self.appData.messages).toEqual(jasmine.any(Array));
+          expect(self.appData.messages.length).toBe(1);
+          done();
+        }, function () {
+          expect('Promise not').toBe('rejected');
+          done();
+        });
       });
 
     });
