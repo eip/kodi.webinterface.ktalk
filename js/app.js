@@ -598,7 +598,7 @@
               result += '[[' + ch.channelid + '||play tv ' + ch.channelid + ']]: ' + ch.label + '\n';
             }
           });
-          return result;
+          return result.trim();
         }
       }, {
         name: 'fullscreen',
@@ -643,7 +643,7 @@
           var i,
             time = Math.round(parseInt(getMessageToken(c, 2), 10) / 10);
 
-          time = time < 0 ? 0 : time > 6 ? 6 : time;
+          time = time > 6 ? 6 : time;
           if (c.response.addons.some(function (a) {
               return a.addonid === 'script.sleep';
             })) {
@@ -662,7 +662,8 @@
             }
             self.queue.commands.push('.delay 1500');
             self.queue.commands.push('.exec Input.Back {}');
-            return 'Set sleep timer to ' + time * 10 + ' min.';
+            self.queue.commands.push('.echo ' + (time ? 'Sleep timer is set for ' + (time < 6 ? time * 10 + ' minutes.' : '1 hour.') : 'Sleep timer is disabled.'));
+            return;
           }
           return r('The required "Sleep" addon by robwebset is not installed.');
         }

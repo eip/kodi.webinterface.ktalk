@@ -2217,6 +2217,499 @@ describe('kTalk', function kTalk_0() {
 
       });
 
+      describe('tv', function answers_tv() {
+
+        beforeEach(function () {
+          command = cloneCommand('tv');
+          command.message = 'tv';
+          command.response = {
+            "channels": [{
+                channelid: 16,
+                label: "Animal Planet"
+              },
+              {
+                channelid: 13,
+                label: "FIDO"
+              },
+              {
+                channelid: 31,
+                label: "TNT"
+              },
+              {
+                channelid: 36,
+                label: "Pivot"
+              },
+              {
+                channelid: 58,
+                label: "Reelz"
+              },
+              {
+                channelid: 25,
+                label: "FXX"
+              },
+              {
+                channelid: 46,
+                label: "Syfy"
+              },
+              {
+                channelid: 35,
+                label: "Investigation Discovery"
+              },
+              {
+                channelid: 56,
+                label: "American Heroes Channel"
+              },
+              {
+                channelid: 60,
+                label: "BBC America"
+              },
+              {
+                channelid: 72,
+                label: "MTV"
+              },
+              {
+                channelid: 32,
+                label: "Logo TV"
+              },
+              {
+                channelid: 11,
+                label: "Centric"
+              },
+              {
+                channelid: 71,
+                label: "Comedy.tv"
+              },
+              {
+                channelid: 61,
+                label: "Cooking Channel"
+              },
+              {
+                channelid: 1,
+                label: "Universal HD"
+              },
+              {
+                channelid: 49,
+                label: "AWE"
+              },
+              {
+                channelid: 15,
+                label: "CMT"
+              },
+              {
+                channelid: 57,
+                label: "Pop"
+              },
+              {
+                channelid: 52,
+                label: "Adult Swim"
+              },
+              {
+                channelid: 41,
+                label: "Spike"
+              },
+              {
+                channelid: 4,
+                label: "DIY Network"
+              },
+              {
+                channelid: 53,
+                label: "Lifetime"
+              },
+              {
+                channelid: 17,
+                label: "TBS"
+              },
+              {
+                channelid: 34,
+                label: "Travel Channel"
+              },
+              {
+                channelid: 40,
+                label: "TLC"
+              },
+              {
+                channelid: 67,
+                label: "LMN"
+              },
+              {
+                channelid: 26,
+                label: "History"
+              },
+              {
+                channelid: 39,
+                label: "Destination America"
+              },
+              {
+                channelid: 65,
+                label: "Create"
+              },
+              {
+                channelid: 68,
+                label: "Discovery Life"
+              },
+              {
+                channelid: 38,
+                label: "Military History"
+              },
+              {
+                channelid: 48,
+                label: "mydestination.tv"
+              },
+              {
+                channelid: 47,
+                label: "National Geographic Channel"
+              },
+              {
+                channelid: 69,
+                label: "Bravo"
+              },
+              {
+                channelid: 14,
+                label: "Recipe.TV"
+              },
+              {
+                channelid: 44,
+                label: "Nat Geo Wild"
+              },
+              {
+                channelid: 43,
+                label: "MTV2"
+              },
+              {
+                channelid: 59,
+                label: "Chiller"
+              },
+              {
+                channelid: 55,
+                label: "Smithsonian Channel"
+              },
+              {
+                channelid: 70,
+                label: "A&E"
+              },
+              {
+                channelid: 66,
+                label: "Food Network"
+              },
+              {
+                channelid: 28,
+                label: "Science"
+              },
+              {
+                channelid: 45,
+                label: "Esquire Network"
+              },
+              {
+                channelid: 33,
+                label: "AMC"
+              },
+              {
+                channelid: 74,
+                label: "ASPiRE"
+              },
+              {
+                channelid: 10,
+                label: "FYI"
+              },
+              {
+                channelid: 75,
+                label: "Z Living"
+              },
+              {
+                channelid: 30,
+                label: "Audience Network"
+              },
+              {
+                channelid: 37,
+                label: "Crime & Investigation Network"
+              },
+              {
+                channelid: 73,
+                label: "Cloo"
+              },
+              {
+                channelid: 64,
+                label: "FX"
+              },
+              {
+                channelid: 18,
+                label: "WE tv"
+              },
+              {
+                channelid: 7,
+                label: "Lifetime Real Women"
+              },
+              {
+                channelid: 76,
+                label: "El Rey Network"
+              },
+              {
+                channelid: 5,
+                label: "Ovation"
+              },
+              {
+                channelid: 27,
+                label: "E!"
+              },
+              {
+                channelid: 62,
+                label: "Discovery Channel"
+              },
+              {
+                channelid: 8,
+                label: "AXS TV"
+              },
+              {
+                channelid: 51,
+                label: "USA Network"
+              },
+              {
+                channelid: 63,
+                label: "TV One"
+              },
+              {
+                channelid: 20,
+                label: "Pets.TV"
+              },
+              {
+                channelid: 21,
+                label: "Comedy Central"
+              },
+              {
+                channelid: 9,
+                label: "OWN"
+              },
+              {
+                channelid: 19,
+                label: "GSN"
+              },
+              {
+                channelid: 3,
+                label: "VH1"
+              },
+              {
+                channelid: 2,
+                label: "Ion Life"
+              },
+              {
+                channelid: 42,
+                label: "RLTV"
+              },
+              {
+                channelid: 22,
+                label: "Oxygen"
+              },
+              {
+                channelid: 50,
+                label: "BET"
+              },
+              {
+                channelid: 12,
+                label: "truTV"
+              },
+              {
+                channelid: 54,
+                label: "Viceland"
+              },
+              {
+                channelid: 6,
+                label: "WGN America"
+              },
+              {
+                channelid: 23,
+                label: "Es.tv"
+              },
+              {
+                channelid: 24,
+                label: "HGTV"
+              },
+              {
+                channelid: 29,
+                label: "VH1 Classic"
+              }],
+            "limits": {
+              "end": 76,
+              "start": 0,
+              "total": 76
+            }
+          };
+        });
+
+        it('should return the list of all TV channels', function answers_tv_1() {
+          var answer = command.answer(command);
+
+          expect(answer).toEqual(jasmine.any(String));
+          expect(answer).toMatch(/^(?:\[\[\d{1,2}\|\|play tv \d{1,2}\]\]: .*\n){75}\[\[\d{1,2}\|\|play tv \d{1,2}\]\]: .*$/);
+        });
+
+        it('should return the sorted by label list of TV channels', function answers_tv_2() {
+          var answer = command.answer(command);
+
+          expect(answer).toEqual(jasmine.any(String));
+          expect(answer).toMatch(/^\[\[70\|\|.*\n\[\[52\|\|.*\n\[\[33\|\|.*\n[\s\S]+?\[\[18\|\|.*\n\[\[6\|\|.*\n\[\[75\|\|.*$/);
+        });
+
+        it('should return the sorted by number list of TV channels', function answers_tv_3() {
+          var answer;
+
+          command.message = 'tv#';
+          answer = command.answer(command);
+
+          expect(answer).toEqual(jasmine.any(String));
+          expect(answer).toMatch(/^\[\[1\|\|.*\n\[\[2\|\|.*\n\[\[3\|\|.*\n[\s\S]+?\[\[74\|\|.*\n\[\[75\|\|.*\n\[\[76\|\|.*$/);
+        });
+
+        it('should return the sorted by label list of TV channels whose label contains "dis"', function answers_tv_4() {
+          var answer;
+
+          command.message = 'tv dis';
+          answer = command.answer(command);
+
+          expect(answer).toBe('[[62||play tv 62]]: Discovery Channel\n[[68||play tv 68]]: Discovery Life\n[[35||play tv 35]]: Investigation Discovery');
+        });
+
+        it('should return the sorted by number list of TV channels whose label contains "dis"', function answers_tv_5() {
+          var answer;
+
+          command.message = 'tv# dis';
+          answer = command.answer(command);
+
+          expect(answer).toBe('[[35||play tv 35]]: Investigation Discovery\n[[62||play tv 62]]: Discovery Channel\n[[68||play tv 68]]: Discovery Life');
+        });
+
+      });
+
+      describe('fullscreen', function answers_fullscreen() {
+
+        beforeEach(function () {
+          command = cloneCommand('fullscreen');
+        });
+
+        it('should return "OK, fullscreen mode activated." string if command.response is true', function answers_fullscreen_1() {
+          command.response = true;
+          expect(command.answer(command)).toBe('OK, fullscreen mode activated.');
+        });
+
+        it('should return "Oops, still in GUI mode." string if command.response is false', function answers_fullscreen_2() {
+          command.response = false;
+          expect(command.answer(command)).toBe('Oops, still in GUI mode.');
+        });
+
+      });
+
+      describe('sleep', function answers_sleep() {
+
+        beforeEach(function () {
+          command = cloneCommand('sleep');
+          command.message = 'sleep 0';
+          command.response = {
+            "addons": [{
+              "addonid": "script.sleep",
+              "type": "xbmc.python.script"
+            }, {
+              "addonid": "service.openelec.settings",
+              "type": "xbmc.python.script"
+            }, {
+              "addonid": "script.module.youtube.dl",
+              "type": "xbmc.python.script"
+            }],
+            "limits": {
+              "end": 3,
+              "start": 0,
+              "total": 3
+            }
+          };
+          self.queue.commands.length = 0;
+          self.queue.answers.length = 0;
+        });
+
+        it('should return rejected promise with "The required "Sleep" addon by robwebset is not installed." value', function answers_sleep_1(done) {
+          command.response.addons.shift();
+          command.answer(command).then(function () {
+            expect('Promise not').toBe('resolved');
+            done();
+          }, function (v) {
+            expect(v).toBe('The required "Sleep" addon by robwebset is not installed.');
+            done();
+          });
+        });
+        
+        it('should push commands to kTalk.queue.commands to disable sleep timer', function answers_sleep_2() {
+          expect(command.answer(command)).toBeUndefined();
+          expect(self.queue.commands.length).toBe(13);
+          expect(self.queue.commands[0]).toBe('.exec Addons.ExecuteAddon {"addonid":"script.sleep"}');
+          expect(self.queue.commands[1]).toBe('.delay 1500');
+          expect(self.queue.commands[2]).toBe('.exec Input.Left {}');
+          expect(self.queue.commands[3]).toBe('.exec Input.Select {}');
+          expect(self.queue.commands[4]).toBe('.exec Input.Select {}');
+          expect(self.queue.commands[8]).toBe('.exec Input.Select {}');
+          expect(self.queue.commands[9]).toBe('.exec Input.Select {}');
+          expect(self.queue.commands[10]).toBe('.delay 1500');
+          expect(self.queue.commands[11]).toBe('.exec Input.Back {}');
+          expect(self.queue.commands[12]).toBe('.echo Sleep timer is disabled.');
+        });
+
+        it('should push commands to kTalk.queue.commands to set sleep timer for 10 minutes.', function answers_sleep_3() {
+          command.message = 'sleep 7';
+          expect(command.answer(command)).toBeUndefined();
+          expect(self.queue.commands.length).toBe(15);
+          expect(self.queue.commands[0]).toBe('.exec Addons.ExecuteAddon {"addonid":"script.sleep"}');
+          expect(self.queue.commands[1]).toBe('.delay 1500');
+          expect(self.queue.commands[2]).toBe('.exec Input.Left {}');
+          expect(self.queue.commands[3]).toBe('.exec Input.Select {}');
+          expect(self.queue.commands[4]).toBe('.exec Input.Select {}');
+          expect(self.queue.commands[8]).toBe('.exec Input.Select {}');
+          expect(self.queue.commands[9]).toBe('.exec Input.Select {}');
+          expect(self.queue.commands[10]).toBe('.exec Input.Right {}');
+          expect(self.queue.commands[11]).toBe('.exec Input.Select {}');
+          expect(self.queue.commands[12]).toBe('.delay 1500');
+          expect(self.queue.commands[13]).toBe('.exec Input.Back {}');
+          expect(self.queue.commands[14]).toBe('.echo Sleep timer is set for 10 minutes.');
+        });
+
+        it('should push commands to kTalk.queue.commands to set sleep timer for 30 minutes.', function answers_sleep_4() {
+          command.message = 'sleep 34';
+          expect(command.answer(command)).toBeUndefined();
+          expect(self.queue.commands.length).toBe(17);
+          expect(self.queue.commands[0]).toBe('.exec Addons.ExecuteAddon {"addonid":"script.sleep"}');
+          expect(self.queue.commands[1]).toBe('.delay 1500');
+          expect(self.queue.commands[2]).toBe('.exec Input.Left {}');
+          expect(self.queue.commands[3]).toBe('.exec Input.Select {}');
+          expect(self.queue.commands[4]).toBe('.exec Input.Select {}');
+          expect(self.queue.commands[8]).toBe('.exec Input.Select {}');
+          expect(self.queue.commands[9]).toBe('.exec Input.Select {}');
+          expect(self.queue.commands[10]).toBe('.exec Input.Right {}');
+          expect(self.queue.commands[11]).toBe('.exec Input.Select {}');
+          expect(self.queue.commands[12]).toBe('.exec Input.Select {}');
+          expect(self.queue.commands[13]).toBe('.exec Input.Select {}');
+          expect(self.queue.commands[14]).toBe('.delay 1500');
+          expect(self.queue.commands[15]).toBe('.exec Input.Back {}');
+          expect(self.queue.commands[16]).toBe('.echo Sleep timer is set for 30 minutes.');
+        });
+
+        it('should push commands to kTalk.queue.commands to set sleep timer for 1 hour.', function answers_sleep_5() {
+          command.message = 'sleep 123';
+          expect(command.answer(command)).toBeUndefined();
+          expect(self.queue.commands.length).toBe(20);
+          expect(self.queue.commands[0]).toBe('.exec Addons.ExecuteAddon {"addonid":"script.sleep"}');
+          expect(self.queue.commands[1]).toBe('.delay 1500');
+          expect(self.queue.commands[2]).toBe('.exec Input.Left {}');
+          expect(self.queue.commands[3]).toBe('.exec Input.Select {}');
+          expect(self.queue.commands[4]).toBe('.exec Input.Select {}');
+          expect(self.queue.commands[8]).toBe('.exec Input.Select {}');
+          expect(self.queue.commands[9]).toBe('.exec Input.Select {}');
+          expect(self.queue.commands[10]).toBe('.exec Input.Right {}');
+          expect(self.queue.commands[11]).toBe('.exec Input.Select {}');
+          expect(self.queue.commands[12]).toBe('.exec Input.Select {}');
+          expect(self.queue.commands[15]).toBe('.exec Input.Select {}');
+          expect(self.queue.commands[16]).toBe('.exec Input.Select {}');
+          expect(self.queue.commands[17]).toBe('.delay 1500');
+          expect(self.queue.commands[18]).toBe('.exec Input.Back {}');
+          expect(self.queue.commands[19]).toBe('.echo Sleep timer is set for 1 hour.');
+        });
+
+      });
+
     });
 
   });
