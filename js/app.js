@@ -478,7 +478,7 @@
         name: 'play',
         description: ['Start playing the given media URL, or TV channel, or resume paused playback.',
           'Send me "[[play http://www.sample-videos.com/video/mp4/720/big_buck_bunny_720p_50mb.mp4]]" or simply "[[http://www.sample-videos.com/video/mp4/720/big_buck_bunny_720p_50mb.mp4]]" to start playing video file.',
-          'I also understand links to YouTube: "[[play https://youtu.be/YE7VzlLtp-4]]" or "[[https://youtu.be/YE7VzlLtp-4]]", (you should have Kodi Youtube addon to be installed).',
+          'I also understand links to YouTube: "[[play https://youtu.be/YE7VzlLtp-4]]" or "[[https://youtu.be/YE7VzlLtp-4]]", (you should have Kodi YouTube addon to be installed).',
           'Type "[[play tv 1]]" to start playing the TV channel 1. Use "[[tv]]" command to list of available channels.',
           'Send me "[[play]]" command if you have paused playback and it will be resumed.'],
         regex: /^(play)\s*[\.!\?]*$/i,
@@ -490,8 +490,10 @@
             self.queue.commands.push(['.player.playpause', o.playerid, 1].join(' '));
             result.push(capitalize(o.type) + ' playback [#].');
           });
-          self.queue.commands.push('.answers.format ' + JSON.stringify('\n'));
-          return c.response.length === 0 ? 'There is no active players.' : result;
+          if (result.length) {
+            self.queue.commands.push('.answers.format ' + JSON.stringify('\n'));
+          }
+          return result.length ? result : 'There is no active players.';
         }
       }, {
         name: 'pause',
@@ -505,8 +507,10 @@
             self.queue.commands.push(['.player.playpause', o.playerid, 0].join(' '));
             result.push(capitalize(o.type) + ' playback [#].');
           });
-          self.queue.commands.push('.answers.format ' + JSON.stringify('\n'));
-          return c.response.length === 0 ? 'There is no active players.' : result;
+          if (result.length) {
+            self.queue.commands.push('.answers.format ' + JSON.stringify('\n'));
+          }
+          return result.length ? result : 'There is no active players.';
         }
       }, {
         name: 'stop',
@@ -517,7 +521,7 @@
           c.response.forEach(function (o) {
             self.queue.commands.unshift('.exec Player.Stop {"playerid":' + o.playerid + '}');
           });
-          return c.response.length === 0 ? 'There is no active players.' : 'Stopping ' + c.response.length + ' player(s)';
+          return c.response.length ? 'Stopping ' + c.response.length + ' player' + (c.response.length > 1 ? 's' : '') : 'There is no active players.';
         }
       }, {
         name: 'player.playpause',
@@ -541,8 +545,10 @@
           c.response.forEach(function (o) {
             self.queue.commands.push('.player.getitem ' + o.playerid);
           });
-          self.queue.commands.push('.answers.join ' + JSON.stringify('\n'));
-          return c.response.length === 0 ? 'Nothing is playing now.' : 'Now playing:';
+          if (c.response.length) {
+            self.queue.commands.push('.answers.join ' + JSON.stringify('\n'));
+          }
+          return c.response.length ? 'Now playing:' : 'Nothing is playing now.';
         }
       }, {
         name: 'player.getitem',
@@ -551,8 +557,19 @@
         params: '{"playerid":$2,"properties":["artist","channeltype"]}',
         answer: function (c) {
           var i = c.response.item;
-
-          return '‣' + (i.type && i.type !== 'unknown' ? (i.type === 'channel' ? ' ' + i.channeltype.toUpperCase() : '') + ' ' + i.type + (i.type === 'channel' ? ' [[' + i.id + '||play tv ' + i.id + ']]' : '') + ': ' : ' ') +
+          if (!i.type || i.type === 'unknown') {
+            switch (c.params.playerid) {
+            case 0:
+              i.type = 'audio';
+              break;
+            case 2:
+              i.type = 'picture';
+              break;
+            default:
+              i.type = 'video';
+            }
+          }
+          return '‣ ' + capitalize((i.type === 'channel' ? i.channeltype.toUpperCase() + ' ' : '') + i.type + (i.type === 'channel' ? ' [[' + i.id + '||play tv ' + i.id + ']]' : '') + ': ') +
             (i.artist && i.artist.length ? i.artist.join(', ') + ' — ' : '') + i.label;
         }
       }, {

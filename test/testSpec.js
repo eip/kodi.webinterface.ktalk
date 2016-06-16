@@ -348,7 +348,7 @@ describe('kTalk', function kTalk_0() {
 
     describe('.transformPlayerUri()', function transformPlayerUri_0() {
 
-      it('should transform Youtube URLs', function transformPlayerUri_1() {
+      it('should transform YouTube URLs', function transformPlayerUri_1() {
         expect(self.testing.transformPlayerUri('http://www.youtube.com/?feature=player_embedded&v=dQw4w9WgXcQ')).toBe('plugin://plugin.video.youtube/?path=/root&search&action=play_video&videoid=dQw4w9WgXcQ');
         expect(self.testing.transformPlayerUri('http://www.youtube.com/?v=dQw4w9WgXcQ')).toBe('plugin://plugin.video.youtube/?path=/root&search&action=play_video&videoid=dQw4w9WgXcQ');
         expect(self.testing.transformPlayerUri('http://www.youtube.com/e/dQw4w9WgXcQ')).toBe('plugin://plugin.video.youtube/?path=/root&search&action=play_video&videoid=dQw4w9WgXcQ');
@@ -1670,7 +1670,7 @@ describe('kTalk', function kTalk_0() {
 
       it('should add welcome message if the message history is empty', function addMessagesFromHistory_2(done) {
         var messages;
-        
+
         self.appData.messages.length = 0;
         self.testing.addMessagesFromHistory().then(function (v) {
           messages = window.d7('.message-text');
@@ -1690,7 +1690,7 @@ describe('kTalk', function kTalk_0() {
 
       it('should add welcome message if the message history contains single message', function addMessagesFromHistory_3(done) {
         var messages;
-        
+
         self.appData.messages = [{
           text: 'Welcome!',
           type: 'received',
@@ -1786,13 +1786,40 @@ describe('kTalk', function kTalk_0() {
     describe('answers', function answers_0() {
       var command;
 
-      describe('help', function answers_1() {
+      describe('hello', function answers_hello() {
+
+        beforeEach(function () {
+          command = cloneCommand('hello');
+          command.message = 'Hello!';
+          self.queue.commands.length = 0;
+          self.queue.answers.length = 0;
+          self.appData.messages = [{
+            text: 'Welcome!',
+            type: 'received',
+            date: new Date()
+          }];
+          self.lastMessageTime = Date.now();
+        });
+
+        it('should push commands to kTalk.queue.commands and return "Hello, I\'m a Kodi Talk bot." string', function answers_hello_1() {
+          expect(command.answer(command)).toBe('Hello, I\'m a Kodi Talk bot.');
+          expect(self.appData.messages).toBeUndefined();
+          expect(self.dataStorage.getItem(self.dataKey)).toBe('{}');
+          expect(self.queue.commands.length).toBeGreaterThan(4);
+          expect(self.queue.commands[0]).toBe('.version.addon plugin.webinterface.ktalk');
+          expect(self.queue.commands[1]).toBe('.version.kodi');
+          expect(self.queue.commands.slice(-1)[0]).toBe('.what\'s up');
+        });
+
+      });
+
+      describe('help', function answers_help() {
 
         beforeEach(function () {
           command = cloneCommand('help');
         });
 
-        it('should return the formatted list of the commands names and descriptions', function answers_11() {
+        it('should return the formatted list of the commands names and descriptions', function answers_help_1() {
           var answer = command.answer(command);
 
           expect(answer).toEqual(jasmine.any(String));
@@ -1801,30 +1828,30 @@ describe('kTalk', function kTalk_0() {
 
       });
 
-      describe('help.detail', function answers_2() {
+      describe('help.detail', function answers_help_detail() {
 
         beforeEach(function () {
           command = cloneCommand('help.detail');
         });
 
-        it('should return the formatted name and full description of the "stop" command', function answers_21() {
+        it('should return the formatted name and full description of the "stop" command', function answers_help_detail_1() {
           command.message = 'help stop';
           expect(command.answer(command)).toBe('[[stop]]: Stop playback.');
         });
 
-        it('should return "Sorry..." if the given command has no description', function answers_22() {
+        it('should return "Sorry..." if the given command has no description', function answers_help_detail_2() {
           command.message = 'help player.getitem';
           expect(command.answer(command)).toBe('Sorry, I don\'t know anything about "player.getitem" command.');
         });
 
-        it('should return "Sorry..." if the given command doesn\'t exists', function answers_23() {
+        it('should return "Sorry..." if the given command doesn\'t exists', function answers_help_detail_3() {
           command.message = 'help foo';
           expect(command.answer(command)).toBe('Sorry, I don\'t know anything about "foo" command.');
         });
 
       });
 
-      describe('play.url', function answers_3() {
+      describe('play.url', function answers_play_url() {
 
         beforeEach(function () {
           command = cloneCommand('play.url');
@@ -1833,7 +1860,7 @@ describe('kTalk', function kTalk_0() {
           self.queue.answers.length = 0;
         });
 
-        it('should push commands to kTalk.queue.commands and return "Start playing URL..." string', function answers_31() {
+        it('should push commands to kTalk.queue.commands and return "Start playing URL..." string', function answers_play_url_1() {
           expect(command.answer(command)).toBe('Start playing URL: plugin://plugin.video.youtube/?path=/root&search&action=play_video&videoid=YE7VzlLtp-4');
           expect(self.queue.commands.length).toBeGreaterThan(3);
           expect(self.queue.commands[0]).toBe('.stop');
@@ -1842,7 +1869,7 @@ describe('kTalk', function kTalk_0() {
 
       });
 
-      describe('play.tv', function answers_4() {
+      describe('play.tv', function answers_play_tv() {
 
         beforeEach(function () {
           command = cloneCommand('play.tv');
@@ -1851,7 +1878,7 @@ describe('kTalk', function kTalk_0() {
           self.queue.answers.length = 0;
         });
 
-        it('should push commands to kTalk.queue.commands and return "Start playing URL..." string', function answers_41() {
+        it('should push commands to kTalk.queue.commands and return "Start playing URL..." string', function answers_play_tv_1() {
           expect(command.answer(command)).toBe('Start playing TV channel #123');
           expect(self.queue.commands.length).toBeGreaterThan(3);
           expect(self.queue.commands[0]).toBe('.stop');
@@ -1860,13 +1887,302 @@ describe('kTalk', function kTalk_0() {
 
       });
 
-      describe('player.getitem', function answers_5() {
+      describe('play', function answers_play() {
+
+        beforeEach(function () {
+          command = cloneCommand('play');
+          self.queue.commands.length = 0;
+          self.queue.answers.length = 0;
+        });
+
+        it('should not push commands to kTalk.queue.commands and return "There is no active players." string', function answers_play_1() {
+          command.response = [];
+          expect(command.answer(command)).toBe('There is no active players.');
+          expect(self.queue.commands.length).toBe(0);
+        });
+
+        it('should push commands to kTalk.queue.commands and return ["Audio playback [#]."] array', function answers_play_2() {
+          command.response = [{
+            playerid: 0,
+            type: 'audio'
+          }];
+          expect(command.answer(command)).toEqual(['Audio playback [#].']);
+          expect(self.queue.commands.length).toBe(2);
+          expect(self.queue.commands[0]).toBe('.player.playpause 0 1');
+          expect(self.queue.commands[1]).toBe('.answers.format "\\n"');
+        });
+
+        it('should push commands to kTalk.queue.commands and return ["Video playback [#]."] array', function answers_play_3() {
+          command.response = [{
+            playerid: 1,
+            type: 'video'
+          }];
+          expect(command.answer(command)).toEqual(['Video playback [#].']);
+          expect(self.queue.commands.length).toBe(2);
+          expect(self.queue.commands[0]).toBe('.player.playpause 1 1');
+          expect(self.queue.commands[1]).toBe('.answers.format "\\n"');
+        });
+
+        it('should push commands to kTalk.queue.commands and return ["Picture playback [#]."] array', function answers_play_4() {
+          command.response = [{
+            playerid: 2,
+            type: 'picture'
+          }];
+          expect(command.answer(command)).toEqual(['Picture playback [#].']);
+          expect(self.queue.commands.length).toBe(2);
+          expect(self.queue.commands[0]).toBe('.player.playpause 2 1');
+          expect(self.queue.commands[1]).toBe('.answers.format "\\n"');
+        });
+
+        it('should push commands to kTalk.queue.commands and return ["Audio playback [#].", "Picture playback [#]."] array', function answers_play_5() {
+          command.response = [{
+            "playerid": 0,
+            "type": "audio"
+          }, {
+            "playerid": 2,
+            "type": "picture"
+          }];
+          expect(command.answer(command)).toEqual(['Audio playback [#].', 'Picture playback [#].']);
+          expect(self.queue.commands.length).toBe(3);
+          expect(self.queue.commands[0]).toBe('.player.playpause 0 1');
+          expect(self.queue.commands[1]).toBe('.player.playpause 2 1');
+          expect(self.queue.commands[2]).toBe('.answers.format "\\n"');
+        });
+
+      });
+
+      describe('pause', function answers_pause() {
+
+        beforeEach(function () {
+          command = cloneCommand('pause');
+          self.queue.commands.length = 0;
+          self.queue.answers.length = 0;
+        });
+
+        it('should not push commands to kTalk.queue.commands and return "There is no active players." string', function answers_pause_1() {
+          command.response = [];
+          expect(command.answer(command)).toBe('There is no active players.');
+          expect(self.queue.commands.length).toBe(0);
+        });
+
+        it('should push commands to kTalk.queue.commands and return ["Audio playback [#]."] array', function answers_pause_2() {
+          command.response = [{
+            playerid: 0,
+            type: 'audio'
+          }];
+          expect(command.answer(command)).toEqual(['Audio playback [#].']);
+          expect(self.queue.commands.length).toBe(2);
+          expect(self.queue.commands[0]).toBe('.player.playpause 0 0');
+          expect(self.queue.commands[1]).toBe('.answers.format "\\n"');
+        });
+
+        it('should push commands to kTalk.queue.commands and return ["Video playback [#]."] array', function answers_pause_3() {
+          command.response = [{
+            playerid: 1,
+            type: 'video'
+          }];
+          expect(command.answer(command)).toEqual(['Video playback [#].']);
+          expect(self.queue.commands.length).toBe(2);
+          expect(self.queue.commands[0]).toBe('.player.playpause 1 0');
+          expect(self.queue.commands[1]).toBe('.answers.format "\\n"');
+        });
+
+        it('should push commands to kTalk.queue.commands and return ["Picture playback [#]."] array', function answers_pause_4() {
+          command.response = [{
+            playerid: 2,
+            type: 'picture'
+          }];
+          expect(command.answer(command)).toEqual(['Picture playback [#].']);
+          expect(self.queue.commands.length).toBe(2);
+          expect(self.queue.commands[0]).toBe('.player.playpause 2 0');
+          expect(self.queue.commands[1]).toBe('.answers.format "\\n"');
+        });
+
+        it('should push commands to kTalk.queue.commands and return ["Audio playback [#].", "Picture playback [#]."] array', function answers_pause_5() {
+          command.response = [{
+            "playerid": 0,
+            "type": "audio"
+          }, {
+            "playerid": 2,
+            "type": "picture"
+          }];
+          expect(command.answer(command)).toEqual(['Audio playback [#].', 'Picture playback [#].']);
+          expect(self.queue.commands.length).toBe(3);
+          expect(self.queue.commands[0]).toBe('.player.playpause 0 0');
+          expect(self.queue.commands[1]).toBe('.player.playpause 2 0');
+          expect(self.queue.commands[2]).toBe('.answers.format "\\n"');
+        });
+
+      });
+
+      describe('stop', function answers_stop() {
+
+        beforeEach(function () {
+          command = cloneCommand('stop');
+          self.queue.commands.length = 0;
+          self.queue.answers.length = 0;
+        });
+
+        it('should not push commands to kTalk.queue.commands and return "There is no active players." string', function answers_stop_1() {
+          command.response = [];
+          expect(command.answer(command)).toBe('There is no active players.');
+          expect(self.queue.commands.length).toBe(0);
+        });
+
+        it('should push commands to kTalk.queue.commands and return "Stopping 1 player" string', function answers_stop_2() {
+          command.response = [{
+            playerid: 0,
+            type: 'audio'
+          }];
+          expect(command.answer(command)).toBe('Stopping 1 player');
+          expect(self.queue.commands.length).toBe(1);
+          expect(self.queue.commands[0]).toBe('.exec Player.Stop {"playerid":0}');
+        });
+
+        it('should push commands to kTalk.queue.commands and return "Stopping 2 players" string', function answers_stop_3() {
+          command.response = [{
+            "playerid": 0,
+            "type": "audio"
+          }, {
+            "playerid": 2,
+            "type": "picture"
+          }];
+          expect(command.answer(command)).toBe('Stopping 2 players');
+          expect(self.queue.commands.length).toBe(2);
+          expect(self.queue.commands[0]).toBe('.exec Player.Stop {"playerid":2}');
+          expect(self.queue.commands[1]).toBe('.exec Player.Stop {"playerid":0}');
+        });
+
+      });
+
+      describe('player.playpause', function answers_player_playpause() {
+
+        beforeEach(function () {
+          command = cloneCommand('player.playpause');
+          self.queue.commands.length = 0;
+          self.queue.answers.length = 0;
+        });
+
+        it('should return "paused" string', function answers_player_playpause_1() {
+          command.response = {
+            speed: 0
+          };
+          expect(command.answer(command)).toBe('paused');
+          expect(self.queue.commands.length).toBe(0);
+        });
+
+        it('should return "resumed" string', function answers_player_playpause_2() {
+          command.response = {
+            speed: 1
+          };
+          expect(command.answer(command)).toBe('resumed');
+          expect(self.queue.commands.length).toBe(0);
+        });
+
+      });
+
+      describe('what\'s up', function answers_whatsup() {
+
+        beforeEach(function () {
+          command = cloneCommand('what\'s up');
+          self.queue.commands.length = 0;
+          self.queue.answers.length = 0;
+        });
+
+        it('should not push commands to kTalk.queue.commands and return "Nothing is playing now." string', function answers_whatsup_1() {
+          command.response = [];
+          expect(command.answer(command)).toBe('Nothing is playing now.');
+          expect(self.queue.commands.length).toBe(0);
+        });
+
+        it('should push commands to kTalk.queue.commands and return "Now playing:" string', function answers_whatsup_2() {
+          command.response = [{
+            playerid: 0,
+            type: 'audio'
+          }];
+          expect(command.answer(command)).toBe('Now playing:');
+          expect(self.queue.commands.length).toBe(2);
+          expect(self.queue.commands[0]).toBe('.player.getitem 0');
+          expect(self.queue.commands[1]).toBe('.answers.join "\\n"');
+        });
+
+        it('should push commands to kTalk.queue.commands and return "Now playing:" string', function answers_whatsup_3() {
+          command.response = [{
+            "playerid": 0,
+            "type": "audio"
+          }, {
+            "playerid": 2,
+            "type": "picture"
+          }];
+          expect(command.answer(command)).toBe('Now playing:');
+          expect(self.queue.commands.length).toBe(3);
+          expect(self.queue.commands[0]).toBe('.player.getitem 0');
+          expect(self.queue.commands[1]).toBe('.player.getitem 2');
+          expect(self.queue.commands[2]).toBe('.answers.join "\\n"');
+        });
+
+      });
+
+      describe('player.getitem', function answers_player_getitem() {
 
         beforeEach(function () {
           command = cloneCommand('player.getitem');
+          command.params = {
+            playerid: 1,
+            properties: ['artist', 'channeltype']
+          };
         });
 
-        it('should format TV channel', function answers_51() {
+        it('should format a music track description', function answers_player_getitem_1() {
+          command.params.playerid = 0;
+          command.response = {
+            "item": {
+              "artist": ["Скрябін"],
+              "id": 123,
+              "label": "Нікому то не треба",
+              "type": "song"
+            }
+          };
+          expect(command.answer(command)).toBe('‣ Song: Скрябін — Нікому то не треба');
+        });
+
+        it('should format an audio description', function answers_player_getitem_2() {
+          command.params.playerid = 0;
+          command.response = {
+            "item": {
+              "artist": [],
+              "id": 23,
+              "label": "Don\'t Worry...",
+              "type": ""
+            }
+          };
+          expect(command.answer(command)).toBe('‣ Audio: Don\'t Worry...');
+        });
+
+        it('should format a movie description', function answers_player_getitem_3() {
+          command.response = {
+            "item": {
+              "artist": [],
+              "id": 12,
+              "label": "American History X",
+              "type": "movie"
+            }
+          };
+          expect(command.answer(command)).toBe('‣ Movie: American History X');
+        });
+
+        it('should format a YouTube video description', function answers_player_getitem_4() {
+          command.response = {
+            "item": {
+              "artist": ["Blender Foundation"],
+              "label": "Big Buck Bunny",
+              "type": "unknown"
+            }
+          };
+          expect(command.answer(command)).toBe('‣ Video: Blender Foundation — Big Buck Bunny');
+        });
+
+        it('should format a TV channel description', function answers_player_getitem_5() {
           command.response = {
             item: {
               channeltype: 'tv',
@@ -1876,6 +2192,27 @@ describe('kTalk', function kTalk_0() {
             }
           };
           expect(command.answer(command)).toBe('‣ TV channel [[33||play tv 33]]: World News');
+        });
+
+        it('should format a photo description', function answers_player_getitem_6() {
+          command.params.playerid = 2;
+          command.response = {
+            "item": {
+              "label": "IMG_20010101_121007.jpg",
+              "type": "picture"
+            }
+          };
+          expect(command.answer(command)).toBe('‣ Picture: IMG_20010101_121007.jpg');
+        });
+
+        it('should format a picture description', function answers_player_getitem_7() {
+          command.params.playerid = 2;
+          command.response = {
+            "item": {
+              "label": "IMG_20010101_121115.jpg"
+            }
+          };
+          expect(command.answer(command)).toBe('‣ Picture: IMG_20010101_121115.jpg');
         });
 
       });
