@@ -339,13 +339,7 @@
         if (m.length === 0) {
           return null;
         }
-        var elm = self.messages.addMessage(makeMessageParams(m, 'received'));
-
-        if (m.indexOf('#') === 0) {
-          elm.classList.add('debug');
-        } else if (className) {
-          elm.classList.add(className);
-        }
+        var elm = self.messages.addMessage(makeMessageParams(m, ('received ' + (m.indexOf('#') === 0 ? 'debug' : className || '')).trim()));
         addMessageLinkHandlers(elm);
         return elm;
       });
