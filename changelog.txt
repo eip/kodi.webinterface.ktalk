@@ -1,3 +1,9 @@
+0.2.4
+- "version" command and "Now playing" output format improved.
+- "sleep" command response fixed.
+- Message history processing fixed.
+- Formatting commands complex responses fixed.
+
 0.2.3
 - "hello" command should be used to start a new conversation. "new chat" command removed.
 - "version" command output changed.
