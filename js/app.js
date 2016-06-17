@@ -545,7 +545,7 @@
           c.response.forEach(function (o) {
             self.queue.commands.push('.player.getitem ' + o.playerid);
           });
-          if (c.response.length) {
+          if (c.response.length || self.queue.answers.length) {
             self.queue.commands.push('.answers.join ' + JSON.stringify('\n'));
           }
           return c.response.length ? 'Now playing:' : 'Nothing is playing now.';

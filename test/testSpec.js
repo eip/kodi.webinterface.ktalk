@@ -2054,13 +2054,21 @@ describe('kTalk', function kTalk_0() {
           self.queue.answers.length = 0;
         });
 
-        it('should not push commands to kTalk.queue.commands and return "Nothing is playing now." string', function answers_whatsup_1() {
+        it('should not push commands to kTalk.queue.commands if kTalk.queue.answers is empty and return "Nothing is playing now." string', function answers_whatsup_1() {
           command.response = [];
           expect(command.answer(command)).toBe('Nothing is playing now.');
           expect(self.queue.commands.length).toBe(0);
         });
 
-        it('should push commands to kTalk.queue.commands and return "Now playing:" string', function answers_whatsup_2() {
+        it('should push ".answers.join" command to kTalk.queue.commands if kTalk.queue.answers is not empty and return "Nothing is playing now." string', function answers_whatsup_2() {
+          self.queue.answers = ['Previous response.'];
+          command.response = [];
+          expect(command.answer(command)).toBe('Nothing is playing now.');
+          expect(self.queue.commands.length).toBe(1);
+          expect(self.queue.commands[0]).toBe('.answers.join "\\n"');
+        });
+
+        it('should push commands to kTalk.queue.commands and return "Now playing:" string', function answers_whatsup_3() {
           command.response = [{
             playerid: 0,
             type: 'audio'
@@ -2071,7 +2079,7 @@ describe('kTalk', function kTalk_0() {
           expect(self.queue.commands[1]).toBe('.answers.join "\\n"');
         });
 
-        it('should push commands to kTalk.queue.commands and return "Now playing:" string', function answers_whatsup_3() {
+        it('should push commands to kTalk.queue.commands and return "Now playing:" string', function answers_whatsup_4() {
           command.response = [{
             "playerid": 0,
             "type": "audio"
