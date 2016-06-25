@@ -1,88 +1,44 @@
-/*global jasmine, expect, describe, xdescribe, it, beforeEach, afterEach, spyOn*/
-/*global Framework7*/
+/* global jasmine, expect, describe, xdescribe, it, beforeEach, afterEach, spyOn */
+/* global Framework7 */
+/* eslint-disable camelcase */
 
 describe('kTalk', function kTalk_0() {
   'use strict';
 
-  var self = window.kTalk,
-    realSetTimeout = window.setTimeout,
-    store = {
-      getItem: function (key) {
-        return store[key];
-      },
-      setItem: function (key, value) {
-        return (store[key] = value.toString());
-      },
-      removeItem: function (key) {
-        delete store[key];
-      }
+  var self = window.kTalk;
+  var realSetTimeout = window.setTimeout;
+  var store = {
+    getItem: function _getItem(key) {
+      return store[key];
     },
-    jsonRpcProps = {
-      kodi: {
-        name: 'Kodi',
-        version: {
-          major: 16,
-          minor: 1,
-          revision: '60a76d9',
-          tag: 'stable'
-
-        }
-      },
-      ktalk: {
-        addonid: 'plugin.webinterface.ktalk',
-        name: 'Kodi Talk',
-        type: 'xbmc.webinterface',
-        version: '1.2.3'
-      }
-    };
+    setItem: function _setItem(key, value) {
+      return (store[key] = value.toString());
+    },
+    removeItem: function _removeItem(key) {
+      delete store[key];
+    }
+  };
+  var jsonRpcProps = {
+    kodi: { name: 'Kodi', version: { major: 16, minor: 1, revision: '60a76d9', tag: 'stable' } },
+    ktalk: { addonid: 'plugin.webinterface.ktalk', name: 'Kodi Talk', type: 'xbmc.webinterface', version: '1.2.3' }
+  };
 
   function stubAjaxRequests() {
-    [{
-      data: /JSONRPC\.Ping/,
-      responseResult: 'pong'
-    }, {
-      data: /Application\.GetProperties.*"properties":\["name","version"\]/,
-      responseResult: jsonRpcProps.kodi
-    }, {
-      data: /Addons\.GetAddonDetails.*"addonid":"plugin\.webinterface\.ktalk".*"properties":\["name","version"\]/,
-      responseResult: {
-        addon: jsonRpcProps.ktalk
-      }
-    }, {
-      data: /Player\.GetActivePlayers/,
-      responseResult: [{
-        playerid: 1,
-        type: 'video'
-      }]
-    }, {
-      data: /Player\.GetItem.*"properties":\["artist","channeltype"\]/,
-      responseResult: {
-        item: {
-          channeltype: 'tv',
-          id: 33,
-          label: 'World News',
-          type: 'channel'
-        }
-      }
-    }].forEach(function (r) {
-      jasmine.Ajax.stubRequest(
-        /\/jsonrpc/,
-        r.data
-      ).andReturn({
-        status: 200,
-        contentType: 'application/json',
-        responseText: JSON.stringify({
-          id: 0,
-          jsonrpc: '2.0',
-          result: r.responseResult
-        })
-      });
+    [
+      { data: /JSONRPC\.Ping/, responseResult: 'pong' },
+      { data: /Application\.GetProperties.*"properties":\["name","version"\]/, responseResult: jsonRpcProps.kodi },
+      { data: /Addons\.GetAddonDetails.*"addonid":"plugin\.webinterface\.ktalk".*"properties":\["name","version"\]/, responseResult: { addon: jsonRpcProps.ktalk } },
+      { data: /Player\.GetActivePlayers/, responseResult: [{ playerid: 1, type: 'video' }] },
+      { data: /Player\.GetItem.*"properties":\["artist","channeltype"\]/, responseResult: { item: { channeltype: 'tv', id: 33, label: 'World News', type: 'channel' } } }
+    ].forEach(function _each(r) {
+      jasmine.Ajax.stubRequest(/\/jsonrpc/, r.data)
+        .andReturn({ status: 200, contentType: 'application/json', responseText: JSON.stringify({ id: 0, jsonrpc: '2.0', result: r.responseResult }) });
     });
   }
 
   function cloneObject(source) {
-    var member,
-      result = {};
+    var member;
+    var result = {};
 
     for (member in source) {
       if (source.hasOwnProperty(member)) {
@@ -98,10 +54,10 @@ describe('kTalk', function kTalk_0() {
 
   function checkSpyDelayedCall(delay, spy, done) {
     jasmine.clock().tick(delay - 1);
-    realSetTimeout(function () {
+    realSetTimeout(function _ontimeouta() {
       expect(spy).not.toHaveBeenCalled();
       jasmine.clock().tick(2);
-      realSetTimeout(function () {
+      realSetTimeout(function _ontimeoutb() {
         expect(spy).toHaveBeenCalled();
         done();
       }, 1);
@@ -112,7 +68,6 @@ describe('kTalk', function kTalk_0() {
   self.dataStorage = store;
 
   describe('Initialization', function initialization_0() {
-
     it('kTalk should be an object', function initialization_1() {
       expect(self).toEqual(jasmine.any(Object));
     });
@@ -131,13 +86,8 @@ describe('kTalk', function kTalk_0() {
       expect(self.messages.container[0].nodeType).toBe(1);
       expect(self.messages.params.autoLayout).toBe(true);
       expect(self.messages.params.messageTemplate).toMatch(/\{\{day\}\}\{\{#if time\}\},/);
-      expect(self.messages.template({
-        text: 'Hello',
-        type: 'sent',
-        day: 'Friday, May 4',
-        time: '12:30',
-        avatar: 'avatar.png'
-      })).toMatch(/<div.*?>Friday, May 4, <span>12:30<\/span><\/div>.*sent.*Hello.*avatar\.png/);
+      expect(self.messages.template({ text: 'Hello', type: 'sent', day: 'Friday, May 4', time: '12:30', avatar: 'avatar.png' }))
+        .toMatch(/<div.*?>Friday, May 4, <span>12:30<\/span><\/div>.*sent.*Hello.*avatar\.png/);
       expect(self.messages.params.newMessagesFirst).toBe(false);
     });
 
@@ -163,7 +113,7 @@ describe('kTalk', function kTalk_0() {
       expect(self.commands).toEqual(jasmine.any(Array));
       expect(self.commands.length).toBeGreaterThan(2);
 
-      self.commands.forEach(function (c) {
+      self.commands.forEach(function _each(c) {
         expect(['name', 'description', 'regex', 'method', 'params', 'answer']).toEqual(jasmine.arrayContaining(Object.keys(c)));
         expect(c.name).toEqual(jasmine.any(String));
         expect(['object', 'string', 'undefined']).toEqual(jasmine.arrayContaining([typeof c.description]));
@@ -189,85 +139,76 @@ describe('kTalk', function kTalk_0() {
       expect(self.dataStorage.removeItem).toEqual(jasmine.any(Function));
       expect(self.dataStorage.clear).toBeUndefined(); // should not to be real localStorage object
     });
-
   });
 
   describe('.testing [private methods]', function private_0() {
-
     describe('.q()', function q_0() {
-
       it('should return resolved promise with the given value', function q_1(done) {
-        self.testing.q('Resolved').then(function (v) {
+        self.testing.q('Resolved').then(function _onresolve(v) {
           expect(v).toBe('Resolved');
           done();
-        }, function () {
+        }, function _onfail() {
           done.fail('Promise should not be rejected');
         });
       });
-
     });
 
     describe('.qt()', function qt_0() {
-
       it('should return resolved promise with the given value', function qt_1(done) {
-        self.testing.qt('Resolved', 1).then(function (v) {
+        self.testing.qt('Resolved', 1).then(function _onresolve(v) {
           expect(v).toBe('Resolved');
           done();
-        }, function () {
+        }, function _onfail() {
           done.fail('Promise should not be rejected');
         });
       });
 
-      it("promise should be resolved after 50 ms", function qt_2(done) {
-        var delay = 50,
-          startTime = Date.now();
-        self.testing.qt('Resolved', delay).then(function (v) {
+      it('promise should be resolved after 50 ms', function qt_2(done) {
+        var delay = 50;
+        var startTime = Date.now();
+
+        self.testing.qt('Resolved', delay).then(function _onresolve() {
           expect(Date.now() - startTime).toBeCloseTo(delay, -2);
           done();
-        }, function () {
+        }, function _onfail() {
           done.fail('Promise should not be rejected');
         });
       });
 
-      it("promise should be resolved after 500 ms (default)", function qt_3(done) {
-        var delay = 500,
-          startTime = Date.now();
-        self.testing.qt('Resolved').then(function (v) {
+      it('promise should be resolved after 500 ms (default)', function qt_3(done) {
+        var delay = 500;
+        var startTime = Date.now();
+
+        self.testing.qt('Resolved').then(function _onresolve() {
           expect(Date.now() - startTime).toBeCloseTo(delay, -2);
           done();
-        }, function () {
+        }, function _onfail() {
           done.fail('Promise should not be rejected');
         });
       });
-
     });
 
     describe('.r()', function r_0() {
-
       it('should return rejected promise with the given value', function r_1(done) {
-        self.testing.r('Rejected').then(function () {
+        self.testing.r('Rejected').then(function _onresolve() {
           done.fail('Promise should not be resolved');
-        }, function (v) {
+        }, function _onfail(v) {
           expect(v).toBe('Rejected');
           done();
         });
       });
-
     });
 
     describe('.capitalize()', function capitalize_0() {
-
       it('should return string with the 1st letter in upper case', function capitalize_1() {
         expect(self.testing.capitalize('S')).toBe('S');
         expect(self.testing.capitalize('s')).toBe('S');
         expect(self.testing.capitalize('string')).toBe('String');
         expect(self.testing.capitalize('sTrInG')).toBe('STrInG');
       });
-
     });
 
     describe('.formatDay()', function formatDay_0() {
-
       it('should format date as "Day, Mon #"', function formatDay_1() {
         expect(self.testing.formatDay()).toMatch(/^[A-Z][a-z]+, [A-Z][a-z]+ \d{1,2}$/);
         expect(self.testing.formatDay(new Date(2001, 0, 1))).toBe('Monday, Jan 1');
@@ -283,11 +224,9 @@ describe('kTalk', function kTalk_0() {
         expect(self.testing.formatDay(new Date(2001, 10, 28))).toBe('Wednesday, Nov 28');
         expect(self.testing.formatDay(new Date(2001, 11, 11))).toBe('Tuesday, Dec 11');
       });
-
     });
 
     describe('.formatTime()', function formatTime_0() {
-
       it('should format time as "##:##"', function formatTime_1() {
         expect(self.testing.formatTime()).toMatch(/^\d\d:\d\d$/);
         expect(self.testing.formatTime(new Date(2001, 0, 1))).toBe('00:00');
@@ -295,11 +234,9 @@ describe('kTalk', function kTalk_0() {
         expect(self.testing.formatTime(new Date(2001, 0, 1, 12, 30, 0))).toBe('12:30');
         expect(self.testing.formatTime(new Date(2001, 0, 1, 23, 59, 59))).toBe('23:59');
       });
-
     });
 
     describe('.formatDate()', function formatDate_0() {
-
       it('should format date-time as "Day, Mon #, <span>##:##</span>"', function formatDate_1() {
         expect(self.testing.formatDate()).toMatch(/^[A-Z][a-z]+, [A-Z][a-z]+ \d{1,2}, <span>\d\d:\d\d<\/span>$/);
         expect(self.testing.formatDate(new Date(2001, 0, 1))).toBe('Monday, Jan 1, <span>00:00</span>');
@@ -307,44 +244,23 @@ describe('kTalk', function kTalk_0() {
         expect(self.testing.formatDate(new Date(2001, 0, 1, 12, 30, 0))).toBe('Monday, Jan 1, <span>12:30</span>');
         expect(self.testing.formatDate(new Date(2001, 0, 1, 23, 59, 59))).toBe('Monday, Jan 1, <span>23:59</span>');
       });
-
     });
 
     describe('.formatJson()', function formatJson_0() {
-
       it('should simplify JSON format', function formatJson_1() {
         expect(self.testing.formatJson(true)).toBe('true');
         expect(self.testing.formatJson(0)).toBe('0');
         expect(self.testing.formatJson('A string')).toBe('A string');
         expect(self.testing.formatJson('Multiline string\nSecond line')).toBe('Multiline string\\nSecond line');
-        expect(self.testing.formatJson({
-          a: true,
-          b: 0,
-          c: 'A string',
-          d: {
-            da: 'One',
-            db: 'Two'
-          }
-        })).toBe('    a: true\n    b: 0\n    c: A string\n    d:\n        da: One\n        db: Two');
+        expect(self.testing.formatJson({ a: true, b: 0, c: 'A string', d: { da: 'One', db: 'Two' } }))
+          .toBe('    a: true\n    b: 0\n    c: A string\n    d:\n        da: One\n        db: Two');
         expect(self.testing.formatJson(['One', 'Two', 'Three', 'Four'])).toBe('(\n    One\n    Two\n    Three\n    Four\n)');
-        expect(self.testing.formatJson({
-          channels: [{
-            channelid: 1,
-            label: "1+1"
-          }, {
-            channelid: 2,
-            label: "2x2"
-          }, {
-            channelid: 3,
-            label: "3 To 3"
-          }]
-        })).toBe('    channels: (\n            channelid: 1\n            label: 1+1\n\n            channelid: 2\n            label: 2x2\n\n            channelid: 3\n            label: 3 To 3\n    )');
+        expect(self.testing.formatJson({ channels: [{ channelid: 1, label: '1+1' }, { channelid: 2, label: '2x2' }, { channelid: 3, label: '3 To 3' }] }))
+          .toBe('    channels: (\n            channelid: 1\n            label: 1+1\n\n            channelid: 2\n            label: 2x2\n\n            channelid: 3\n            label: 3 To 3\n    )');
       });
-
     });
 
     describe('.encodeHtmlEntities()', function encodeHtmlEntities_0() {
-
       it('should escape all potentially dangerous characters', function encodeHtmlEntities_1() {
         expect(self.testing.encodeHtmlEntities('&')).toBe('&amp;');
         expect(self.testing.encodeHtmlEntities('<')).toBe('&lt;');
@@ -352,11 +268,9 @@ describe('kTalk', function kTalk_0() {
         expect(self.testing.encodeHtmlEntities('!@#$%^&*()_+-={}[]:";\'<>?,./`~ \n\u0000\r\u0127')).toBe('!@#$%^&amp;*()_+-={}[]:&#34;;\'&lt;&gt;?,./`~ &#10;&#0;&#13;&#295;');
         expect(self.testing.encodeHtmlEntities('𐀀𐀁𐀂𐀃')).toBe('&#65536;&#65537;&#65538;&#65539;');
       });
-
     });
 
     describe('.transformPlayerUri()', function transformPlayerUri_0() {
-
       it('should transform YouTube URLs', function transformPlayerUri_1() {
         expect(self.testing.transformPlayerUri('http://www.youtube.com/?feature=player_embedded&v=dQw4w9WgXcQ')).toBe('plugin://plugin.video.youtube/?path=/root&search&action=play_video&videoid=dQw4w9WgXcQ');
         expect(self.testing.transformPlayerUri('http://www.youtube.com/?v=dQw4w9WgXcQ')).toBe('plugin://plugin.video.youtube/?path=/root&search&action=play_video&videoid=dQw4w9WgXcQ');
@@ -415,36 +329,27 @@ describe('kTalk', function kTalk_0() {
       it('should not transform other URLs', function transformPlayerUri_2() {
         expect(self.testing.transformPlayerUri('http://www.sample-videos.com/video/mp4/720/big_buck_bunny_720p_50mb.mp4')).toBe('http://www.sample-videos.com/video/mp4/720/big_buck_bunny_720p_50mb.mp4');
       });
-
     });
 
     describe('.getMessageToken()', function getMessageToken_0() {
-
       it('should return the token by number from the command message', function getMessageToken_1() {
-        var command = {
-          message: 'exec Addons.ExecuteAddon {"addonid":"script.test"}',
-          regex: /^(exec)\s+([\w\.]+)\s+(\S+)$/i
-        };
+        var command = { message: 'exec Addons.ExecuteAddon {"addonid":"script.test"}', regex: /^(exec)\s+([\w\.]+)\s+(\S+)$/i };
 
         expect(self.testing.getMessageToken(command, 1)).toBe('exec');
         expect(self.testing.getMessageToken(command, 2)).toBe('Addons.ExecuteAddon');
         expect(self.testing.getMessageToken(command, 3)).toBe('{"addonid":"script.test"}');
       });
-
     });
 
     describe('.getCommand()', function getCommand_0() {
-
       it('should find the command in the commands array by name', function getCommand_1() {
         expect(self.testing.getCommand('hello')).toEqual(jasmine.any(Object));
         expect(self.testing.getCommand('help.detail')).toEqual(jasmine.any(Object));
         expect(self.testing.getCommand('what\'s up')).toEqual(jasmine.any(Object));
       });
-
     });
 
     describe('.getCommandDescription()', function getCommandDescription_0() {
-
       it('should return the description of the command', function getCommandDescription_1() {
         expect(self.testing.getCommandDescription(cloneCommand('echo'))).toBe('');
         expect(self.testing.getCommandDescription(cloneCommand('home'))).toBe('Show the home screen.');
@@ -459,11 +364,9 @@ describe('kTalk', function kTalk_0() {
         expect(self.testing.getCommandDescription(cloneCommand('help'), true)).toBe('List of available commands. [[(…)||help help]]');
         expect(self.testing.getCommandDescription(cloneCommand('help'), 'short')).toBe('List of available commands. [[(…)||help help]]');
       });
-
     });
 
     describe('.makeLinks()', function makeLinks_0() {
-
       it('should replace "[[text]]" and "[[text||command]]" in the string to "<a ...>...</a>" tags', function makeLinks_1() {
         expect(self.testing.makeLinks('Example <text> with link &templates "[[help]]", "[[Help!]]", "[[Help?..||help]]"…')).toBe('Example &lt;text&gt; with link &amp;templates &#34;<a href="#" class="new link" data-command="help">help</a>&#34;, &#34;<a href="#" class="new link" data-command="Help!">Help!</a>&#34;, &#34;<a href="#" class="new link" data-command="help">Help?..</a>&#34;&#8230;');
       });
@@ -475,20 +378,13 @@ describe('kTalk', function kTalk_0() {
       it('should return original string if is not containing "[[...]]"', function makeLinks_3() {
         expect(self.testing.makeLinks('Example text without link templates.')).toBe('Example text without link templates.');
       });
-
     });
 
     describe('.messageLinkHandler()', function messageLinkHandler_0() {
       var event;
 
-      beforeEach(function () {
-        event = {
-          target: {
-            dataset: {
-              command: 'command'
-            }
-          }
-        };
+      beforeEach(function _beforeeach() {
+        event = { target: { dataset: { command: 'command' } } };
         self.messagebar.clear();
       });
 
@@ -515,17 +411,15 @@ describe('kTalk', function kTalk_0() {
         expect(self.testing.messageLinkHandler(event)).toBeUndefined();
         expect(self.messagebar.value()).toBe('command');
       });
-
     });
 
     describe('.loadSettings()', function loadSettings_0() {
-
-      beforeEach(function () {
-        var i,
-          history,
-          date,
-          text,
-          type;
+      beforeEach(function _beforeeach() {
+        var i;
+        var history;
+        var date;
+        var text;
+        var type;
 
         delete self.appData.messages;
         history = [];
@@ -533,15 +427,9 @@ describe('kTalk', function kTalk_0() {
         type = 'received';
         date = new Date(2001, 0, 1, 12, 30, 0);
         for (i = 1; i <= self.messageHistorySize; ++i) {
-          history.push({
-            text: text + '-' + i,
-            type: type,
-            date: new Date(date.getTime() + i * 60000)
-          });
+          history.push({ text: text + '-' + i, type: type, date: new Date(date.getTime() + i * 60000) });
         }
-        self.dataStorage.setItem(self.dataKey, JSON.stringify({
-          messages: history
-        }));
+        self.dataStorage.setItem(self.dataKey, JSON.stringify({ messages: history }));
       });
 
       it('should load kTalk.appData.messages from the data storage', function loadSettings_1() {
@@ -550,27 +438,21 @@ describe('kTalk', function kTalk_0() {
         expect(self.appData.messages).toEqual(jasmine.any(Array));
         expect(self.appData.messages.length).toBe(self.messageHistorySize);
       });
-
     });
 
     describe('.saveSettings()', function saveSettings_0() {
-
-      beforeEach(function () {
-        var i,
-          date,
-          text,
-          type;
+      beforeEach(function _beforeeach() {
+        var i;
+        var date;
+        var text;
+        var type;
 
         self.appData.messages = [];
         text = 'Message text';
         type = 'received';
         date = new Date(2001, 0, 1, 12, 30, 0);
         for (i = 1; i <= self.messageHistorySize; ++i) {
-          self.appData.messages.push({
-            text: text + '-' + i,
-            type: type,
-            date: new Date(date.getTime() + i * 60000)
-          });
+          self.appData.messages.push({ text: text + '-' + i, type: type, date: new Date(date.getTime() + i * 60000) });
         }
         self.dataStorage.removeItem(self.dataKey);
       });
@@ -578,19 +460,16 @@ describe('kTalk', function kTalk_0() {
       it('should save kTalk.appData.messages to the data storage', function saveSettings_1() {
         expect(self.dataStorage.getItem(self.dataKey)).toBeUndefined();
         self.testing.saveSettings();
-        expect(self.dataStorage.getItem(self.dataKey)).toBe(JSON.stringify({
-          messages: self.appData.messages
-        }));
+        expect(self.dataStorage.getItem(self.dataKey)).toBe(JSON.stringify({ messages: self.appData.messages }));
       });
-
     });
 
     describe('.addMessageToHistory()', function addMessageToHistory_0() {
-      var date,
-        text,
-        type;
+      var date;
+      var text;
+      var type;
 
-      beforeEach(function () {
+      beforeEach(function _beforeeach() {
         date = new Date(2001, 0, 1, 12, 30, 0);
         text = 'Message text';
         type = 'received';
@@ -601,14 +480,8 @@ describe('kTalk', function kTalk_0() {
       it('should add message to the history', function addMessageToHistory_1() {
         self.testing.addMessageToHistory(text, type, date);
         expect(self.appData.messages.length).toBe(1);
-        expect(self.appData.messages[0]).toEqual({
-          date: date,
-          text: text,
-          type: type
-        });
-        expect(self.dataStorage.getItem(self.dataKey)).toBe(JSON.stringify({
-          messages: self.appData.messages
-        }));
+        expect(self.appData.messages[0]).toEqual({ date: date, text: text, type: type });
+        expect(self.dataStorage.getItem(self.dataKey)).toBe(JSON.stringify({ messages: self.appData.messages }));
       });
 
       it('should remove old messages from the history to maintain maximum history size', function addMessageToHistory_2() {
@@ -618,27 +491,16 @@ describe('kTalk', function kTalk_0() {
           self.testing.addMessageToHistory(text + '-' + i, type, new Date(date.getTime() + i * 60000));
         }
         expect(self.appData.messages.length).toBe(self.messageHistorySize);
-        expect(self.appData.messages[0]).toEqual({
-          date: new Date(date.getTime() + 11 * 60000),
-          text: text + '-' + 11,
-          type: type
-        });
-        expect(self.appData.messages[self.messageHistorySize - 1]).toEqual({
-          date: new Date(date.getTime() + (self.messageHistorySize + 10) * 60000),
-          text: text + '-' + (self.messageHistorySize + 10),
-          type: type
-        });
-        expect(self.dataStorage.getItem(self.dataKey)).toBe(JSON.stringify({
-          messages: self.appData.messages
-        }));
+        expect(self.appData.messages[0]).toEqual({ date: new Date(date.getTime() + 11 * 60000), text: text + '-' + 11, type: type });
+        expect(self.appData.messages[self.messageHistorySize - 1]).toEqual({ date: new Date(date.getTime() + (self.messageHistorySize + 10) * 60000), text: text + '-' + (self.messageHistorySize + 10), type: type });
+        expect(self.dataStorage.getItem(self.dataKey)).toBe(JSON.stringify({ messages: self.appData.messages }));
       });
-
     });
 
     describe('.makeMessageParams()', function makeMessageParams_0() {
       var params;
 
-      beforeEach(function () {
+      beforeEach(function _beforeeach() {
         self.appData.messages.length = 0;
       });
 
@@ -668,85 +530,68 @@ describe('kTalk', function kTalk_0() {
       it('should add message to history', function makeMessageParams_3() {
         params = self.testing.makeMessageParams('Message text', 'received', new Date(2001, 0, 1, 12, 30, 0));
         expect(self.appData.messages.length).toBe(1);
-        expect(self.appData.messages[0]).toEqual({
-          date: new Date(2001, 0, 1, 12, 30, 0),
-          text: 'Message text',
-          type: 'received'
-        });
+        expect(self.appData.messages[0]).toEqual({ date: new Date(2001, 0, 1, 12, 30, 0), text: 'Message text', type: 'received' });
       });
 
       it('should not add message to history if "noHistory" parameter is set', function makeMessageParams_4() {
         params = self.testing.makeMessageParams('Message text', 'received', new Date(2001, 0, 1, 12, 30, 0), true);
         expect(self.appData.messages.length).toBe(0);
       });
-
     });
 
     describe('.checkMessage()', function checkMessage_0() {
-
       it('should return rejected promise if message string is empty', function checkMessage_1(done) {
-        self.testing.checkMessage('').then(function () {
+        self.testing.checkMessage('').then(function _onresolve() {
           done.fail('Promise should not be resolved');
-        }, function (v) {
+        }, function _onfail(v) {
           expect(v).toBeUndefined();
           done();
         });
       });
 
       it('should return rejected promise if message string is "."', function checkMessage_2(done) {
-        self.testing.checkMessage('.').then(function () {
+        self.testing.checkMessage('.').then(function _onresolve() {
           done.fail('Promise should not be resolved');
-        }, function (v) {
+        }, function _onfail(v) {
           expect(v).toBeUndefined();
         });
-        self.testing.checkMessage('....').then(function () {
+        self.testing.checkMessage('....').then(function _onresolve() {
           done.fail('Promise should not be resolved');
-        }, function (v) {
+        }, function _onfail(v) {
           expect(v).toBeUndefined();
           done();
         });
       });
 
       it('should return resolved promise with the command object and command.message set to message string', function checkMessage_3(done) {
-        self.testing.checkMessage('Help').then(function (v) {
-          expect(v).toEqual({
-            message: 'Help'
-          });
+        self.testing.checkMessage('Help').then(function _onresolve(v) {
+          expect(v).toEqual({ message: 'Help' });
           done();
-        }, function () {
+        }, function _onfail() {
           done.fail('Promise should not be rejected');
         });
       });
 
       it('should set command.silent to true if message string starts with "."', function checkMessage_4(done) {
-        self.testing.checkMessage('.Help').then(function (v) {
-          expect(v).toEqual({
-            message: 'Help',
-            silent: true
-          });
-        }, function () {
+        self.testing.checkMessage('.Help').then(function _onresolve(v) {
+          expect(v).toEqual({ message: 'Help', silent: true });
+        }, function _onfail() {
           done.fail('Promise should not be rejected');
         });
-        self.testing.checkMessage('....Help').then(function (v) {
-          expect(v).toEqual({
-            message: 'Help',
-            silent: true
-          });
+        self.testing.checkMessage('....Help').then(function _onresolve(v) {
+          expect(v).toEqual({ message: 'Help', silent: true });
           done();
-        }, function () {
+        }, function _onfail() {
           done.fail('Promise should not be rejected');
         });
       });
-
     });
 
     describe('.addQuestionMessage()', function addQuestionMessage_0() {
       var command;
 
-      beforeEach(function () {
-        command = {
-          message: 'Help <span>me</span>!'
-        };
+      beforeEach(function _beforeeach() {
+        command = { message: 'Help <span>me</span>!' };
         self.lastMessageTime = Date.now();
         spyOn(self.messages, 'addMessage');
       });
@@ -765,18 +610,14 @@ describe('kTalk', function kTalk_0() {
         expect(self.testing.addQuestionMessage(cloneObject(command))).toEqual(command);
         expect(self.messages.addMessage).not.toHaveBeenCalled();
       });
-
     });
 
     describe('.parseProperty()', function parseProperty_0() {
-      var command, result;
+      var command;
+      var result;
 
-      beforeEach(function () {
-        result = {
-          playerid: 2,
-          properties: ['artist', 'album'],
-          message: 'Hello, Kodi from test 123.'
-        };
+      beforeEach(function _beforeeach() {
+        result = { playerid: 2, properties: ['artist', 'album'], message: 'Hello, Kodi from test 123.' };
         command = {
           message: result.message,
           regex: /^(hello)[\.,!\?]*\s+([A-Z]+)\s+from\s+test\s+(\d+)[\.,!\?]*$/i,
@@ -785,29 +626,26 @@ describe('kTalk', function kTalk_0() {
           params_b: true,
           params_n: 123,
           params_u: undefined,
-          params_fs: function (c) {
+          params_fs: function _params_fs() {
             return JSON.stringify(result);
           },
-          params_fo: function (c) {
+          params_fo: function _params_fo() {
             return result;
           },
-          params_fb: function (c) {
+          params_fb: function _params_fb() {
             return true;
           },
-          params_fn: function (c) {
+          params_fn: function _params_fn() {
             return 123;
           },
-          params_fu: function (c) {
+          params_fu: function _params_fu() {
             return;
           },
-          params_fp: function (c) {
+          params_fp: function _params_fp() {
             return self.testing.qt('Promise', 5);
           },
           params_ts: '{"command":"$1","properties":["$2",$3]}',
-          params_to: {
-            command: '$1',
-            properties: ['$2', '$3']
-          },
+          params_to: { command: '$1', properties: ['$2', '$3'] },
           params_ta: ['$1', '$2', '$3']
         };
       });
@@ -827,10 +665,10 @@ describe('kTalk', function kTalk_0() {
       });
 
       it('and should correctly process case if property(command) returns a promise', function parseProperty_3(done) {
-        self.testing.parseProperty(command, 'params_fp').then(function (v) {
+        self.testing.parseProperty(command, 'params_fp').then(function _onresolve(v) {
           expect(v).toBe('Promise');
           done();
-        }, function () {
+        }, function _onfail() {
           done.fail('Promise should not be rejected');
         });
       });
@@ -843,30 +681,22 @@ describe('kTalk', function kTalk_0() {
       });
 
       it('should substitute $# in result with the tokens from command.message', function parseProperty_5() {
-        var result_s = JSON.stringify({
-            command: 'Hello',
-            properties: ['Kodi', 123]
-          }),
-          result_o = {
-            command: 'Hello',
-            properties: ['Kodi', '123']
-          },
-          result_a = ['Hello', 'Kodi', '123'];
+        var result_s = JSON.stringify({ command: 'Hello', properties: ['Kodi', 123] });
+        var result_o = { command: 'Hello', properties: ['Kodi', '123'] };
+        var result_a = ['Hello', 'Kodi', '123'];
 
         expect(self.testing.parseProperty(command, 'params_ts')).toBe(result_s);
         expect(self.testing.parseProperty(command, 'params_to')).toEqual(result_o);
         expect(self.testing.parseProperty(command, 'params_ta')).toEqual(result_a);
       });
-
     });
 
     describe('.parseKodiCommand()', function parseKodiCommand_0() {
-      var command, result;
+      var command;
+      var result;
 
-      beforeEach(function () {
-        command = {
-          message: ''
-        };
+      beforeEach(function _beforeeach() {
+        command = { message: '' };
       });
 
       it('should successfully parse "hello" command', function parseKodiCommand_1() {
@@ -905,10 +735,7 @@ describe('kTalk', function kTalk_0() {
         command.message = 'player.getitem 1';
         result = cloneCommand('player.getitem');
         result.message = command.message;
-        result.params = {
-          playerid: 1,
-          properties: ['artist', 'channeltype']
-        };
+        result.params = { playerid: 1, properties: ['artist', 'channeltype'] };
         expect(self.testing.parseKodiCommand(command)).toEqual(jasmine.objectContaining(result));
       });
 
@@ -916,10 +743,7 @@ describe('kTalk', function kTalk_0() {
         command.message = 'player.playpause 2 1';
         result = cloneCommand('player.playpause');
         result.message = command.message;
-        result.params = {
-          playerid: 2,
-          play: true
-        };
+        result.params = { playerid: 2, play: true };
         expect(self.testing.parseKodiCommand(command)).toEqual(jasmine.objectContaining(result));
       });
 
@@ -941,40 +765,33 @@ describe('kTalk', function kTalk_0() {
 
       it('should return rejected promise for unknown command', function parseKodiCommand_6(done) {
         command.message = 'Fake message.';
-        self.testing.parseKodiCommand(command).then(function () {
+        self.testing.parseKodiCommand(command).then(function _onresolve() {
           done.fail('Promise should not be resolved');
-        }, function (v) {
+        }, function _onfail(v) {
           expect(v).toBe('Sorry, I can\'t understand you. I will learn more commands soon.');
           done();
         });
       });
-
     });
 
     describe('.callJsonRpcMethod()', function callJsonRpcMethod_0() {
-      var command, xhrMethod, headers, data, response, result, xhr;
+      var command;
+      var xhrMethod;
+      var headers;
+      var data;
+      var response;
+      var result;
+      var xhr;
 
-      beforeEach(function () {
+      beforeEach(function _beforeeach() {
         xhrMethod = 'POST';
-        headers = {
-          'Content-Type': 'application/json'
-        };
-        data = {
-          id: self.commandId + 1,
-          jsonrpc: "2.0"
-        };
-        response = {
-          status: 200,
-          contentType: headers['Content-Type'],
-          responseText: {
-            id: self.commandId + 1,
-            jsonrpc: '2.0'
-          }
-        };
+        headers = { 'Content-Type': 'application/json' };
+        data = { id: self.commandId + 1, jsonrpc: '2.0' };
+        response = { status: 200, contentType: headers['Content-Type'], responseText: { id: self.commandId + 1, jsonrpc: '2.0' } };
         jasmine.Ajax.install();
       });
 
-      afterEach(function () {
+      afterEach(function _aftereach() {
         jasmine.Ajax.uninstall();
       });
 
@@ -987,10 +804,10 @@ describe('kTalk', function kTalk_0() {
         response.responseText.result = result.response;
         response.responseText = JSON.stringify(response.responseText);
 
-        self.testing.callJsonRpcMethod(command).then(function (v) {
+        self.testing.callJsonRpcMethod(command).then(function _onresolve(v) {
           expect(v).toEqual(jasmine.objectContaining(result));
           done();
-        }, function () {
+        }, function _onfail() {
           done.fail('Promise should not be rejected');
         });
         xhr = jasmine.Ajax.requests.mostRecent();
@@ -1004,11 +821,7 @@ describe('kTalk', function kTalk_0() {
       it('should call Player.Open method via XMLHttpRequest and return resolved promise with result in the command.response', function callJsonRpcMethod_2(done) {
         command = cloneCommand('exec');
         command.method = 'Player.Open';
-        command.params = {
-          item: {
-            file: 'plugin://plugin.video.youtube/?path=/root&search&action=play_video&videoid=YE7VzlLtp-4'
-          }
-        };
+        command.params = { item: { file: 'plugin://plugin.video.youtube/?path=/root&search&action=play_video&videoid=YE7VzlLtp-4' } };
         data.method = command.method;
         data.params = command.params;
         result = cloneObject(command);
@@ -1016,10 +829,10 @@ describe('kTalk', function kTalk_0() {
         response.responseText.result = result.response;
         response.responseText = JSON.stringify(response.responseText);
 
-        self.testing.callJsonRpcMethod(command).then(function (v) {
+        self.testing.callJsonRpcMethod(command).then(function _onresolve(v) {
           expect(v).toEqual(jasmine.objectContaining(result));
           done();
-        }, function () {
+        }, function _onfail() {
           done.fail('Promise should not be rejected');
         });
         xhr = jasmine.Ajax.requests.mostRecent();
@@ -1032,11 +845,7 @@ describe('kTalk', function kTalk_0() {
 
       it('should call JSONRPC.Fake method via XMLHttpRequest and return rejected promise with error description', function callJsonRpcMethod_3(done) {
         data.method = 'JSONRPC.Fake';
-        data.params = {
-          foo: {
-            bar: '!@#$%^&*()_+-={}[]:";\'<>?,./`~ \n'
-          }
-        };
+        data.params = { foo: { bar: '!@#$%^&*()_+-={}[]:";\'<>?,./`~ \n' } };
         command = cloneCommand('exec');
         command.method = data.method;
         command.params = data.params;
@@ -1047,9 +856,9 @@ describe('kTalk', function kTalk_0() {
         response.responseText.error = result;
         response.responseText = JSON.stringify(response.responseText);
 
-        self.testing.callJsonRpcMethod(command).then(function () {
+        self.testing.callJsonRpcMethod(command).then(function _onresolve() {
           done.fail('Promise should not be resolved');
-        }, function (v) {
+        }, function _onfail(v) {
           expect(v).toEqual(jasmine.objectContaining(result));
           done();
         });
@@ -1073,9 +882,9 @@ describe('kTalk', function kTalk_0() {
           message: 'Failed to complete JSON-RPC request to the Kodi server.'
         };
 
-        self.testing.callJsonRpcMethod(command).then(function () {
+        self.testing.callJsonRpcMethod(command).then(function _onresolve() {
           done.fail('Promise should not be resolved');
-        }, function (v) {
+        }, function _onfail(v) {
           expect(v).toEqual(jasmine.objectContaining(result));
           done();
         });
@@ -1091,13 +900,14 @@ describe('kTalk', function kTalk_0() {
         command = cloneCommand('hello');
         expect(self.testing.callJsonRpcMethod(command)).toBe(command);
       });
-
     });
 
     describe('.formatAnswerMessage()', function formatAnswerMessage_0() {
-      var command, result, resultStr;
+      var command;
+      var result;
+      var resultStr;
 
-      beforeEach(function () {
+      beforeEach(function _beforeeach() {
         command = {};
         result = {
           num: 1,
@@ -1111,179 +921,174 @@ describe('kTalk', function kTalk_0() {
       });
 
       describe('should return promise resolved with the parsed command.answer property', function formatAnswerMessage_1() {
-
         it('and command.answer is a string', function formatAnswerMessage_11(done) {
           command.answer = 'Test';
-          self.testing.formatAnswerMessage(command).then(function (v) {
+          self.testing.formatAnswerMessage(command).then(function _onresolve(v) {
             expect(v).toBe('Test');
             expect(self.queue.answers.length).toBe(0);
             done();
-          }, function () {
+          }, function _onfail() {
             done.fail('Promise should not be rejected');
           });
         });
 
         it('and command.answer is a number', function formatAnswerMessage_12(done) {
           command.answer = 123;
-          self.testing.formatAnswerMessage(command).then(function (v) {
+          self.testing.formatAnswerMessage(command).then(function _onresolve(v) {
             expect(v).toBe('123');
             expect(self.queue.answers.length).toBe(0);
             done();
-          }, function () {
+          }, function _onfail() {
             done.fail('Promise should not be rejected');
           });
         });
 
         it('and command.answer is an object', function formatAnswerMessage_13(done) {
           command.answer = result;
-          self.testing.formatAnswerMessage(command).then(function (v) {
+          self.testing.formatAnswerMessage(command).then(function _onresolve(v) {
             expect(v).toBe(resultStr);
             expect(self.queue.answers.length).toBe(0);
             done();
-          }, function () {
+          }, function _onfail() {
             done.fail('Promise should not be rejected');
           });
         });
 
         it('and command.answer is a function that return a string', function formatAnswerMessage_14(done) {
-          command.answer = function () {
+          command.answer = function _answer() {
             return 'Test';
           };
-          self.testing.formatAnswerMessage(command).then(function (v) {
+          self.testing.formatAnswerMessage(command).then(function _onresolve(v) {
             expect(v).toBe('Test');
             expect(self.queue.answers.length).toBe(0);
             done();
-          }, function () {
+          }, function _onfail() {
             done.fail('Promise should not be rejected');
           });
         });
 
         it('and command.answer is a function that return a number', function formatAnswerMessage_15(done) {
-          command.answer = function () {
+          command.answer = function _answer() {
             return 123;
           };
-          self.testing.formatAnswerMessage(command).then(function (v) {
+          self.testing.formatAnswerMessage(command).then(function _onresolve(v) {
             expect(v).toBe('123');
             expect(self.queue.answers.length).toBe(0);
             done();
-          }, function () {
+          }, function _onfail() {
             done.fail('Promise should not be rejected');
           });
         });
 
         it('and command.answer is a function that return an object', function formatAnswerMessage_16(done) {
-          command.answer = function () {
+          command.answer = function _answer() {
             return result;
           };
-          self.testing.formatAnswerMessage(command).then(function (v) {
+          self.testing.formatAnswerMessage(command).then(function _onresolve(v) {
             expect(v).toBe(resultStr);
             expect(self.queue.answers.length).toBe(0);
             done();
-          }, function () {
+          }, function _onfail() {
             done.fail('Promise should not be rejected');
           });
         });
 
         it('and command.answer is a function that return a promise', function formatAnswerMessage_17(done) {
-          command.answer = function () {
+          command.answer = function _answer() {
             return self.testing.qt(result, 5);
           };
-          self.testing.formatAnswerMessage(command).then(function (v) {
+          self.testing.formatAnswerMessage(command).then(function _onresolve(v) {
             expect(v).toBe(resultStr);
             expect(self.queue.answers.length).toBe(0);
             done();
-          }, function () {
+          }, function _onfail() {
             done.fail('Promise should not be rejected');
           });
         });
-
       });
 
       describe('should return promise resolved with the formatted command.response property if command.answer is not defined', function formatAnswerMessage_2() {
-
         it('and command.response is a string', function formatAnswerMessage_21(done) {
           command.response = 'Test';
-          self.testing.formatAnswerMessage(command).then(function (v) {
+          self.testing.formatAnswerMessage(command).then(function _onresolve(v) {
             expect(v).toBe('Test!');
             expect(self.queue.answers.length).toBe(0);
-          }, function () {
+          }, function _onfail() {
             done.fail('Promise should not be rejected');
           });
           command.response = 'tesT';
-          self.testing.formatAnswerMessage(command).then(function (v) {
+          self.testing.formatAnswerMessage(command).then(function _onresolve(v) {
             expect(v).toBe('TesT!');
             expect(self.queue.answers.length).toBe(0);
             done();
-          }, function () {
+          }, function _onfail() {
             done.fail('Promise should not be rejected');
           });
         });
 
         it('and command.response is a number', function formatAnswerMessage_22(done) {
           command.response = 123;
-          self.testing.formatAnswerMessage(command).then(function (v) {
+          self.testing.formatAnswerMessage(command).then(function _onresolve(v) {
             expect(v).toBe('123');
             expect(self.queue.answers.length).toBe(0);
             done();
-          }, function () {
+          }, function _onfail() {
             done.fail('Promise should not be rejected');
           });
         });
 
         it('and command.response is an object', function formatAnswerMessage_23(done) {
           command.response = result;
-          self.testing.formatAnswerMessage(command).then(function (v) {
+          self.testing.formatAnswerMessage(command).then(function _onresolve(v) {
             expect(v).toBe(resultStr);
             expect(self.queue.answers.length).toBe(0);
             done();
-          }, function () {
+          }, function _onfail() {
             done.fail('Promise should not be rejected');
           });
         });
-
       });
 
       describe('should push non empty value in kTalk.queue.answers if kTalk.queue.commands is not empty, and return promise resolved with the empty string', function formatAnswerMessage_3() {
-
         it('and command.answer is a string', function formatAnswerMessage_31(done) {
           command.answer = 'Test';
           self.queue.commands.push(command);
-          self.testing.formatAnswerMessage(command).then(function (v) {
+          self.testing.formatAnswerMessage(command).then(function _onresolve(v) {
             expect(v).toBe('');
             expect(self.queue.answers.length).toBe(1);
             expect(self.queue.answers[0]).toBe('Test');
             done();
-          }, function () {
+          }, function _onfail() {
             done.fail('Promise should not be rejected');
           });
         });
 
         it('and command.answer is an object', function formatAnswerMessage_32(done) {
-          command.answer = function () {
+          command.answer = function _answer() {
             return result;
           };
           self.queue.commands.push(command);
-          self.testing.formatAnswerMessage(command).then(function (v) {
+          self.testing.formatAnswerMessage(command).then(function _onresolve(v) {
             expect(v).toBe('');
             expect(self.queue.answers.length).toBe(1);
             expect(self.queue.answers[0]).toEqual(result);
             done();
-          }, function () {
+          }, function _onfail() {
             done.fail('Promise should not be rejected');
           });
         });
 
         it('and command.answer is a function that return a promise resolved with an object', function formatAnswerMessage_33(done) {
-          command.answer = function () {
+          command.answer = function _answer() {
             return self.testing.qt(result, 5);
           };
           self.queue.commands.push(command);
-          self.testing.formatAnswerMessage(command).then(function (v) {
+          self.testing.formatAnswerMessage(command).then(function _onresolve(v) {
             expect(v).toBe('');
             expect(self.queue.answers.length).toBe(1);
             expect(self.queue.answers[0]).toBe(result);
             done();
-          }, function () {
+          }, function _onfail() {
             done.fail('Promise should not be rejected');
           });
         });
@@ -1291,12 +1096,12 @@ describe('kTalk', function kTalk_0() {
         it('and command.response is a string', function formatAnswerMessage_34(done) {
           command.response = 'Test';
           self.queue.commands.push(command);
-          self.testing.formatAnswerMessage(command).then(function (v) {
+          self.testing.formatAnswerMessage(command).then(function _onresolve(v) {
             expect(v).toBe('');
             expect(self.queue.answers.length).toBe(1);
             expect(self.queue.answers[0]).toBe('Test!');
             done();
-          }, function () {
+          }, function _onfail() {
             done.fail('Promise should not be rejected');
           });
         });
@@ -1304,12 +1109,12 @@ describe('kTalk', function kTalk_0() {
         it('and command.response is an object', function formatAnswerMessage_35(done) {
           command.response = result;
           self.queue.commands.push(command);
-          self.testing.formatAnswerMessage(command).then(function (v) {
+          self.testing.formatAnswerMessage(command).then(function _onresolve(v) {
             expect(v).toBe('');
             expect(self.queue.answers.length).toBe(1);
             expect(self.queue.answers[0]).toBe(result);
             done();
-          }, function () {
+          }, function _onfail() {
             done.fail('Promise should not be rejected');
           });
         });
@@ -1317,32 +1122,29 @@ describe('kTalk', function kTalk_0() {
         it('but should not push undefined value in kTalk.queue.answers', function formatAnswerMessage_36(done) {
           command.answer = void 0;
           self.queue.commands.push(command);
-          self.testing.formatAnswerMessage(command).then(function (v) {
+          self.testing.formatAnswerMessage(command).then(function _onresolve(v) {
             expect(v).toBe('');
             expect(self.queue.answers.length).toBe(0);
-          }, function () {
+          }, function _onfail() {
             done.fail('Promise should not be rejected');
           });
 
-          command.answer = function () {
+          command.answer = function _answer() {
             return self.testing.qt(void 0, 5);
           };
           self.queue.commands.push(command);
-          self.testing.formatAnswerMessage(command).then(function (v) {
+          self.testing.formatAnswerMessage(command).then(function _onresolve(v) {
             expect(v).toBe('');
             expect(self.queue.answers.length).toBe(0);
             done();
-          }, function () {
+          }, function _onfail() {
             done.fail('Promise should not be rejected');
           });
         });
-
       });
-
     });
 
     describe('.formatErrorMessage()', function formatErrorMessage_0() {
-
       it('should return an empty string if message is undefined', function formatErrorMessage_1() {
         expect(self.testing.formatErrorMessage()).toBe('');
         expect(self.testing.formatErrorMessage(undefined)).toBe('');
@@ -1370,66 +1172,63 @@ describe('kTalk', function kTalk_0() {
         expect(self.testing.formatErrorMessage('Message')).toBe('Message');
         expect(self.testing.formatErrorMessage('\n Another message\n\t')).toBe('Another message');
       });
-
     });
 
     describe('.addReceivedMessage()', function addReceivedMessage_0() {
-
-      beforeEach(function () {
+      beforeEach(function _beforeeach() {
         self.messages.clean();
       });
 
       it('should return promise with null result if formatted message is empty string', function addReceivedMessage_1(done) {
-        self.testing.addReceivedMessage('').then(function (v) {
+        self.testing.addReceivedMessage('').then(function _onresolve(v) {
           expect(v).toBe(null);
           done();
-        }, function () {
+        }, function _onfail() {
           done.fail('Promise should not be rejected');
         });
       });
 
       it('should return promise with <div> element containing message', function addReceivedMessage_2(done) {
-        self.testing.addReceivedMessage('Sample <span>message</span>').then(function (v) {
+        self.testing.addReceivedMessage('Sample <span>message</span>').then(function _onresolve(v) {
           expect(v).toEqual(jasmine.any(window.HTMLDivElement));
           expect(v.classList.contains('message-received')).toBe(true);
           expect(v.firstElementChild.innerHTML).toBe('Sample <span>message</span>');
           done();
-        }, function () {
+        }, function _onfail() {
           done.fail('Promise should not be rejected');
         });
       });
 
       it('should return promise with <div> element with "error" class', function addReceivedMessage_3(done) {
-        self.testing.addReceivedMessage('Sample message', null, 'error').then(function (v) {
+        self.testing.addReceivedMessage('Sample message', null, 'error').then(function _onresolve(v) {
           expect(v).toEqual(jasmine.any(window.HTMLDivElement));
           expect(v.classList.contains('message-received')).toBe(true);
           expect(v.classList.contains('error')).toBe(true);
           expect(v.firstElementChild.innerHTML).toBe('Sample message');
           done();
-        }, function () {
+        }, function _onfail() {
           done.fail('Promise should not be rejected');
         });
       });
 
       it('should return promise with <div> element with "debug" class if message begins with "#"', function addReceivedMessage_4(done) {
-        self.testing.addReceivedMessage('#Debug message', null, 'error').then(function (v) {
+        self.testing.addReceivedMessage('#Debug message', null, 'error').then(function _onresolve(v) {
           expect(v).toEqual(jasmine.any(window.HTMLDivElement));
           expect(v.classList.contains('message-received')).toBe(true);
           expect(v.classList.contains('error')).toBe(false);
           expect(v.classList.contains('debug')).toBe(true);
           expect(v.firstElementChild.innerHTML).toBe('#Debug message');
           done();
-        }, function () {
+        }, function _onfail() {
           done.fail('Promise should not be rejected');
         });
       });
-
     });
 
     describe('.addAnswerMessage()', function addAnswerMessage_0() {
       var command;
 
-      beforeEach(function () {
+      beforeEach(function _beforeeach() {
         command = {};
         self.queue.commands.length = 0;
         self.messages.clean();
@@ -1437,73 +1236,67 @@ describe('kTalk', function kTalk_0() {
 
       it('should return promise with <div> element containing formatted message from command object', function addAnswerMessage_1(done) {
         command.answer = 'Sample <span>message</span>';
-        self.testing.addAnswerMessage(command).then(function (v) {
+        self.testing.addAnswerMessage(command).then(function _onresolve(v) {
           expect(v).toEqual(jasmine.any(window.HTMLDivElement));
           expect(v.classList.contains('message-received')).toBe(true);
           expect(v.firstElementChild.innerHTML).toBe('Sample &lt;span&gt;message&lt;/span&gt;');
           done();
-        }, function () {
+        }, function _onfail() {
           done.fail('Promise should not be rejected');
         });
       });
-
     });
 
     describe('.addErrorMessage()', function addErrorMessage_0() {
-
       it('should return promise with <div> element containing formatted error message', function addErrorMessage_1(done) {
-        self.testing.addErrorMessage('Sample error <span>message</span>').then(function (v) {
+        self.testing.addErrorMessage('Sample error <span>message</span>').then(function _onresolve(v) {
           expect(v).toEqual(jasmine.any(window.HTMLDivElement));
           expect(v.classList.contains('message-received')).toBe(true);
           expect(v.classList.contains('error')).toBe(true);
           expect(v.firstElementChild.innerHTML).toBe('Sample error <span>message</span>');
           done();
-        }, function () {
+        }, function _onfail() {
           done.fail('Promise should not be rejected');
         });
       });
-
     });
 
     describe('.sendCommand()', function sendCommand_0() {
-
-      beforeEach(function () {
+      beforeEach(function _beforeeach() {
         jasmine.Ajax.install();
         stubAjaxRequests();
         self.messages.clean();
       });
 
-      afterEach(function () {
+      afterEach(function _aftereach() {
         jasmine.Ajax.uninstall();
       });
 
       it('should send "echo" command and return a given message', function sendCommand_1(done) {
-        self.testing.sendCommand('Echo Hello!').then(function (v) {
+        self.testing.sendCommand('Echo Hello!').then(function _onresolve(v) {
           expect(v).toEqual(jasmine.any(window.HTMLDivElement));
           expect(v.classList.contains('message-received')).toBe(true);
           expect(v.firstElementChild.innerHTML).toBe('Hello!');
           done();
-        }, function () {
+        }, function _onfail() {
           done.fail('Promise should not be rejected');
         });
       });
 
       it('should send "ping" command and return "pong!" message', function sendCommand_2(done) {
-        self.testing.sendCommand('Ping').then(function (v) {
+        self.testing.sendCommand('Ping').then(function _onresolve(v) {
           expect(v).toEqual(jasmine.any(window.HTMLDivElement));
           expect(v.classList.contains('message-received')).toBe(true);
           expect(v.firstElementChild.innerHTML).toBe('Pong!');
           done();
-        }, function () {
+        }, function _onfail() {
           done.fail('Promise should not be rejected');
         });
       });
-
     });
 
     describe('.sendQueuedCommand()', function sendQueuedCommand_0() {
-
-      beforeEach(function () {
+      beforeEach(function _beforeeach() {
         jasmine.Ajax.install();
         stubAjaxRequests();
         self.queue.commands.length = 0;
@@ -1512,7 +1305,7 @@ describe('kTalk', function kTalk_0() {
         self.messages.clean();
       });
 
-      afterEach(function () {
+      afterEach(function _aftereach() {
         jasmine.Ajax.uninstall();
       });
 
@@ -1524,20 +1317,18 @@ describe('kTalk', function kTalk_0() {
         self.queue.commands.push('echo Hello!');
         self.queue.commands.push('Ping');
         self.queue.commands.push('Ping');
-        self.testing.sendQueuedCommand().then(function (v) {
+        self.testing.sendQueuedCommand().then(function _onresolve(v) {
           expect(v).toBe('Finished.');
           expect(self.commandId).toBe(2); // Two JSON-RPC commands should be sent
           done();
-        }, function () {
+        }, function _onfail() {
           done.fail('Promise should not be rejected');
         });
       });
-
     });
 
     describe('.talkToKodi()', function talkToKodi_0() {
-
-      beforeEach(function () {
+      beforeEach(function _beforeeach() {
         jasmine.Ajax.install();
         stubAjaxRequests();
         self.queue.commands.length = 0;
@@ -1546,25 +1337,23 @@ describe('kTalk', function kTalk_0() {
         self.messages.clean();
       });
 
-      afterEach(function () {
+      afterEach(function _aftereach() {
         jasmine.Ajax.uninstall();
       });
 
       it('should send "ping" command and return "Finished." string', function talkToKodi_1(done) {
-        self.testing.talkToKodi('Ping').then(function (v) {
+        self.testing.talkToKodi('Ping').then(function _onresolve(v) {
           expect(v).toBe('Finished.');
           expect(self.commandId).toBe(1); // Two JSON-RPC commands should be sent
           done();
-        }, function () {
+        }, function _onfail() {
           done.fail('Promise should not be rejected');
         });
       });
-
     });
 
     describe('.addMessagesFromHistory()', function addMessagesFromHistory_0() {
-
-      beforeEach(function () {
+      beforeEach(function _beforeeach() {
         self.messages.clean();
         spyOn(self.testing.getCommand('hello'), 'answer').and.returnValue('Hello!');
       });
@@ -1572,31 +1361,14 @@ describe('kTalk', function kTalk_0() {
       it('should add messages stored in the message history', function addMessagesFromHistory_1() {
         var messages;
 
-        self.appData.messages = [{
-          text: 'Hi!',
-          type: 'sent',
-          date: new Date(2001, 0, 1, 12, 10, 0)
-        }, {
-          text: 'Hello!',
-          type: 'received',
-          date: new Date(2001, 0, 1, 12, 11, 0)
-        }, {
-          text: 'What?',
-          type: 'sent',
-          date: new Date(2001, 0, 1, 12, 25, 0)
-        }, {
-          text: 'Sorry, I can\'t understand you.',
-          type: 'received error',
-          date: new Date(2001, 0, 1, 12, 26, 0)
-        }, {
-          text: 'debug 2+2',
-          type: 'sent',
-          date: new Date(2001, 0, 1, 12, 40, 0)
-        }, {
-          text: '# answer: 4',
-          type: 'received debug',
-          date: new Date(2001, 0, 1, 12, 41, 0)
-        }];
+        self.appData.messages = [
+          { text: 'Hi!', type: 'sent', date: new Date(2001, 0, 1, 12, 10, 0) },
+          { text: 'Hello!', type: 'received', date: new Date(2001, 0, 1, 12, 11, 0) },
+          { text: 'What?', type: 'sent', date: new Date(2001, 0, 1, 12, 25, 0) },
+          { text: 'Sorry, I can\'t understand you.', type: 'received error', date: new Date(2001, 0, 1, 12, 26, 0) },
+          { text: 'debug 2+2', type: 'sent', date: new Date(2001, 0, 1, 12, 40, 0) },
+          { text: '# answer: 4', type: 'received debug', date: new Date(2001, 0, 1, 12, 41, 0) }
+        ];
         self.dataStorage.setItem(self.dataKey, JSON.stringify(self.appData));
 
         self.testing.addMessagesFromHistory();
@@ -1641,7 +1413,7 @@ describe('kTalk', function kTalk_0() {
         var messages;
 
         self.appData.messages.length = 0;
-        self.testing.addMessagesFromHistory().then(function (v) {
+        self.testing.addMessagesFromHistory().then(function _onresolve() {
           messages = window.d7('.message-text');
           expect(messages.length).toBe(1);
           expect(messages[0].innerHTML).toBe('Hello!');
@@ -1651,7 +1423,7 @@ describe('kTalk', function kTalk_0() {
           expect(self.appData.messages).toEqual(jasmine.any(Array));
           expect(self.appData.messages.length).toBe(1);
           done();
-        }, function () {
+        }, function _onfail() {
           done.fail('Promise should not be rejected');
         });
       });
@@ -1659,12 +1431,8 @@ describe('kTalk', function kTalk_0() {
       it('should add welcome message if the message history contains single message', function addMessagesFromHistory_3(done) {
         var messages;
 
-        self.appData.messages = [{
-          text: 'Welcome!',
-          type: 'received',
-          date: new Date(2001, 0, 1, 12, 0, 0)
-        }];
-        self.testing.addMessagesFromHistory().then(function (v) {
+        self.appData.messages = [{ text: 'Welcome!', type: 'received', date: new Date(2001, 0, 1, 12, 0, 0) }];
+        self.testing.addMessagesFromHistory().then(function _onresolve() {
           messages = window.d7('.message-text');
           expect(messages.length).toBe(1);
           expect(messages[0].innerHTML).toBe('Hello!');
@@ -1674,33 +1442,33 @@ describe('kTalk', function kTalk_0() {
           expect(self.appData.messages).toEqual(jasmine.any(Array));
           expect(self.appData.messages.length).toBe(1);
           done();
-        }, function () {
+        }, function _onfail() {
           done.fail('Promise should not be rejected');
         });
       });
-
     });
-
   });
 
   describe('[public methods]', function public_0() {
-
     describe('.sendMessage()', function sendMessage_0() {
-
       it('should send messages in sequence, waiting 300 ms if previous command still processing; should clear messagebar value', function sendMessage_1(done) {
-        var delay_1, startTime_1, delay_2, startTime_2, messages;
+        var delay_1;
+        var startTime_1;
+        var delay_2;
+        var startTime_2;
+        var messages;
 
         self.messages.clean();
         delay_1 = 100;
         expect(self.busy).toBe(false);
         startTime_1 = Date.now();
-        self.sendMessage('delay ' + delay_1).then(function (v) {
+        self.sendMessage('delay ' + delay_1).then(function _onresolve() {
           expect(Date.now() - startTime_1).toBeCloseTo(delay_1, -2);
           expect(self.busy).toBe(false);
           messages = window.d7('.message-text');
           expect(messages.length).toBe(2);
           expect(messages[1].innerHTML).toBe('Waiting ' + delay_1 + ' ms.');
-        }, function () {
+        }, function _onfail() {
           done.fail('Promise should not be rejected');
         });
 
@@ -1708,7 +1476,7 @@ describe('kTalk', function kTalk_0() {
         self.messagebar.value('delay ' + delay_2);
         expect(self.busy).toBe(true);
         startTime_2 = Date.now();
-        self.sendMessage().then(function (v) {
+        self.sendMessage().then(function _onresolve() {
           expect(Date.now() - startTime_2).toBeCloseTo(300 + delay_2, -2);
           expect(self.busy).toBe(false);
           expect(self.messagebar.value()).toBe('');
@@ -1716,22 +1484,18 @@ describe('kTalk', function kTalk_0() {
           expect(messages.length).toBe(4);
           expect(messages[3].innerHTML).toBe('Waiting ' + delay_2 + ' ms.');
           done();
-        }, function () {
+        }, function _onfail() {
           done.fail('Promise should not be rejected');
         });
         expect(self.busy).toBe(true);
       });
-
     });
-
   });
 
   describe('Commands', function commands_0() {
-
     describe('descriptions', function descriptions_0() {
-
       it('each line should begins with uppercase letter (may be prefixed with "★ ") and ends with "." or "…"', function descriptions_1() {
-        self.commands.forEach(function (c) {
+        self.commands.forEach(function _eacha(c) {
           var d = c.description;
 
           if (!d) {
@@ -1740,29 +1504,23 @@ describe('kTalk', function kTalk_0() {
           if (!window.d7.isArray(d)) {
             d = [d];
           }
-          d.forEach(function (s) {
+          d.forEach(function _eachb(s) {
             expect(s).toMatch(/^(?:★ )?[A-Z].*\S[\.…]$/);
           });
         });
       });
-
     });
 
     describe('answers', function answers_0() {
       var command;
 
       describe('hello', function answers_hello_0() {
-
-        beforeEach(function () {
+        beforeEach(function _beforeeach() {
           command = cloneCommand('hello');
           command.message = 'Hello!';
           self.queue.commands.length = 0;
           self.queue.answers.length = 0;
-          self.appData.messages = [{
-            text: 'Welcome!',
-            type: 'received',
-            date: new Date()
-          }];
+          self.appData.messages = [{ text: 'Welcome!', type: 'received', date: new Date() }];
           self.lastMessageTime = Date.now();
         });
 
@@ -1775,12 +1533,10 @@ describe('kTalk', function kTalk_0() {
           expect(self.queue.commands[1]).toBe('.version.kodi');
           expect(self.queue.commands.slice(-1)[0]).toBe('.what\'s up');
         });
-
       });
 
       describe('help', function answers_help_0() {
-
-        beforeEach(function () {
+        beforeEach(function _beforeeach() {
           command = cloneCommand('help');
         });
 
@@ -1790,12 +1546,10 @@ describe('kTalk', function kTalk_0() {
           expect(answer).toEqual(jasmine.any(String));
           expect(answer).toMatch(/^I understand the following commmands:\n(?:‣.*\.(?: \[\[\(…\)\|\|[\w ]*\]\])?\n)+\nSend me.*"\[\[help tv\]\]"\.$/);
         });
-
       });
 
       describe('help.detail', function answers_help_detail_0() {
-
-        beforeEach(function () {
+        beforeEach(function _beforeeach() {
           command = cloneCommand('help.detail');
         });
 
@@ -1813,12 +1567,10 @@ describe('kTalk', function kTalk_0() {
           command.message = 'help foo';
           expect(command.answer(command)).toBe('Sorry, I don\'t know anything about "foo" command.');
         });
-
       });
 
       describe('play.url', function answers_play_url_0() {
-
-        beforeEach(function () {
+        beforeEach(function _beforeeach() {
           command = cloneCommand('play.url');
           command.message = 'play https://youtu.be/YE7VzlLtp-4';
           self.queue.commands.length = 0;
@@ -1831,12 +1583,10 @@ describe('kTalk', function kTalk_0() {
           expect(self.queue.commands[0]).toBe('.stop');
           expect(self.queue.commands.slice(-1)[0]).toBe('.what\'s up');
         });
-
       });
 
       describe('play.tv', function answers_play_tv_0() {
-
-        beforeEach(function () {
+        beforeEach(function _beforeeach() {
           command = cloneCommand('play.tv');
           command.message = 'play tv 123';
           self.queue.commands.length = 0;
@@ -1849,12 +1599,10 @@ describe('kTalk', function kTalk_0() {
           expect(self.queue.commands[0]).toBe('.stop');
           expect(self.queue.commands.slice(-1)[0]).toBe('.what\'s up');
         });
-
       });
 
       describe('play', function answers_play_0() {
-
-        beforeEach(function () {
+        beforeEach(function _beforeeach() {
           command = cloneCommand('play');
           self.queue.commands.length = 0;
           self.queue.answers.length = 0;
@@ -1867,10 +1615,7 @@ describe('kTalk', function kTalk_0() {
         });
 
         it('should push commands to kTalk.queue.commands and return ["Audio playback [#]."] array', function answers_play_2() {
-          command.response = [{
-            playerid: 0,
-            type: 'audio'
-          }];
+          command.response = [{ playerid: 0, type: 'audio' }];
           expect(command.answer(command)).toEqual(['Audio playback [#].']);
           expect(self.queue.commands.length).toBe(2);
           expect(self.queue.commands[0]).toBe('.player.playpause 0 1');
@@ -1878,10 +1623,7 @@ describe('kTalk', function kTalk_0() {
         });
 
         it('should push commands to kTalk.queue.commands and return ["Video playback [#]."] array', function answers_play_3() {
-          command.response = [{
-            playerid: 1,
-            type: 'video'
-          }];
+          command.response = [{ playerid: 1, type: 'video' }];
           expect(command.answer(command)).toEqual(['Video playback [#].']);
           expect(self.queue.commands.length).toBe(2);
           expect(self.queue.commands[0]).toBe('.player.playpause 1 1');
@@ -1889,10 +1631,7 @@ describe('kTalk', function kTalk_0() {
         });
 
         it('should push commands to kTalk.queue.commands and return ["Picture playback [#]."] array', function answers_play_4() {
-          command.response = [{
-            playerid: 2,
-            type: 'picture'
-          }];
+          command.response = [{ playerid: 2, type: 'picture' }];
           expect(command.answer(command)).toEqual(['Picture playback [#].']);
           expect(self.queue.commands.length).toBe(2);
           expect(self.queue.commands[0]).toBe('.player.playpause 2 1');
@@ -1900,25 +1639,17 @@ describe('kTalk', function kTalk_0() {
         });
 
         it('should push commands to kTalk.queue.commands and return ["Audio playback [#].", "Picture playback [#]."] array', function answers_play_5() {
-          command.response = [{
-            "playerid": 0,
-            "type": "audio"
-          }, {
-            "playerid": 2,
-            "type": "picture"
-          }];
+          command.response = [{ playerid: 0, type: 'audio' }, { playerid: 2, type: 'picture' }];
           expect(command.answer(command)).toEqual(['Audio playback [#].', 'Picture playback [#].']);
           expect(self.queue.commands.length).toBe(3);
           expect(self.queue.commands[0]).toBe('.player.playpause 0 1');
           expect(self.queue.commands[1]).toBe('.player.playpause 2 1');
           expect(self.queue.commands[2]).toBe('.answers.format "\\n"');
         });
-
       });
 
       describe('pause', function answers_pause_0() {
-
-        beforeEach(function () {
+        beforeEach(function _beforeeach() {
           command = cloneCommand('pause');
           self.queue.commands.length = 0;
           self.queue.answers.length = 0;
@@ -1931,10 +1662,7 @@ describe('kTalk', function kTalk_0() {
         });
 
         it('should push commands to kTalk.queue.commands and return ["Audio playback [#]."] array', function answers_pause_2() {
-          command.response = [{
-            playerid: 0,
-            type: 'audio'
-          }];
+          command.response = [{ playerid: 0, type: 'audio' }];
           expect(command.answer(command)).toEqual(['Audio playback [#].']);
           expect(self.queue.commands.length).toBe(2);
           expect(self.queue.commands[0]).toBe('.player.playpause 0 0');
@@ -1942,10 +1670,7 @@ describe('kTalk', function kTalk_0() {
         });
 
         it('should push commands to kTalk.queue.commands and return ["Video playback [#]."] array', function answers_pause_3() {
-          command.response = [{
-            playerid: 1,
-            type: 'video'
-          }];
+          command.response = [{ playerid: 1, type: 'video' }];
           expect(command.answer(command)).toEqual(['Video playback [#].']);
           expect(self.queue.commands.length).toBe(2);
           expect(self.queue.commands[0]).toBe('.player.playpause 1 0');
@@ -1953,10 +1678,7 @@ describe('kTalk', function kTalk_0() {
         });
 
         it('should push commands to kTalk.queue.commands and return ["Picture playback [#]."] array', function answers_pause_4() {
-          command.response = [{
-            playerid: 2,
-            type: 'picture'
-          }];
+          command.response = [{ playerid: 2, type: 'picture' }];
           expect(command.answer(command)).toEqual(['Picture playback [#].']);
           expect(self.queue.commands.length).toBe(2);
           expect(self.queue.commands[0]).toBe('.player.playpause 2 0');
@@ -1964,25 +1686,17 @@ describe('kTalk', function kTalk_0() {
         });
 
         it('should push commands to kTalk.queue.commands and return ["Audio playback [#].", "Picture playback [#]."] array', function answers_pause_5() {
-          command.response = [{
-            "playerid": 0,
-            "type": "audio"
-          }, {
-            "playerid": 2,
-            "type": "picture"
-          }];
+          command.response = [{ playerid: 0, type: 'audio' }, { playerid: 2, type: 'picture' }];
           expect(command.answer(command)).toEqual(['Audio playback [#].', 'Picture playback [#].']);
           expect(self.queue.commands.length).toBe(3);
           expect(self.queue.commands[0]).toBe('.player.playpause 0 0');
           expect(self.queue.commands[1]).toBe('.player.playpause 2 0');
           expect(self.queue.commands[2]).toBe('.answers.format "\\n"');
         });
-
       });
 
       describe('stop', function answers_stop_0() {
-
-        beforeEach(function () {
+        beforeEach(function _beforeeach() {
           command = cloneCommand('stop');
           self.queue.commands.length = 0;
           self.queue.answers.length = 0;
@@ -1995,60 +1709,43 @@ describe('kTalk', function kTalk_0() {
         });
 
         it('should push commands to kTalk.queue.commands and return "Stopping 1 player" string', function answers_stop_2() {
-          command.response = [{
-            playerid: 0,
-            type: 'audio'
-          }];
+          command.response = [{ playerid: 0, type: 'audio' }];
           expect(command.answer(command)).toBe('Stopping 1 player');
           expect(self.queue.commands.length).toBe(1);
           expect(self.queue.commands[0]).toBe('.exec Player.Stop {"playerid":0}');
         });
 
         it('should push commands to kTalk.queue.commands and return "Stopping 2 players" string', function answers_stop_3() {
-          command.response = [{
-            "playerid": 0,
-            "type": "audio"
-          }, {
-            "playerid": 2,
-            "type": "picture"
-          }];
+          command.response = [{ playerid: 0, type: 'audio' }, { playerid: 2, type: 'picture' }];
           expect(command.answer(command)).toBe('Stopping 2 players');
           expect(self.queue.commands.length).toBe(2);
           expect(self.queue.commands[0]).toBe('.exec Player.Stop {"playerid":2}');
           expect(self.queue.commands[1]).toBe('.exec Player.Stop {"playerid":0}');
         });
-
       });
 
       describe('player.playpause', function answers_player_playpause_0() {
-
-        beforeEach(function () {
+        beforeEach(function _beforeeach() {
           command = cloneCommand('player.playpause');
           self.queue.commands.length = 0;
           self.queue.answers.length = 0;
         });
 
         it('should return "paused" string', function answers_player_playpause_1() {
-          command.response = {
-            speed: 0
-          };
+          command.response = { speed: 0 };
           expect(command.answer(command)).toBe('paused');
           expect(self.queue.commands.length).toBe(0);
         });
 
         it('should return "resumed" string', function answers_player_playpause_2() {
-          command.response = {
-            speed: 1
-          };
+          command.response = { speed: 1 };
           expect(command.answer(command)).toBe('resumed');
           expect(self.queue.commands.length).toBe(0);
         });
-
       });
 
       describe('what\'s up', function answers_whatsup_0() {
-
-        beforeEach(function () {
+        beforeEach(function _beforeeach() {
           command = cloneCommand('what\'s up');
           self.queue.commands.length = 0;
           self.queue.answers.length = 0;
@@ -2069,10 +1766,7 @@ describe('kTalk', function kTalk_0() {
         });
 
         it('should push commands to kTalk.queue.commands and return "Now playing:" string', function answers_whatsup_3() {
-          command.response = [{
-            playerid: 0,
-            type: 'audio'
-          }];
+          command.response = [{ playerid: 0, type: 'audio' }];
           expect(command.answer(command)).toBe('Now playing:');
           expect(self.queue.commands.length).toBe(2);
           expect(self.queue.commands[0]).toBe('.player.getitem 0');
@@ -2080,356 +1774,145 @@ describe('kTalk', function kTalk_0() {
         });
 
         it('should push commands to kTalk.queue.commands and return "Now playing:" string', function answers_whatsup_4() {
-          command.response = [{
-            "playerid": 0,
-            "type": "audio"
-          }, {
-            "playerid": 2,
-            "type": "picture"
-          }];
+          command.response = [{ playerid: 0, type: 'audio' }, { playerid: 2, type: 'picture' }];
           expect(command.answer(command)).toBe('Now playing:');
           expect(self.queue.commands.length).toBe(3);
           expect(self.queue.commands[0]).toBe('.player.getitem 0');
           expect(self.queue.commands[1]).toBe('.player.getitem 2');
           expect(self.queue.commands[2]).toBe('.answers.join "\\n"');
         });
-
       });
 
       describe('player.getitem', function answers_player_getitem_0() {
-
-        beforeEach(function () {
+        beforeEach(function _beforeeach() {
           command = cloneCommand('player.getitem');
-          command.params = {
-            playerid: 1,
-            properties: ['artist', 'channeltype']
-          };
+          command.params = { playerid: 1, properties: ['artist', 'channeltype'] };
         });
 
         it('should format a music track description', function answers_player_getitem_1() {
           command.params.playerid = 0;
-          command.response = {
-            "item": {
-              "artist": ["Скрябін"],
-              "id": 123,
-              "label": "Нікому то не треба",
-              "type": "song"
-            }
-          };
+          command.response = { item: { artist: ['Скрябін'], id: 123, label: 'Нікому то не треба', type: 'song' } };
           expect(command.answer(command)).toBe('‣ Song: Скрябін — Нікому то не треба');
         });
 
         it('should format an audio description', function answers_player_getitem_2() {
           command.params.playerid = 0;
-          command.response = {
-            "item": {
-              "artist": [],
-              "id": 23,
-              "label": "Don\'t Worry...",
-              "type": ""
-            }
-          };
+          command.response = { item: { artist: [], id: 23, label: 'Don\'t Worry...', type: '' } };
           expect(command.answer(command)).toBe('‣ Audio: Don\'t Worry...');
         });
 
         it('should format a movie description', function answers_player_getitem_3() {
-          command.response = {
-            "item": {
-              "artist": [],
-              "id": 12,
-              "label": "American History X",
-              "type": "movie"
-            }
-          };
+          command.response = { item: { artist: [], id: 12, label: 'American History X', type: 'movie' } };
           expect(command.answer(command)).toBe('‣ Movie: American History X');
         });
 
         it('should format a YouTube video description', function answers_player_getitem_4() {
-          command.response = {
-            "item": {
-              "artist": ["Blender Foundation"],
-              "label": "Big Buck Bunny",
-              "type": "unknown"
-            }
-          };
+          command.response = { item: { artist: ['Blender Foundation'], label: 'Big Buck Bunny', type: 'unknown' } };
           expect(command.answer(command)).toBe('‣ Video: Blender Foundation — Big Buck Bunny');
         });
 
         it('should format a TV channel description', function answers_player_getitem_5() {
-          command.response = {
-            item: {
-              channeltype: 'tv',
-              id: 33,
-              label: 'World News',
-              type: 'channel'
-            }
-          };
+          command.response = { item: { channeltype: 'tv', id: 33, label: 'World News', type: 'channel' } };
           expect(command.answer(command)).toBe('‣ TV channel [[33||play tv 33]]: World News');
         });
 
         it('should format a photo description', function answers_player_getitem_6() {
           command.params.playerid = 2;
-          command.response = {
-            "item": {
-              "label": "IMG_20010101_121007.jpg",
-              "type": "picture"
-            }
-          };
+          command.response = { item: { label: 'IMG_20010101_121007.jpg', type: 'picture' } };
           expect(command.answer(command)).toBe('‣ Picture: IMG_20010101_121007.jpg');
         });
 
         it('should format a picture description', function answers_player_getitem_7() {
           command.params.playerid = 2;
-          command.response = {
-            "item": {
-              "label": "IMG_20010101_121115.jpg"
-            }
-          };
+          command.response = { item: { label: 'IMG_20010101_121115.jpg' } };
           expect(command.answer(command)).toBe('‣ Picture: IMG_20010101_121115.jpg');
         });
-
       });
 
       describe('tv', function answers_tv_0() {
-
-        beforeEach(function () {
+        beforeEach(function _beforeeach() {
           command = cloneCommand('tv');
           command.message = 'tv';
           command.response = {
-            "channels": [{
-              channelid: 16,
-              label: "Animal Planet"
-            }, {
-              channelid: 13,
-              label: "FIDO"
-            }, {
-              channelid: 31,
-              label: "TNT"
-            }, {
-              channelid: 36,
-              label: "Pivot"
-            }, {
-              channelid: 58,
-              label: "Reelz"
-            }, {
-              channelid: 25,
-              label: "FXX"
-            }, {
-              channelid: 46,
-              label: "Syfy"
-            }, {
-              channelid: 35,
-              label: "Investigation Discovery"
-            }, {
-              channelid: 56,
-              label: "American Heroes Channel"
-            }, {
-              channelid: 60,
-              label: "BBC America"
-            }, {
-              channelid: 72,
-              label: "MTV"
-            }, {
-              channelid: 32,
-              label: "Logo TV"
-            }, {
-              channelid: 11,
-              label: "Centric"
-            }, {
-              channelid: 71,
-              label: "Comedy.tv"
-            }, {
-              channelid: 61,
-              label: "Cooking Channel"
-            }, {
-              channelid: 1,
-              label: "Universal HD"
-            }, {
-              channelid: 49,
-              label: "AWE"
-            }, {
-              channelid: 15,
-              label: "CMT"
-            }, {
-              channelid: 57,
-              label: "Pop"
-            }, {
-              channelid: 52,
-              label: "Adult Swim"
-            }, {
-              channelid: 41,
-              label: "Spike"
-            }, {
-              channelid: 4,
-              label: "DIY Network"
-            }, {
-              channelid: 53,
-              label: "Lifetime"
-            }, {
-              channelid: 17,
-              label: "TBS"
-            }, {
-              channelid: 34,
-              label: "Travel Channel"
-            }, {
-              channelid: 40,
-              label: "TLC"
-            }, {
-              channelid: 67,
-              label: "LMN"
-            }, {
-              channelid: 26,
-              label: "History"
-            }, {
-              channelid: 39,
-              label: "Destination America"
-            }, {
-              channelid: 65,
-              label: "Create"
-            }, {
-              channelid: 68,
-              label: "Discovery Life"
-            }, {
-              channelid: 38,
-              label: "Military History"
-            }, {
-              channelid: 48,
-              label: "mydestination.tv"
-            }, {
-              channelid: 47,
-              label: "National Geographic Channel"
-            }, {
-              channelid: 69,
-              label: "Bravo"
-            }, {
-              channelid: 14,
-              label: "Recipe.TV"
-            }, {
-              channelid: 44,
-              label: "Nat Geo Wild"
-            }, {
-              channelid: 43,
-              label: "MTV2"
-            }, {
-              channelid: 59,
-              label: "Chiller"
-            }, {
-              channelid: 55,
-              label: "Smithsonian Channel"
-            }, {
-              channelid: 70,
-              label: "A&E"
-            }, {
-              channelid: 66,
-              label: "Food Network"
-            }, {
-              channelid: 28,
-              label: "Science"
-            }, {
-              channelid: 45,
-              label: "Esquire Network"
-            }, {
-              channelid: 33,
-              label: "AMC"
-            }, {
-              channelid: 74,
-              label: "ASPiRE"
-            }, {
-              channelid: 10,
-              label: "FYI"
-            }, {
-              channelid: 75,
-              label: "Z Living"
-            }, {
-              channelid: 30,
-              label: "Audience Network"
-            }, {
-              channelid: 37,
-              label: "Crime & Investigation Network"
-            }, {
-              channelid: 73,
-              label: "Cloo"
-            }, {
-              channelid: 64,
-              label: "FX"
-            }, {
-              channelid: 18,
-              label: "WE tv"
-            }, {
-              channelid: 7,
-              label: "Lifetime Real Women"
-            }, {
-              channelid: 76,
-              label: "El Rey Network"
-            }, {
-              channelid: 5,
-              label: "Ovation"
-            }, {
-              channelid: 27,
-              label: "E!"
-            }, {
-              channelid: 62,
-              label: "Discovery Channel"
-            }, {
-              channelid: 8,
-              label: "AXS TV"
-            }, {
-              channelid: 51,
-              label: "USA Network"
-            }, {
-              channelid: 63,
-              label: "TV One"
-            }, {
-              channelid: 20,
-              label: "Pets.TV"
-            }, {
-              channelid: 21,
-              label: "Comedy Central"
-            }, {
-              channelid: 9,
-              label: "OWN"
-            }, {
-              channelid: 19,
-              label: "GSN"
-            }, {
-              channelid: 3,
-              label: "VH1"
-            }, {
-              channelid: 2,
-              label: "Ion Life"
-            }, {
-              channelid: 42,
-              label: "RLTV"
-            }, {
-              channelid: 22,
-              label: "Oxygen"
-            }, {
-              channelid: 50,
-              label: "BET"
-            }, {
-              channelid: 12,
-              label: "truTV"
-            }, {
-              channelid: 54,
-              label: "Viceland"
-            }, {
-              channelid: 6,
-              label: "WGN America"
-            }, {
-              channelid: 23,
-              label: "Es.tv"
-            }, {
-              channelid: 24,
-              label: "HGTV"
-            }, {
-              channelid: 29,
-              label: "VH1 Classic"
-            }],
-            "limits": {
-              "end": 76,
-              "start": 0,
-              "total": 76
-            }
+            channels: [
+              { channelid: 16, label: 'Animal Planet' },
+              { channelid: 13, label: 'FIDO' },
+              { channelid: 31, label: 'TNT' },
+              { channelid: 36, label: 'Pivot' },
+              { channelid: 58, label: 'Reelz' },
+              { channelid: 25, label: 'FXX' },
+              { channelid: 46, label: 'Syfy' },
+              { channelid: 35, label: 'Investigation Discovery' },
+              { channelid: 56, label: 'American Heroes Channel' },
+              { channelid: 60, label: 'BBC America' },
+              { channelid: 72, label: 'MTV' },
+              { channelid: 32, label: 'Logo TV' },
+              { channelid: 11, label: 'Centric' },
+              { channelid: 71, label: 'Comedy.tv' },
+              { channelid: 61, label: 'Cooking Channel' },
+              { channelid: 1, label: 'Universal HD' },
+              { channelid: 49, label: 'AWE' },
+              { channelid: 15, label: 'CMT' },
+              { channelid: 57, label: 'Pop' },
+              { channelid: 52, label: 'Adult Swim' },
+              { channelid: 41, label: 'Spike' },
+              { channelid: 4, label: 'DIY Network' },
+              { channelid: 53, label: 'Lifetime' },
+              { channelid: 17, label: 'TBS' },
+              { channelid: 34, label: 'Travel Channel' },
+              { channelid: 40, label: 'TLC' },
+              { channelid: 67, label: 'LMN' },
+              { channelid: 26, label: 'History' },
+              { channelid: 39, label: 'Destination America' },
+              { channelid: 65, label: 'Create' },
+              { channelid: 68, label: 'Discovery Life' },
+              { channelid: 38, label: 'Military History' },
+              { channelid: 48, label: 'mydestination.tv' },
+              { channelid: 47, label: 'National Geographic Channel' },
+              { channelid: 69, label: 'Bravo' },
+              { channelid: 14, label: 'Recipe.TV' },
+              { channelid: 44, label: 'Nat Geo Wild' },
+              { channelid: 43, label: 'MTV2' },
+              { channelid: 59, label: 'Chiller' },
+              { channelid: 55, label: 'Smithsonian Channel' },
+              { channelid: 70, label: 'A&E' },
+              { channelid: 66, label: 'Food Network' },
+              { channelid: 28, label: 'Science' },
+              { channelid: 45, label: 'Esquire Network' },
+              { channelid: 33, label: 'AMC' },
+              { channelid: 74, label: 'ASPiRE' },
+              { channelid: 10, label: 'FYI' },
+              { channelid: 75, label: 'Z Living' },
+              { channelid: 30, label: 'Audience Network' },
+              { channelid: 37, label: 'Crime & Investigation Network' },
+              { channelid: 73, label: 'Cloo' },
+              { channelid: 64, label: 'FX' },
+              { channelid: 18, label: 'WE tv' },
+              { channelid: 7, label: 'Lifetime Real Women' },
+              { channelid: 76, label: 'El Rey Network' },
+              { channelid: 5, label: 'Ovation' },
+              { channelid: 27, label: 'E!' },
+              { channelid: 62, label: 'Discovery Channel' },
+              { channelid: 8, label: 'AXS TV' },
+              { channelid: 51, label: 'USA Network' },
+              { channelid: 63, label: 'TV One' },
+              { channelid: 20, label: 'Pets.TV' },
+              { channelid: 21, label: 'Comedy Central' },
+              { channelid: 9, label: 'OWN' },
+              { channelid: 19, label: 'GSN' },
+              { channelid: 3, label: 'VH1' },
+              { channelid: 2, label: 'Ion Life' },
+              { channelid: 42, label: 'RLTV' },
+              { channelid: 22, label: 'Oxygen' },
+              { channelid: 50, label: 'BET' },
+              { channelid: 12, label: 'truTV' },
+              { channelid: 54, label: 'Viceland' },
+              { channelid: 6, label: 'WGN America' },
+              { channelid: 23, label: 'Es.tv' },
+              { channelid: 24, label: 'HGTV' },
+              { channelid: 29, label: 'VH1 Classic' }
+            ],
+            limits: { end: 76, start: 0, total: 76 }
           };
         });
 
@@ -2474,12 +1957,10 @@ describe('kTalk', function kTalk_0() {
 
           expect(answer).toBe('[[35||play tv 35]]: Investigation Discovery\n[[62||play tv 62]]: Discovery Channel\n[[68||play tv 68]]: Discovery Life');
         });
-
       });
 
       describe('fullscreen', function answers_fullscreen_0() {
-
-        beforeEach(function () {
+        beforeEach(function _beforeeach() {
           command = cloneCommand('fullscreen');
         });
 
@@ -2492,40 +1973,22 @@ describe('kTalk', function kTalk_0() {
           command.response = false;
           expect(command.answer(command)).toBe('Oops, still in GUI mode.');
         });
-
       });
 
       describe('sleep', function answers_sleep_0() {
-
-        beforeEach(function () {
+        beforeEach(function _beforeeach() {
           command = cloneCommand('sleep');
           command.message = 'sleep 0';
-          command.response = {
-            "addons": [{
-              "addonid": "script.sleep",
-              "type": "xbmc.python.script"
-            }, {
-              "addonid": "service.openelec.settings",
-              "type": "xbmc.python.script"
-            }, {
-              "addonid": "script.module.youtube.dl",
-              "type": "xbmc.python.script"
-            }],
-            "limits": {
-              "end": 3,
-              "start": 0,
-              "total": 3
-            }
-          };
+          command.response = { addons: [{ addonid: 'script.sleep', type: 'xbmc.python.script' }, { addonid: 'service.openelec.settings', type: 'xbmc.python.script' }, { addonid: 'script.module.youtube.dl', type: 'xbmc.python.script' }], limits: { end: 3, start: 0, total: 3 } };
           self.queue.commands.length = 0;
           self.queue.answers.length = 0;
         });
 
         it('should return rejected promise with "The required "Sleep" addon by robwebset is not installed." value', function answers_sleep_1(done) {
           command.response.addons.shift();
-          command.answer(command).then(function () {
+          command.answer(command).then(function _onresolve() {
             done.fail('Promise should not be resolved');
-          }, function (v) {
+          }, function _onfail(v) {
             expect(v).toBe('The required "Sleep" addon by robwebset is not installed.');
             done();
           });
@@ -2604,12 +2067,10 @@ describe('kTalk', function kTalk_0() {
           expect(self.queue.commands[18]).toBe('.exec Input.Back {}');
           expect(self.queue.commands[19]).toBe('.echo Sleep timer is set for 1 hour.');
         });
-
       });
 
       describe('version', function answers_version_0() {
-
-        beforeEach(function () {
+        beforeEach(function _beforeeach() {
           command = cloneCommand('version');
           self.queue.commands.length = 0;
           self.queue.answers.length = 0;
@@ -2622,23 +2083,12 @@ describe('kTalk', function kTalk_0() {
           expect(self.queue.commands[1]).toBe('.version.kodi');
           expect(self.queue.commands[2]).toBe('.answers.join "\\n"');
         });
-
       });
 
       describe('version.kodi', function answers_version_kodi_0() {
-
-        beforeEach(function () {
+        beforeEach(function _beforeeach() {
           command = cloneCommand('version.kodi');
-          command.response = {
-            name: 'Kodi',
-            version: {
-              major: 15,
-              minor: 2,
-              tag: 'stable',
-              tagversion: '',
-              revision: '02e7013'
-            }
-          };
+          command.response = { name: 'Kodi', version: { major: 15, minor: 2, tag: 'stable', tagversion: '', revision: '02e7013' } };
         });
 
         it('should format a Kodi version if it is a stable release', function answers_version_kodi_1() {
@@ -2682,21 +2132,12 @@ describe('kTalk', function kTalk_0() {
 
           expect(command.answer(command)).toBe('Kodi version is 13.0 Prealpha 11 (rev. 8eb49b3).');
         });
-
       });
 
       describe('version.addon', function answers_version_addon_0() {
-
-        beforeEach(function () {
+        beforeEach(function _beforeeach() {
           command = cloneCommand('version.addon');
-          command.response = {
-            addon: {
-              addonid: 'plugin.webinterface.ktalk',
-              name: 'Kodi Talk',
-              type: 'xbmc.webinterface',
-              version: '0.2.3'
-            }
-          };
+          command.response = { addon: { addonid: 'plugin.webinterface.ktalk', name: 'Kodi Talk', type: 'xbmc.webinterface', version: '0.2.3' } };
         });
 
         it('should format a given addon name and version', function answers_version_addon_1() {
@@ -2711,50 +2152,47 @@ describe('kTalk', function kTalk_0() {
         it('should return "My version is..." if the addon is Kodi Talk', function answers_version_addon_2() {
           expect(command.answer(command)).toBe('My version is 0.2.3.');
         });
-
       });
 
       describe('delay', function answers_delay_0() {
         var spy;
 
-        beforeEach(function () {
+        beforeEach(function _beforeeach() {
           jasmine.clock().install();
-          spy = jasmine.createSpy("After Delay");
+          spy = jasmine.createSpy('After Delay');
           command = cloneCommand('delay');
           command.message = 'delay 50';
         });
 
-        afterEach(function () {
+        afterEach(function _aftereach() {
           jasmine.clock().uninstall();
         });
 
         it('should return promise resolved after given time with "Waiting ### ms." result', function answers_delay_1(done) {
-          command.answer(command).then(function (v) {
+          command.answer(command).then(function _onresolve(v) {
             spy();
             expect(v).toBe('Waiting 50 ms.');
-          }, function () {
+          }, function _onfail() {
             done.fail('Promise should not be rejected');
           });
           checkSpyDelayedCall(50, spy, done);
         });
 
-        it("should limit delay to 10 s", function answers_delay_2(done) {
+        it('should limit delay to 10 s', function answers_delay_2(done) {
           command.message = 'delay 90000';
 
-          command.answer(command).then(function (v) {
+          command.answer(command).then(function _onresolve(v) {
             spy();
             expect(v).toBe('Waiting 10000 ms.');
-          }, function () {
+          }, function _onfail() {
             done.fail('Promise should not be rejected');
           });
           checkSpyDelayedCall(10000, spy, done);
         });
-
       });
 
       describe('answers.clear', function answers_answers_clear_0() {
-
-        beforeEach(function () {
+        beforeEach(function _beforeeach() {
           command = cloneCommand('answers.clear');
           self.queue.answers = ['One', 'Two', 'Three', 'Four'];
         });
@@ -2764,19 +2202,17 @@ describe('kTalk', function kTalk_0() {
           expect(command.answer(command)).toBe('');
           expect(self.queue.answers.length).toBe(0);
         });
-
       });
 
       describe('answers.join', function answers_answers_join_0() {
-
-        beforeEach(function () {
+        beforeEach(function _beforeeach() {
           command = cloneCommand('answers.join');
           self.queue.answers = ['Answer one', 'Answer two', 'Answer three', 'Answer four'];
         });
 
         it('should return the string of kTalk.queue.answers values divided with space', function answers_answers_join_1() {
           command.message = 'answers.join " "';
-          
+
           expect(self.queue.answers.length).toBeGreaterThan(0);
           expect(command.answer(command)).toBe('Answer one Answer two Answer three Answer four');
           expect(self.queue.answers.length).toBe(0);
@@ -2784,7 +2220,7 @@ describe('kTalk', function kTalk_0() {
 
         it('should return the string of kTalk.queue.answers values divided with comma', function answers_answers_join_2() {
           command.message = 'answers.join , ';
-          
+
           expect(self.queue.answers.length).toBeGreaterThan(0);
           expect(command.answer(command)).toBe('Answer one, Answer two, Answer three, Answer four');
           expect(self.queue.answers.length).toBe(0);
@@ -2792,7 +2228,7 @@ describe('kTalk', function kTalk_0() {
 
         it('should return the string of kTalk.queue.answers values as lines', function answers_answers_join_3() {
           command.message = 'answers.join "\\n"';
-          
+
           expect(self.queue.answers.length).toBeGreaterThan(0);
           expect(command.answer(command)).toBe('Answer one\nAnswer two\nAnswer three\nAnswer four');
           expect(self.queue.answers.length).toBe(0);
@@ -2801,7 +2237,7 @@ describe('kTalk', function kTalk_0() {
         it('should process "\u2408" (BS) symbol by deleting it and leftward symbol', function answers_answers_join_4() {
           self.queue.answers.push('\u2408...');
           command.message = 'answers.join "\\n"';
-          
+
           expect(self.queue.answers.length).toBeGreaterThan(0);
           expect(command.answer(command)).toBe('Answer one\nAnswer two\nAnswer three\nAnswer four...');
           expect(self.queue.answers.length).toBe(0);
@@ -2810,25 +2246,25 @@ describe('kTalk', function kTalk_0() {
         it('should process successive "\u2408" (BS) symbols', function answers_answers_join_5() {
           self.queue.answers.push('\u2408...ZZZZ\u2408\u2408\u2408\u2408');
           command.message = 'answers.join "\\n"';
-          
+
           expect(self.queue.answers.length).toBeGreaterThan(0);
           expect(command.answer(command)).toBe('Answer one\nAnswer two\nAnswer three\nAnswer four...');
           expect(self.queue.answers.length).toBe(0);
         });
-
       });
 
       describe('answers.format', function answers_answers_format_0() {
-
-        beforeEach(function () {
+        beforeEach(function _beforeeach() {
           command = cloneCommand('answers.format');
-          self.queue.answers = [['Player 1 is: "[#]"', 'Player 2 is: "[#]"', 'Player 3 is: "[#]"'], 'Audio', 'Video', 'Photo'];
+          self.queue.answers = [
+            ['Player 1 is: "[#]"', 'Player 2 is: "[#]"', 'Player 3 is: "[#]"'], 'Audio', 'Video', 'Photo'
+          ];
         });
 
         it('should return the string of formatted kTalk.queue.answers values when format value is a string', function answers_answers_format_1() {
           command.message = 'answers.format " "';
           self.queue.answers = ['Player 1 is: "[#]"; Player 2 is: "[#]"; Player 3 is: "[#]"', 'Audio', 'Video', 'Photo'];
-          
+
           expect(self.queue.answers.length).toBeGreaterThan(0);
           expect(command.answer(command)).toBe('Player 1 is: "Audio"; Player 2 is: "Video"; Player 3 is: "Photo"');
           expect(self.queue.answers.length).toBe(0);
@@ -2836,7 +2272,7 @@ describe('kTalk', function kTalk_0() {
 
         it('should return the string of formatted kTalk.queue.answers values divided with space when format value is an array', function answers_answers_format_2() {
           command.message = 'answers.format " "';
-          
+
           expect(self.queue.answers.length).toBeGreaterThan(0);
           expect(command.answer(command)).toBe('Player 1 is: "Audio" Player 2 is: "Video" Player 3 is: "Photo"');
           expect(self.queue.answers.length).toBe(0);
@@ -2844,7 +2280,7 @@ describe('kTalk', function kTalk_0() {
 
         it('should return the string of formatted kTalk.queue.answers values divided with comma', function answers_answers_format_3() {
           command.message = 'answers.format , ';
-          
+
           expect(self.queue.answers.length).toBeGreaterThan(0);
           expect(command.answer(command)).toBe('Player 1 is: "Audio", Player 2 is: "Video", Player 3 is: "Photo"');
           expect(self.queue.answers.length).toBe(0);
@@ -2852,7 +2288,7 @@ describe('kTalk', function kTalk_0() {
 
         it('should return the string of formatted kTalk.queue.answers values as lines', function answers_answers_format_4() {
           command.message = 'answers.format "\\n"';
-          
+
           expect(self.queue.answers.length).toBeGreaterThan(0);
           expect(command.answer(command)).toBe('Player 1 is: "Audio"\nPlayer 2 is: "Video"\nPlayer 3 is: "Photo"');
           expect(self.queue.answers.length).toBe(0);
@@ -2861,7 +2297,7 @@ describe('kTalk', function kTalk_0() {
         it('should process "\u2408" (BS) symbol by deleting it and leftward symbol', function answers_answers_format_5() {
           self.queue.answers[0].push('\u2408...');
           command.message = 'answers.format "\\n"';
-          
+
           expect(self.queue.answers.length).toBeGreaterThan(0);
           expect(command.answer(command)).toBe('Player 1 is: "Audio"\nPlayer 2 is: "Video"\nPlayer 3 is: "Photo"...');
           expect(self.queue.answers.length).toBe(0);
@@ -2870,17 +2306,15 @@ describe('kTalk', function kTalk_0() {
         it('should process successive "\u2408" (BS) symbols', function answers_answers_format_6() {
           self.queue.answers[0].push('\u2408...ZZZZ\u2408\u2408\u2408\u2408');
           command.message = 'answers.format "\\n"';
-          
+
           expect(self.queue.answers.length).toBeGreaterThan(0);
           expect(command.answer(command)).toBe('Player 1 is: "Audio"\nPlayer 2 is: "Video"\nPlayer 3 is: "Photo"...');
           expect(self.queue.answers.length).toBe(0);
         });
-
       });
 
       describe('debug', function answers_debug_0() {
-
-        beforeEach(function () {
+        beforeEach(function _beforeeach() {
           command = cloneCommand('debug');
         });
 
@@ -2891,11 +2325,7 @@ describe('kTalk', function kTalk_0() {
           command.message = 'debug document.title';
           expect(command.answer(command)).toBe('# document.title =\n"Kodi Talk Tests"');
         });
-
       });
-
     });
-
   });
-
 });

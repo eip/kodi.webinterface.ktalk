@@ -1,5 +1,5 @@
-/*global Framework7: false, Dom7: false, Template7:false, Promise:false*/
-(function (window) {
+/* global Framework7: false, Dom7: false, Template7:false, Promise:false */
+(function _main(window) {
   'use strict';
 
   function KTalk() {
@@ -10,8 +10,8 @@
     }
 
     function qt(v, d) {
-      return new Promise(function (resolve) {
-        setTimeout(function () {
+      return new Promise(function _executor(resolve) {
+        setTimeout(function _ontimeout() {
           resolve(v);
         }, d || 500);
       });
@@ -22,22 +22,22 @@
     }
 
     function capitalize(s) {
-      return s.charAt(0).toLocaleUpperCase() + s.slice(1); //.toLocaleLowerCase();
+      return s.charAt(0).toLocaleUpperCase() + s.slice(1); // .toLocaleLowerCase();
     }
 
     function formatDay(d) {
-      var date = d ? new Date(d) : new Date(),
-        day = date.getDate(),
-        month = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][date.getMonth()],
-        weekDay = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][date.getDay()];
+      var date = d ? new Date(d) : new Date();
+      var day = date.getDate();
+      var month = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][date.getMonth()];
+      var weekDay = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][date.getDay()];
 
       return weekDay + ', ' + month + ' ' + day;
     }
 
     function formatTime(d) {
-      var date = d ? new Date(d) : new Date(),
-        hours = date.getHours(),
-        mins = date.getMinutes();
+      var date = d ? new Date(d) : new Date();
+      var hours = date.getHours();
+      var mins = date.getMinutes();
 
       return (hours < 10 ? '0' : '') + hours + (mins < 10 ? ':0' : ':') + mins;
     }
@@ -57,17 +57,17 @@
     }
 
     function encodeHtmlEntities(s) {
-      var NON_ALPHANUMERIC_REGEXP = /([^#-~ |!])/g,
-        SURROGATE_PAIR_REGEXP = /[\uD800-\uDBFF][\uDC00-\uDFFF]/g;
+      var NON_ALPHANUMERIC_REGEXP = /([^#-~ |!])/g;
+      var SURROGATE_PAIR_REGEXP = /[\uD800-\uDBFF][\uDC00-\uDFFF]/g;
 
       return s.replace(/&/g, '&amp;')
-        .replace(SURROGATE_PAIR_REGEXP, function (ss) {
-          var hi = ss.charCodeAt(0),
-            low = ss.charCodeAt(1);
+        .replace(SURROGATE_PAIR_REGEXP, function replace(ss) {
+          var hi = ss.charCodeAt(0);
+          var low = ss.charCodeAt(1);
 
           return '&#' + ((hi - 0xD800) * 0x400 + (low - 0xDC00) + 0x10000) + ';';
         })
-        .replace(NON_ALPHANUMERIC_REGEXP, function (ss) {
+        .replace(NON_ALPHANUMERIC_REGEXP, function replace(ss) {
           return '&#' + ss.charCodeAt(0) + ';';
         })
         .replace(/</g, '&lt;')
@@ -75,10 +75,12 @@
     }
 
     function transformPlayerUri(uri) {
+      var match;
+      var newUri;
+
       uri = uri.trim();
       // youtube links
-      var match = (/^https?:\/\/(?:www\.)?youtu(?:\.be|be\.com)\/(?:\S+\/)?(?:[^\s\/]*(?:\?|&)vi?=)?([^#?&\/]+)/i).exec(uri),
-        newUri;
+      match = (/^https?:\/\/(?:www\.)?youtu(?:\.be|be\.com)\/(?:\S+\/)?(?:[^\s\/]*(?:\?|&)vi?=)?([^#?&\/]+)/i).exec(uri);
 
       if (match) {
         newUri = 'plugin://plugin.video.youtube/?path=/root&search&action=play_video&videoid=' + match[1];
@@ -93,13 +95,14 @@
     }
 
     function getCommand(name) {
-      return self.commands.find(function (c) {
+      return self.commands.find(function _find(c) {
         return c.name === name;
       });
     }
 
     function getCommandDescription(command, short) {
       var result = command.description || '';
+
       if (window.d7.isArray(result)) {
         if (short) {
           result = result[0];
@@ -116,14 +119,14 @@
       var re = /\[\[(.*?)(?:\|\|(.*?))?\]\]/g;
 
       text = encodeHtmlEntities(text);
-      return (entire ? '[[' + text + ']]' : text).replace(re, function (m, t, c) {
+      return (entire ? '[[' + text + ']]' : text).replace(re, function replace(m, t, c) {
         return '<a href="#" class="new link" data-command="' + (c || t) + '">' + t + '</a>';
       });
     }
 
     function messageLinkHandler(event) {
-      var message = self.messagebar.value().trim(),
-        command = event.target.dataset.command.trim();
+      var message = self.messagebar.value().trim();
+      var command = event.target.dataset.command.trim();
 
       message = (getCommand('help').regex.test(message) ? message + ' ' : '') + command;
       self.messagebar.value(message);
@@ -142,7 +145,6 @@
     }
 
     function addMessageToHistory(text, type, date) {
-
       self.appData.messages = self.appData.messages || [];
       while (self.appData.messages.length >= self.messageHistorySize) {
         self.appData.messages.shift();
@@ -191,8 +193,11 @@
     }
 
     function addQuestionMessage(command) {
+      var elm;
+
       if (!command.silent) {
-        var elm = self.messages.addMessage(makeMessageParams(makeLinks(command.message, true), 'sent'));
+        elm = self.messages.addMessage(makeMessageParams(makeLinks(command.message, true), 'sent'));
+
         addMessageLinkHandlers(elm);
       }
       window.console.debug('Send command: ' + (command.silent ? '(silent) ' : '') + command.message);
@@ -200,8 +205,8 @@
     }
 
     function parseProperty(command, propName) {
-      var result = command[propName],
-        parseResult = false;
+      var result = command[propName];
+      var parseResult = false;
 
       if (typeof result === 'function') {
         result = result(command);
@@ -226,7 +231,7 @@
     }
 
     function parseKodiCommand(command) {
-      self.commands.some(function (c) {
+      self.commands.some(function _some(c) {
         if (c.regex.test(command.message)) {
           command.name = c.name;
           command.description = c.description;
@@ -250,7 +255,7 @@
     }
 
     function callJsonRpcMethod(command) {
-
+      // helpers
       function makeRequestBody(c) {
         var result = JSON.stringify({
           id: c.id || ++self.commandId,
@@ -274,13 +279,13 @@
       if (typeof command.method === 'undefined') {
         return command;
       }
-      return new Promise(function (resolve, reject) {
+      return new Promise(function _executor(resolve, reject) {
         window.d7.ajax({
           url: self.jsonRpcUrl,
           method: 'POST',
           data: makeRequestBody(command),
           success: resolve,
-          error: function (xhr, status) {
+          error: function onError(xhr, status) {
             reject({
               code: status.toString(),
               message: 'Failed to complete JSON-RPC request to the Kodi server.'
@@ -300,9 +305,9 @@
       } else {
         result = command.response;
       }
-      return q().then(function () {
+      return q().then(function _exit() {
         return result;
-      }).then(function (m) {
+      }).then(function _format(m) {
         if (self.queue.commands.length) {
           if (typeof m !== 'undefined') {
             self.queue.answers.push(m);
@@ -321,10 +326,12 @@
     }
 
     function formatErrorMessage(message) {
+      var result;
+
       if (typeof message === 'undefined') {
         return '';
       } else if (typeof message === 'object') {
-        var result = 'ERROR';
+        result = 'ERROR';
 
         result += message.code ? ' ' + message.code + ':' : ':';
         result += message.name ? ' [' + message.name + ']' : '';
@@ -335,11 +342,13 @@
     }
 
     function addReceivedMessage(message, format, className) {
-      return q(message).then(format).then(function (m) {
+      return q(message).then(format).then(function _addmessage(m) {
+        var elm;
+
         if (m.length === 0) {
           return null;
         }
-        var elm = self.messages.addMessage(makeMessageParams(m, ('received ' + (m.indexOf('#') === 0 ? 'debug' : className || '')).trim()));
+        elm = self.messages.addMessage(makeMessageParams(m, ('received ' + (m.indexOf('#') === 0 ? 'debug' : className || '')).trim()));
         addMessageLinkHandlers(elm);
         return elm;
       });
@@ -382,10 +391,12 @@
         self.appData.messages = [];
         return talkToKodi('.hello');
       }
-      self.appData.messages.forEach(function (m) {
+      self.appData.messages.forEach(function _each(m) {
         var elm = self.messages.addMessage(makeMessageParams(m.text, m.type, m.date, 'no history'));
+
         addMessageLinkHandlers(elm);
       });
+      return '';
     }
 
     function init() {
@@ -407,7 +418,7 @@
         name: 'hello',
         description: 'Start a new conversation with me.',
         regex: /^(hello)\s*[\.!\?]*$/i,
-        answer: function () {
+        answer: function _answer() {
           self.messages.clean();
           self.lastMessageTime = 0;
           delete self.appData.messages;
@@ -424,12 +435,13 @@
         name: 'help',
         description: ['List of available commands.',
           'I also understand you if you type "[[Help]]", "[[Help!]]", "[[help?]]"…',
-          'Send me "help command" for detailed description of the command, for example, "[[help play]]" or "[[help tv]]".'],
+          'Send me "help command" for detailed description of the command, for example, "[[help play]]" or "[[help tv]]".'
+        ],
         regex: /^(help)\s*[\.!\?]*$/i,
-        answer: function (c) {
+        answer: function _answer(c) {
           var result = 'I understand the following commmands:\n';
 
-          self.commands.forEach(function (cc) {
+          self.commands.forEach(function _each(cc) {
             if (typeof cc.description !== 'undefined') {
               result += '‣ [[' + cc.name + ']]: ' + getCommandDescription(cc, 'short') + '\n';
             }
@@ -440,9 +452,10 @@
       }, {
         name: 'help.detail',
         regex: /^(help)\s+(\S[\S\s]*)$/i,
-        answer: function (c) {
-          var commandName = getMessageToken(c, 2).trim(),
-            command = getCommand(commandName);
+        answer: function _answer(c) {
+          var commandName = getMessageToken(c, 2).trim();
+          var command = getCommand(commandName);
+
           if (command && command.description) {
             return '[[' + command.name + ']]: ' + getCommandDescription(command);
           }
@@ -451,7 +464,7 @@
       }, {
         name: 'play.url',
         regex: /^(?:play)?\s*((?:https?|plugin):\/\/.+)$/i,
-        answer: function (c) {
+        answer: function _answer(c) {
           var file = transformPlayerUri(getMessageToken(c, 1));
 
           self.queue.commands.push('.stop');
@@ -464,7 +477,7 @@
       }, {
         name: 'play.tv',
         regex: /^play\s+tv\s+(\d+)\s*[\.!\?]*$/i,
-        answer: function (c) {
+        answer: function _answer(c) {
           var id = getMessageToken(c, 1);
 
           self.queue.commands.push('.stop');
@@ -480,13 +493,14 @@
           'Send me "[[play http://www.sample-videos.com/video/mp4/720/big_buck_bunny_720p_50mb.mp4]]" or simply "[[http://www.sample-videos.com/video/mp4/720/big_buck_bunny_720p_50mb.mp4]]" to start playing video file.',
           'I also understand links to YouTube: "[[play https://youtu.be/YE7VzlLtp-4]]" or "[[https://youtu.be/YE7VzlLtp-4]]", (you should have Kodi YouTube addon to be installed).',
           'Type "[[play tv 1]]" to start playing the TV channel 1. Use "[[tv]]" command to list of available channels.',
-          'Send me "[[play]]" command if you have paused playback and it will be resumed.'],
+          'Send me "[[play]]" command if you have paused playback and it will be resumed.'
+        ],
         regex: /^(play)\s*[\.!\?]*$/i,
         method: 'Player.GetActivePlayers',
-        answer: function (c) {
+        answer: function _answer(c) {
           var result = [];
 
-          c.response.forEach(function (o) {
+          c.response.forEach(function _each(o) {
             self.queue.commands.push(['.player.playpause', o.playerid, 1].join(' '));
             result.push(capitalize(o.type) + ' playback [#].');
           });
@@ -500,10 +514,10 @@
         description: 'Pause playback.',
         regex: /^(pause)\s*[\.!\?]*$/i,
         method: 'Player.GetActivePlayers',
-        answer: function (c) {
+        answer: function _answer(c) {
           var result = [];
 
-          c.response.forEach(function (o) {
+          c.response.forEach(function _each(o) {
             self.queue.commands.push(['.player.playpause', o.playerid, 0].join(' '));
             result.push(capitalize(o.type) + ' playback [#].');
           });
@@ -517,8 +531,8 @@
         description: 'Stop playback.',
         regex: /^(stop)\s*[\.!\?]*$/i,
         method: 'Player.GetActivePlayers',
-        answer: function (c) {
-          c.response.forEach(function (o) {
+        answer: function _answer(c) {
+          c.response.forEach(function _each(o) {
             self.queue.commands.unshift('.exec Player.Stop {"playerid":' + o.playerid + '}');
           });
           return c.response.length ? 'Stopping ' + c.response.length + ' player' + (c.response.length > 1 ? 's' : '') : 'There is no active players.';
@@ -527,13 +541,13 @@
         name: 'player.playpause',
         regex: /^(player\.playpause)\s+(\d+)\s+(\d+)$/i,
         method: 'Player.PlayPause',
-        params: function (c) {
+        params: function _params(c) {
           return {
             playerid: parseInt(getMessageToken(c, 2), 10),
             play: Boolean(parseInt(getMessageToken(c, 3), 10))
           };
         },
-        answer: function (c) {
+        answer: function _answer(c) {
           return c.response.speed === 0 ? 'paused' : 'resumed';
         }
       }, {
@@ -541,8 +555,8 @@
         description: 'Check what Kodi is doing now.',
         regex: /^(w(?:hat'?s\s*|ass|azz)up)\s*[\.!\?]*$/i,
         method: 'Player.GetActivePlayers',
-        answer: function (c) {
-          c.response.forEach(function (o) {
+        answer: function _answer(c) {
+          c.response.forEach(function _each(o) {
             self.queue.commands.push('.player.getitem ' + o.playerid);
           });
           if (c.response.length || self.queue.answers.length) {
@@ -555,18 +569,19 @@
         regex: /^(player\.getitem)\s+(\d+)$/i,
         method: 'Player.GetItem',
         params: '{"playerid":$2,"properties":["artist","channeltype"]}',
-        answer: function (c) {
+        answer: function _answer(c) {
           var i = c.response.item;
+
           if (!i.type || i.type === 'unknown') {
             switch (c.params.playerid) {
-            case 0:
-              i.type = 'audio';
-              break;
-            case 2:
-              i.type = 'picture';
-              break;
-            default:
-              i.type = 'video';
+              case 0:
+                i.type = 'audio';
+                break;
+              case 2:
+                i.type = 'picture';
+                break;
+              default:
+                i.type = 'video';
             }
           }
           return '‣ ' + capitalize((i.type === 'channel' ? i.channeltype.toUpperCase() + ' ' : '') + i.type + (i.type === 'channel' ? ' [[' + i.id + '||play tv ' + i.id + ']]' : '') + ': ') +
@@ -576,24 +591,25 @@
         name: 'tv',
         description: ['List of available TV channels.',
           'You may add a (sub)string to filter the list by name, for example, "[[tv discovery]]".',
-          'For sorting the list by channel number, use "[[tv#]]" or "[[tv# discovery]]".'],
+          'For sorting the list by channel number, use "[[tv#]]" or "[[tv# discovery]]".'
+        ],
         regex: /^(tv#?)(?:$|\s+(.*)$)/i,
         method: 'PVR.GetChannels',
         params: {
           channelgroupid: 'alltv'
         },
-        answer: function (c) {
-          var filter = getMessageToken(c, 2).toLowerCase(),
-            result = '',
-            sortById = getMessageToken(c, 1).indexOf('#') >= 0;
+        answer: function _answer(c) {
+          var filter = getMessageToken(c, 2).toLowerCase();
+          var result = '';
+          var sortById = getMessageToken(c, 1).indexOf('#') >= 0;
 
-          c.response.channels.sort(function (a, b) {
+          c.response.channels.sort(function _sort(a, b) {
             if (sortById) {
               return a.channelid - b.channelid;
             }
             return a.label.localeCompare(b.label);
           });
-          c.response.channels.forEach(function (ch) {
+          c.response.channels.forEach(function _each(ch) {
             if (ch.label.toLowerCase().indexOf(filter) >= 0) {
               result += '[[' + ch.channelid + '||play tv ' + ch.channelid + ']]: ' + ch.label + '\n';
             }
@@ -608,7 +624,7 @@
         params: {
           fullscreen: true
         },
-        answer: function (c) {
+        answer: function _answer(c) {
           return c.response ? 'OK, fullscreen mode activated.' : 'Oops, still in GUI mode.';
         }
       }, {
@@ -632,21 +648,24 @@
         name: 'sleep',
         description: ['Put Kodi to sleep after specified time in minutes.',
           '★ Requires "Sleep" addon by robwebset.',
-          'For example, if you type "[[sleep 30]]", Kodi will sleep in 30 minutes. Send "[[sleep 0]]" to disable sleep timer.'],
+          'For example, if you type "[[sleep 30]]", Kodi will sleep in 30 minutes. Send "[[sleep 0]]" to disable sleep timer.'
+        ],
         regex: /^(sleep)\s+(\d+)\s*[\.!\?]*$/i,
         method: 'Addons.GetAddons',
         params: {
           type: 'xbmc.addon.executable',
           enabled: true
         },
-        answer: function (c) {
-          var i,
-            time = Math.round(parseInt(getMessageToken(c, 2), 10) / 10);
+        answer: function _answer(c) {
+          var i;
+          var time = Math.round(parseInt(getMessageToken(c, 2), 10) / 10);
+          var sleepAddonExists;
 
           time = time > 6 ? 6 : time;
-          if (c.response.addons.some(function (a) {
-              return a.addonid === 'script.sleep';
-            })) {
+          sleepAddonExists = c.response.addons.some(function _some(a) {
+            return a.addonid === 'script.sleep';
+          });
+          if (sleepAddonExists) {
             self.queue.commands.push('.exec Addons.ExecuteAddon {"addonid":"script.sleep"}');
             self.queue.commands.push('.delay 1500');
 
@@ -663,7 +682,7 @@
             self.queue.commands.push('.delay 1500');
             self.queue.commands.push('.exec Input.Back {}');
             self.queue.commands.push('.echo ' + (time ? 'Sleep timer is set for ' + (time < 6 ? time * 10 + ' minutes.' : '1 hour.') : 'Sleep timer is disabled.'));
-            return;
+            return void 0;
           }
           return r('The required "Sleep" addon by robwebset is not installed.');
         }
@@ -671,7 +690,7 @@
         name: 'version',
         description: 'Show the Kodi and the Kodi Talk addon versions.',
         regex: /^(version)\s*[\.!\?]*$/i,
-        answer: function (c) {
+        answer: function _answer() {
           self.queue.commands.push('.version.addon plugin.webinterface.ktalk');
           self.queue.commands.push('.version.kodi');
           self.queue.commands.push('.answers.join ' + JSON.stringify('\n'));
@@ -683,16 +702,16 @@
         params: {
           properties: ['name', 'version']
         },
-        answer: function (c) {
+        answer: function _answer(c) {
           switch (c.response.version.tag) {
-          case 'stable':
-            c.response.version.tagversion = '';
-            break;
-          case 'releasecandidate':
-            c.response.version.tagversion = [' RC', c.response.version.tagversion].join(' ').trimRight();
-            break;
-          default:
-            c.response.version.tagversion = ['', capitalize(c.response.version.tag), c.response.version.tagversion].join(' ').trimRight();
+            case 'stable':
+              c.response.version.tagversion = '';
+              break;
+            case 'releasecandidate':
+              c.response.version.tagversion = [' RC', c.response.version.tagversion].join(' ').trimRight();
+              break;
+            default:
+              c.response.version.tagversion = ['', capitalize(c.response.version.tag), c.response.version.tagversion].join(' ').trimRight();
           }
           return c.response.name + ' version is ' + c.response.version.major + '.' + c.response.version.minor + c.response.version.tagversion + ' (rev. ' + c.response.version.revision + ').';
         }
@@ -701,7 +720,7 @@
         regex: /^(version\.addon)\s+(.+)$/i,
         method: 'Addons.GetAddonDetails',
         params: '{"addonid":"$2","properties":["name","version"]}',
-        answer: function (c) {
+        answer: function _answer(c) {
           return (c.response.addon.addonid === 'plugin.webinterface.ktalk' ? 'My' : c.response.addon.name + ' addon') + ' version is ' + c.response.addon.version + '.';
         }
       }, {
@@ -712,7 +731,8 @@
       }, {
         name: 'say',
         description: ['Display the message on the Kodi screen.',
-          'For example, "[[say Hello there!]]".'],
+          'For example, "[[say Hello there!]]".'
+        ],
         regex: /^(say)\s+([\S\s]+?)\s*$/i,
         method: 'GUI.ShowNotification',
         params: '{"title":"Kodi Talk","message":"$2"}'
@@ -730,7 +750,8 @@
         name: 'exec',
         description: ['★ For geeks only: execute the JSON-RPC method.',
           'For example, "[[exec GUI.ActivateWindow {"window":"home"}]]".',
-          'See the Kodi Wiki for JSON-RPC API description.'],
+          'See the Kodi Wiki for JSON-RPC API description.'
+        ],
         regex: /^exec\s+([\w\.]+)\s+(\S+)$/i,
         method: '$1',
         params: '$2'
@@ -741,7 +762,7 @@
       }, {
         name: 'delay',
         regex: /^(delay)\s+(\d+)$/i,
-        answer: function (c) {
+        answer: function _answer(c) {
           var ms = parseInt(getMessageToken(c, 2), 10);
 
           ms = ms <= 10000 ? ms : 10000;
@@ -750,16 +771,16 @@
       }, {
         name: 'answers.clear',
         regex: /^(answers\.clear)$/i,
-        answer: function () {
+        answer: function _answer() {
           self.queue.answers.length = 0;
           return '';
         }
       }, {
         name: 'answers.join',
         regex: /^(answers\.join)\s+(.+)$/i,
-        answer: function (c) {
-          var d = getMessageToken(c, 2),
-            result;
+        answer: function _answer(c) {
+          var d = getMessageToken(c, 2);
+          var result;
 
           d = d.indexOf('"') === 0 ? JSON.parse(d) : d;
           result = self.queue.answers.join(d);
@@ -772,11 +793,11 @@
       }, {
         name: 'answers.format',
         regex: /^(answers\.format)\s+(.+)$/i,
-        answer: function (c) {
-          var a,
-            d = getMessageToken(c, 2),
-            result = self.queue.answers[0],
-            i;
+        answer: function _answer(c) {
+          var a;
+          var d = getMessageToken(c, 2);
+          var result = self.queue.answers[0];
+          var i;
 
           d = d.indexOf('"') === 0 ? JSON.parse(d) : d;
           if (typeof result.join === 'function') {
@@ -795,14 +816,13 @@
       }, {
         name: 'debug',
         regex: /^(debug)\s+(.+)$/i,
-        answer: function (c) {
+        answer: function _answer(c) {
           var val = getMessageToken(c, 2);
 
-          /*jslint evil: true*/
+          // eslint-disable-next-line no-eval
           return '# ' + val + ' =\n' + JSON.stringify(eval(val), null, 2);
         }
       }];
-      /*jslint evil: false*/
 
       self.queue = {
         commands: [],
@@ -812,13 +832,11 @@
     }
 
     function run() {
-      addMessagesFromHistory();
-
-      if (!window.f7App.device.os) {
-        setTimeout(function () {
+      addMessagesFromHistory().then(function _setfocus() {
+        if (!window.f7App.device.os) {
           window.d7('.messagebar textarea').focus();
-        }, 100);
-      }
+        }
+      });
     }
 
     function sendMessage(message) {
@@ -905,16 +923,15 @@
   window.d7('html').removeClass('with-statusbar-overlay');
 
   // Handle message
-  window.d7('.messagebar .link').on('click', function () {
+  window.d7('.messagebar .link').on('click', function _onclick() {
     window.kTalk.sendMessage();
   });
 
-  window.d7('.messagebar textarea').on('keypress', function (e) {
+  window.d7('.messagebar textarea').on('keypress', function _onkeypress(e) {
     e = e || window.event;
     if ((e.which || e.keyCode) === 13) {
       e.preventDefault();
       window.kTalk.sendMessage();
     }
   });
-
 }(window));
