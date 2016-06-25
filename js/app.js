@@ -396,7 +396,7 @@
 
         addMessageLinkHandlers(elm);
       });
-      return '';
+      return q('');
     }
 
     function init() {
