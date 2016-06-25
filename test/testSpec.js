@@ -37,14 +37,11 @@ describe('kTalk', function kTalk_0() {
   }
 
   function cloneObject(source) {
-    var member;
     var result = {};
 
-    for (member in source) {
-      if (source.hasOwnProperty(member)) {
-        result[member] = source[member];
-      }
-    }
+    Object.keys(source).forEach(function _each(p) {
+      result[p] = source[p];
+    });
     return result;
   }
 
