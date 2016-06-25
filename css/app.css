@@ -8,8 +8,8 @@ body {
 
 .views {
   max-width: 800px;
-  margin-left: auto;
   margin-right: auto;
+  margin-left: auto;
 }
 
 .message {
@@ -17,16 +17,16 @@ body {
 }
 
 .message .message-text {
-  border-radius: 8px;
   padding: 8px 16px;
   white-space: pre-wrap;
+  border-radius: 8px;
 }
 
 .message-avatar {
   width: 38px;
   height: 38px;
-  border-radius: 8px;
   margin-top: -38px;
+  border-radius: 8px;
 }
 
 .message-received.message-last .message-text, .message-received.message-with-tail .message-text, .message-received .message-text, .message-sent.message-last .message-text, .message-sent.message-with-tail .message-text, .message-sent .message-text {
@@ -62,10 +62,10 @@ body {
 }
 
 .message-sent a {
-  color: #ffffff;
+  color: #fff;
 }
 
 .messagebar textarea {
-  padding: 6px 8px;
   height: 34px;
+  padding: 6px 8px;
 }
