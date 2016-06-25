@@ -1,3 +1,7 @@
+0.2.5
+- "hello" command response fixed if nothing is playing now.
+- Other bug fixes and optimizations.
+
 0.2.4
 - "version" command and "Now playing" output format improved.
 - "sleep" command response fixed.

@@ -21,7 +21,7 @@ See [Kodi Wiki](http://kodi.wiki/view/Web_interface) for more details.
 
 ## Installing addon manually
 
-Download the [plugin.webinterface.ktalk-0.2.4.zip](https://github.com/eip/kodi.webinterface.ktalk/raw/master/plugin.webinterface.ktalk-0.2.4.zip) file and manually install the addon (Settings → Add-ons → Install from zip file → Navigate to the ZIP file).
+Download the [plugin.webinterface.ktalk-0.2.5.zip](https://github.com/eip/kodi.webinterface.ktalk/raw/master/plugin.webinterface.ktalk-0.2.5.zip) file and manually install the addon (Settings → Add-ons → Install from zip file → Navigate to the ZIP file).
 
 ## Screenshots
 
