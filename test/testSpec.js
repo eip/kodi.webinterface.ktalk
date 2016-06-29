@@ -957,7 +957,18 @@ describe('kTalk', function kTalk_0() {
           });
         });
 
-        it('and command.answer is a function that return a string', function formatAnswerMessage_14(done) {
+        it('and command.answer is not defined', function formatAnswerMessage_14(done) {
+          command.answer = void 0;
+          self.testing.formatAnswerMessage(command).then(function _onresolve(v) {
+            expect(v).toBe('');
+            expect(self.queue.answers.length).toBe(0);
+            done();
+          }, function _onfail() {
+            done.fail('Promise should not be rejected');
+          });
+        });
+
+        it('and command.answer is a function that return a string', function formatAnswerMessage_15(done) {
           command.answer = function _answer() {
             return 'Test';
           };
@@ -970,7 +981,7 @@ describe('kTalk', function kTalk_0() {
           });
         });
 
-        it('and command.answer is a function that return a number', function formatAnswerMessage_15(done) {
+        it('and command.answer is a function that return a number', function formatAnswerMessage_16(done) {
           command.answer = function _answer() {
             return 123;
           };
@@ -983,7 +994,7 @@ describe('kTalk', function kTalk_0() {
           });
         });
 
-        it('and command.answer is a function that return an object', function formatAnswerMessage_16(done) {
+        it('and command.answer is a function that return an object', function formatAnswerMessage_17(done) {
           command.answer = function _answer() {
             return result;
           };
@@ -996,7 +1007,7 @@ describe('kTalk', function kTalk_0() {
           });
         });
 
-        it('and command.answer is a function that return a promise', function formatAnswerMessage_17(done) {
+        it('and command.answer is a function that return a promise', function formatAnswerMessage_18(done) {
           command.answer = function _answer() {
             return self.testing.qt(result, 5);
           };
@@ -1483,7 +1494,6 @@ describe('kTalk', function kTalk_0() {
         expect(self.busy).toBe(false);
         self.sendMessage('delay ' + delay_1).then(function _onresolve() {
           spy_1();
-          console.debug('delay ' + delay_1);
           expect(self.busy).toBe(false);
           messages = window.d7('.message-text');
           expect(messages.length).toBe(2);
@@ -1496,7 +1506,6 @@ describe('kTalk', function kTalk_0() {
         expect(self.busy).toBe(true);
         self.sendMessage().then(function _onresolve() {
           spy_2();
-          console.debug('delay ' + delay_2);
           expect(self.busy).toBe(false);
           expect(self.messagebar.value()).toBe('');
           messages = window.d7('.message-text');
@@ -1510,6 +1519,56 @@ describe('kTalk', function kTalk_0() {
           checkSpyDelayedCall(300 - delay_1 - 2, null, function _doneB() {
             checkSpyDelayedCall(delay_2, spy_2, done);
           });
+        });
+      });
+    });
+
+    describe('.run()', function run_0() {
+      beforeEach(function _beforeeach() {
+        self.messages.clean();
+        spyOn(self.testing.getCommand('hello'), 'answer').and.returnValue('Hello!');
+        spyOn(self.messagebar.textarea[0], 'focus');
+      });
+
+      it('should add welcome message and set focus to the message bar if run on desktop', function run_2(done) {
+        var messages;
+
+        window.f7App.device.os = void 0;
+        self.appData.messages.length = 0;
+        self.run().then(function _onresolve() {
+          messages = window.d7('.message-text');
+          expect(messages.length).toBe(1);
+          expect(messages[0].innerHTML).toBe('Hello!');
+          expect(messages[0].parentElement.classList.contains('message-received')).toBe(true);
+          expect(messages[0].parentElement.classList.contains('error')).toBe(false);
+          expect(messages[0].parentElement.classList.contains('debug')).toBe(false);
+          expect(self.appData.messages).toEqual(jasmine.any(Array));
+          expect(self.appData.messages.length).toBe(1);
+          expect(self.messagebar.textarea[0].focus).toHaveBeenCalled();
+          done();
+        }, function _onfail() {
+          done.fail('Promise should not be rejected');
+        });
+      });
+
+      it('should not set focus to the message bar if run on mobile device', function run_1(done) {
+        var messages;
+
+        window.f7App.device.os = 'ios';
+        self.appData.messages.length = 0;
+        self.run().then(function _onresolve() {
+          messages = window.d7('.message-text');
+          expect(messages.length).toBe(1);
+          expect(messages[0].innerHTML).toBe('Hello!');
+          expect(messages[0].parentElement.classList.contains('message-received')).toBe(true);
+          expect(messages[0].parentElement.classList.contains('error')).toBe(false);
+          expect(messages[0].parentElement.classList.contains('debug')).toBe(false);
+          expect(self.appData.messages).toEqual(jasmine.any(Array));
+          expect(self.appData.messages.length).toBe(1);
+          expect(self.messagebar.textarea[0].focus).not.toHaveBeenCalled();
+          done();
+        }, function _onfail() {
+          done.fail('Promise should not be rejected');
         });
       });
     });

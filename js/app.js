@@ -305,7 +305,7 @@
       } else {
         result = command.response;
       }
-      return q().then(function _exit() {
+      return q().then(function _result() {
         return result;
       }).then(function _format(m) {
         if (self.queue.commands.length) {
@@ -832,7 +832,7 @@
     }
 
     function run() {
-      addMessagesFromHistory().then(function _setfocus() {
+      return addMessagesFromHistory().then(function _setfocus() {
         if (!window.f7App.device.os) {
           window.d7('.messagebar textarea').focus();
         }
