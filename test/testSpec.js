@@ -50,15 +50,23 @@ describe('kTalk', function kTalk_0() {
   }
 
   function checkSpyDelayedCall(delay, spy, done) {
-    jasmine.clock().tick(delay - 1);
-    realSetTimeout(function _ontimeouta() {
-      expect(spy).not.toHaveBeenCalled();
-      jasmine.clock().tick(2);
-      realSetTimeout(function _ontimeoutb() {
-        expect(spy).toHaveBeenCalled();
-        done();
+    realSetTimeout(function _ontimeoutA() {
+      jasmine.clock().tick(delay - 1);
+      realSetTimeout(function _ontimeoutB() {
+        if (typeof spy === 'function') {
+          expect(spy).not.toHaveBeenCalled();
+        }
+        jasmine.clock().tick(2);
+        realSetTimeout(function _ontimeoutC() {
+          if (typeof spy === 'function') {
+            expect(spy).toHaveBeenCalled();
+          }
+          if (typeof done === 'function') {
+            done();
+          }
+        }, 1);
       }, 1);
-    }, 1);
+    }, 10);
   }
 
   self.dataStorage = store;
@@ -151,37 +159,35 @@ describe('kTalk', function kTalk_0() {
     });
 
     describe('.qt()', function qt_0() {
-      it('should return resolved promise with the given value', function qt_1(done) {
-        self.testing.qt('Resolved', 1).then(function _onresolve(v) {
+      var spy;
+
+      beforeEach(function _beforeeach() {
+        jasmine.clock().install();
+        spy = jasmine.createSpy('After Delay');
+      });
+
+      afterEach(function _aftereach() {
+        jasmine.clock().uninstall();
+      });
+
+      it('promise should be resolved with the given value after 5000 ms', function qt_1(done) {
+        self.testing.qt('Resolved', 5000).then(function _onresolve(v) {
+          spy();
           expect(v).toBe('Resolved');
-          done();
         }, function _onfail() {
           done.fail('Promise should not be rejected');
         });
+        checkSpyDelayedCall(5000, spy, done);
       });
 
-      it('promise should be resolved after 50 ms', function qt_2(done) {
-        var delay = 50;
-        var startTime = Date.now();
-
-        self.testing.qt('Resolved', delay).then(function _onresolve() {
-          expect(Date.now() - startTime).toBeCloseTo(delay, -2);
-          done();
+      it('promise should be resolved with the given value after 500 ms (default)', function qt_2(done) {
+        self.testing.qt('Resolved').then(function _onresolve(v) {
+          spy();
+          expect(v).toBe('Resolved');
         }, function _onfail() {
           done.fail('Promise should not be rejected');
         });
-      });
-
-      it('promise should be resolved after 500 ms (default)', function qt_3(done) {
-        var delay = 500;
-        var startTime = Date.now();
-
-        self.testing.qt('Resolved').then(function _onresolve() {
-          expect(Date.now() - startTime).toBeCloseTo(delay, -2);
-          done();
-        }, function _onfail() {
-          done.fail('Promise should not be rejected');
-        });
+        checkSpyDelayedCall(500, spy, done);
       });
     });
 
@@ -1355,7 +1361,7 @@ describe('kTalk', function kTalk_0() {
         spyOn(self.testing.getCommand('hello'), 'answer').and.returnValue('Hello!');
       });
 
-      it('should add messages stored in the message history', function addMessagesFromHistory_1() {
+      it('should add messages stored in the message history', function addMessagesFromHistory_1(done) {
         var messages;
 
         self.appData.messages = [
@@ -1368,42 +1374,46 @@ describe('kTalk', function kTalk_0() {
         ];
         self.dataStorage.setItem(self.dataKey, JSON.stringify(self.appData));
 
-        self.testing.addMessagesFromHistory();
-        messages = window.d7('.message-text');
-        expect(messages.length).toBe(6);
+        self.testing.addMessagesFromHistory().then(function _onresolve() {
+          messages = window.d7('.message-text');
+          expect(messages.length).toBe(6);
 
-        expect(messages[0].innerHTML).toBe('Hi!');
-        expect(messages[0].parentElement.classList.contains('message-sent')).toBe(true);
-        expect(messages[0].parentElement.classList.contains('error')).toBe(false);
-        expect(messages[0].parentElement.classList.contains('debug')).toBe(false);
+          expect(messages[0].innerHTML).toBe('Hi!');
+          expect(messages[0].parentElement.classList.contains('message-sent')).toBe(true);
+          expect(messages[0].parentElement.classList.contains('error')).toBe(false);
+          expect(messages[0].parentElement.classList.contains('debug')).toBe(false);
 
-        expect(messages[1].innerHTML).toBe('Hello!');
-        expect(messages[1].parentElement.classList.contains('message-received')).toBe(true);
-        expect(messages[1].parentElement.classList.contains('error')).toBe(false);
-        expect(messages[1].parentElement.classList.contains('debug')).toBe(false);
+          expect(messages[1].innerHTML).toBe('Hello!');
+          expect(messages[1].parentElement.classList.contains('message-received')).toBe(true);
+          expect(messages[1].parentElement.classList.contains('error')).toBe(false);
+          expect(messages[1].parentElement.classList.contains('debug')).toBe(false);
 
-        expect(messages[2].innerHTML).toBe('What?');
-        expect(messages[2].parentElement.classList.contains('message-sent')).toBe(true);
-        expect(messages[2].parentElement.classList.contains('error')).toBe(false);
-        expect(messages[2].parentElement.classList.contains('debug')).toBe(false);
+          expect(messages[2].innerHTML).toBe('What?');
+          expect(messages[2].parentElement.classList.contains('message-sent')).toBe(true);
+          expect(messages[2].parentElement.classList.contains('error')).toBe(false);
+          expect(messages[2].parentElement.classList.contains('debug')).toBe(false);
 
-        expect(messages[3].innerHTML).toBe('Sorry, I can\'t understand you.');
-        expect(messages[3].parentElement.classList.contains('message-received')).toBe(true);
-        expect(messages[3].parentElement.classList.contains('error')).toBe(true);
-        expect(messages[3].parentElement.classList.contains('debug')).toBe(false);
+          expect(messages[3].innerHTML).toBe('Sorry, I can\'t understand you.');
+          expect(messages[3].parentElement.classList.contains('message-received')).toBe(true);
+          expect(messages[3].parentElement.classList.contains('error')).toBe(true);
+          expect(messages[3].parentElement.classList.contains('debug')).toBe(false);
 
-        expect(messages[4].innerHTML).toBe('debug 2+2');
-        expect(messages[4].parentElement.classList.contains('message-sent')).toBe(true);
-        expect(messages[4].parentElement.classList.contains('error')).toBe(false);
-        expect(messages[4].parentElement.classList.contains('debug')).toBe(false);
+          expect(messages[4].innerHTML).toBe('debug 2+2');
+          expect(messages[4].parentElement.classList.contains('message-sent')).toBe(true);
+          expect(messages[4].parentElement.classList.contains('error')).toBe(false);
+          expect(messages[4].parentElement.classList.contains('debug')).toBe(false);
 
-        expect(messages[5].innerHTML).toBe('# answer: 4');
-        expect(messages[5].parentElement.classList.contains('message-received')).toBe(true);
-        expect(messages[5].parentElement.classList.contains('error')).toBe(false);
-        expect(messages[5].parentElement.classList.contains('debug')).toBe(true);
+          expect(messages[5].innerHTML).toBe('# answer: 4');
+          expect(messages[5].parentElement.classList.contains('message-received')).toBe(true);
+          expect(messages[5].parentElement.classList.contains('error')).toBe(false);
+          expect(messages[5].parentElement.classList.contains('debug')).toBe(true);
 
-        expect(self.appData.messages).toEqual(jasmine.any(Array));
-        expect(self.appData.messages.length).toBe(6);
+          expect(self.appData.messages).toEqual(jasmine.any(Array));
+          expect(self.appData.messages.length).toBe(6);
+          done();
+        }, function _onfail() {
+          done.fail('Promise should not be rejected');
+        });
       });
 
       it('should add welcome message if the message history is empty', function addMessagesFromHistory_2(done) {
@@ -1448,19 +1458,32 @@ describe('kTalk', function kTalk_0() {
 
   describe('[public methods]', function public_0() {
     describe('.sendMessage()', function sendMessage_0() {
+      var spy_1;
+      var spy_2;
+
+      beforeEach(function _beforeeach() {
+        jasmine.clock().install();
+        spy_1 = jasmine.createSpy('After Delay 1');
+        spy_2 = jasmine.createSpy('After Delay 2');
+      });
+
+      afterEach(function _aftereach() {
+        jasmine.clock().uninstall();
+      });
+
       it('should send messages in sequence, waiting 300 ms if previous command still processing; should clear messagebar value', function sendMessage_1(done) {
         var delay_1;
-        var startTime_1;
         var delay_2;
-        var startTime_2;
         var messages;
 
         self.messages.clean();
         delay_1 = 100;
+        delay_2 = 50;
+
         expect(self.busy).toBe(false);
-        startTime_1 = Date.now();
         self.sendMessage('delay ' + delay_1).then(function _onresolve() {
-          expect(Date.now() - startTime_1).toBeCloseTo(delay_1, -2);
+          spy_1();
+          console.debug('delay ' + delay_1);
           expect(self.busy).toBe(false);
           messages = window.d7('.message-text');
           expect(messages.length).toBe(2);
@@ -1469,22 +1492,25 @@ describe('kTalk', function kTalk_0() {
           done.fail('Promise should not be rejected');
         });
 
-        delay_2 = 50;
         self.messagebar.value('delay ' + delay_2);
         expect(self.busy).toBe(true);
-        startTime_2 = Date.now();
         self.sendMessage().then(function _onresolve() {
-          expect(Date.now() - startTime_2).toBeCloseTo(300 + delay_2, -2);
+          spy_2();
+          console.debug('delay ' + delay_2);
           expect(self.busy).toBe(false);
           expect(self.messagebar.value()).toBe('');
           messages = window.d7('.message-text');
           expect(messages.length).toBe(4);
           expect(messages[3].innerHTML).toBe('Waiting ' + delay_2 + ' ms.');
-          done();
         }, function _onfail() {
           done.fail('Promise should not be rejected');
         });
         expect(self.busy).toBe(true);
+        checkSpyDelayedCall(delay_1, spy_1, function _doneA() {
+          checkSpyDelayedCall(300 - delay_1 - 2, null, function _doneB() {
+            checkSpyDelayedCall(delay_2, spy_2, done);
+          });
+        });
       });
     });
   });
@@ -1492,7 +1518,7 @@ describe('kTalk', function kTalk_0() {
   describe('Commands', function commands_0() {
     describe('descriptions', function descriptions_0() {
       it('each line should begins with uppercase letter (may be prefixed with "★ ") and ends with "." or "…"', function descriptions_1() {
-        self.commands.forEach(function _eacha(c) {
+        self.commands.forEach(function _eachA(c) {
           var d = c.description;
 
           if (!d) {
@@ -1501,7 +1527,7 @@ describe('kTalk', function kTalk_0() {
           if (!window.d7.isArray(d)) {
             d = [d];
           }
-          d.forEach(function _eachb(s) {
+          d.forEach(function _eachB(s) {
             expect(s).toMatch(/^(?:★ )?[A-Z].*\S[\.…]$/);
           });
         });
