@@ -353,9 +353,17 @@ describe('kTalk', function kTalk_0() {
     });
 
     describe('.getCommandDescription()', function getCommandDescription_0() {
+      var command;
+
+      beforeEach(function _beforeeach() {
+        command = cloneCommand('home');
+        command.description = [].concat(command.description);
+      });
+
       it('should return the description of the command', function getCommandDescription_1() {
         expect(self.testing.getCommandDescription(cloneCommand('echo'))).toBe('');
         expect(self.testing.getCommandDescription(cloneCommand('home'))).toBe('Show the home screen.');
+        expect(self.testing.getCommandDescription(command)).toBe('Show the home screen.');
         expect(self.testing.getCommandDescription(cloneCommand('help'))).toBe('List of available commands.' +
           '\nI also understand you if you type "[[Help]]", "[[Help!]]", "[[help?]]"…' +
           '\nSend me "help command" for detailed description of the command, for example, "[[help play]]" or "[[help tv]]".');
@@ -364,6 +372,7 @@ describe('kTalk', function kTalk_0() {
       it('should return the first line of the description of the command if "short" parameter is true', function getCommandDescription_2() {
         expect(self.testing.getCommandDescription(cloneCommand('echo'), true)).toBe('');
         expect(self.testing.getCommandDescription(cloneCommand('home'), 1)).toBe('Show the home screen.');
+        expect(self.testing.getCommandDescription(command, 'yes')).toBe('Show the home screen.');
         expect(self.testing.getCommandDescription(cloneCommand('help'), true)).toBe('List of available commands. [[(…)||help help]]');
         expect(self.testing.getCommandDescription(cloneCommand('help'), 'short')).toBe('List of available commands. [[(…)||help help]]');
       });

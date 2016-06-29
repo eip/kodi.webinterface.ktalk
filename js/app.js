@@ -107,8 +107,9 @@
         if (short) {
           result = result[0];
           if (command.description.length > 1) {
-            return result + ' [[(…)||help ' + command.name + ']]';
+            result += ' [[(…)||help ' + command.name + ']]';
           }
+          return result;
         }
         return result.join('\n');
       }
